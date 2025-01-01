@@ -100,9 +100,10 @@ const CertificateInfo = () => {
           {/* Image Row Below CTA */}
           <div className="mt-12 rounded-lg border-4 border-blue-500 px-6 py-8 text-center">
             {/* Heading inside the box */}
-            <h3 className="!w-half bg-primary hover:bg-primary-dark border-primary-500 text-black-600 mt-12 mb-6 justify-self-center rounded-lg border-[2px]  px-8 py-4 text-2xl font-bold text-white">
-              Wits Education Tag / Certification
-            </h3>
+<h3 className="bg-primary justify-self-center rounded-lg border-[0px] border-transparent bg-gradient-to-r from-green-300 to-purple-500 px-6 py-4 text-2xl font-bold text-black">
+  Wits Education Tag / Certification
+</h3>
+
 
             {/* Logo Grid */}
             <div className="grid grid-cols-2 place-items-center gap-10 md:grid-cols-4">
@@ -122,14 +123,14 @@ const CertificateInfo = () => {
               />
               <Image
                 src="/iss/niti.png"
-                width={170}
+                width={150}
                 height={100}
                 className="object-contain"
                 alt="ISO Logo"
               />
               <Image
                 src="/iss/iso5-.png"
-                width={180}
+                width={160}
                 height={110}
                 className="object-contain"
                 alt="AICTE Logo"

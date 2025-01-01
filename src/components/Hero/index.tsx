@@ -6,7 +6,6 @@ import ShinyText from "./shinnytext";
 import EnrollDropdown from "./EnrollDropdown";
 
 
-
 const Hero = () => {
   const [showModal, setShowModal] = useState(true);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
