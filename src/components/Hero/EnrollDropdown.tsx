@@ -63,8 +63,8 @@ export default function EnrollDropdown() {
       {/* Header */}
       <div className="grid grid-cols-3 bg-gray-100 px-4 py-3 font-semibold text-gray-800 dark:bg-gray-900 dark:text-gray-200">
         <div>State</div>
-        <div className="text-center">Private</div>
-        <div className="text-center">Government</div>
+        <div className="text-center">Private College</div>
+        <div className="text-center">Government College</div>
       </div>
 
       {/* Table */}
