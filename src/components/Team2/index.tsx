@@ -22,7 +22,7 @@ const teamMembers = [
 
 { name: "Er. Vishal Kumar",
     image: "/company/vishal-kumar.jpg",
-    expertise: "MetLab,Crucit design, Pwoer System,Contral System etc",
+    expertise: "MetLab,Crucit design, Power System,Contral System etc",
     experience: " 6+ Years Experience",
     qulafication: " B-Tech in Electrical Engineering, M-Tech in Instrumentation Engineering and Control system",
    
