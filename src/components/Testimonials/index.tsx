@@ -1,6 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import React from "react";
 
 type Testimonial = {
   id: number;
@@ -12,6 +17,7 @@ type Testimonial = {
 };
 
 const testimonialData: Testimonial[] = [
+  // same data as your original
   {
     id: 1,
     name: "Rohan Singh",
@@ -93,99 +99,49 @@ const testimonialData: Testimonial[] = [
     image: "/review/IMG4870.PNG",
     star: 5,
   },
+  // ...rest of testimonials
 ];
 
 const Testimonials = () => {
-  const [visibleCount, setVisibleCount] = useState(3);
-
-  const handleShowMore = () => {
-    setVisibleCount((prev) => prev + 3);
-  };
-
   return (
-    <section
-      style={{
-        backgroundColor: "#f9fafb",
-        padding: "60px 20px",
-        position: "relative",
-        zIndex: 10,
+    <Swiper
+      modules={[Navigation, Pagination, Autoplay]}
+      spaceBetween={20}
+      slidesPerView={1}
+      pagination={{ clickable: true }}
+      autoplay={{ delay: 3000 }}
+      breakpoints={{
+        640: { slidesPerView: 1 },
+        768: { slidesPerView: 2 },
+        1024: { slidesPerView: 3 },
+        1280: { slidesPerView: 4 },
       }}
     >
-      <div style={{ textAlign: "center", marginBottom: 40 }}>
-        <h2 style={{ fontSize: "28px", fontWeight: 600 }}>
-          What Our Users Say
-        </h2>
-        <p style={{ fontSize: "16px", color: "#555", marginTop: 10 }}>
-          Hear from our students who have successfully transformed their careers
-          with NLIT.
-        </p>
-      </div>
+      {testimonialData.map((t) => (
+        <SwiperSlide key={t.id}>
+          <div className="flex h-full flex-col items-center rounded-lg bg-white p-6 text-center shadow">
+            {/* Avatar */}
+            <img
+              src={t.image}
+              alt={t.name}
+              className="mb-4 h-16 w-16 rounded-full border-2 border-gray-200 object-cover"
+            />
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-          gap: "20px",
-          maxWidth: "1200px",
-          margin: "0 auto",
-        }}
-      >
-        {testimonialData.slice(0, visibleCount).map((t) => (
-          <div
-            key={t.id}
-            style={{
-              backgroundColor: "white",
-              padding: "20px",
-              borderRadius: "8px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              textAlign: "left",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 15 }}>
-              <img
-                src={t.image}
-                alt={t.name}
-                style={{
-                  width: "50px",
-                  height: "50px",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  marginRight: "15px",
-                }}
-              />
-              <div>
-                <h4 style={{ fontSize: "16px", fontWeight: 600 }}>{t.name}</h4>
-                <p style={{ fontSize: "14px", color: "#777" }}>{t.designation}</p>
-              </div>
+            {/* Testimonial Content */}
+            <p className="mb-6 text-sm text-gray-700">“{t.content}”</p>
+
+            {/* Footer (Name + Role) */}
+            <div className="mt-auto">
+              <h4 className="text-base font-semibold text-gray-900">
+                {t.name}
+              </h4>
+              <p className="text-sm text-gray-500">{t.designation}</p>
             </div>
-            <p style={{ fontSize: "15px", color: "#333" }}>{t.content}</p>
           </div>
-        ))}
-      </div>
-
-      {visibleCount < testimonialData.length && (
-        <div style={{ textAlign: "center", marginTop: 30 }}>
-          <button
-            onClick={handleShowMore}
-            style={{
-              backgroundColor: "#4A6CF7",
-              color: "#fff",
-              padding: "10px 20px",
-              borderRadius: "6px",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "16px",
-            }}
-          >
-            Show More
-          </button>
-        </div>
-      )}
-    </section>
+        </SwiperSlide>
+      ))}
+    </Swiper>
   );
 };
 
 export default Testimonials;
-
-
-

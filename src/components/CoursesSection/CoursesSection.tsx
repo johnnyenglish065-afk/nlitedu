@@ -5,43 +5,48 @@ const CoursesSection = () => {
   const courses = [
     {
       title: "Java Programming",
-      description: "Learn object-oriented programming and backend fundamentals.",
+      description:
+        "Learn object-oriented programming and backend fundamentals.",
       link: "https://your-google-form-link.com/java",
-      image: "/courses/java.jpg",
+      image: "/fontimage/java.png",
     },
     {
       title: "Python Programming",
       description: "Master Python for data science, automation, and scripting.",
       link: "https://your-google-form-link.com/python",
-      image: "/courses/python.jpg",
+      image: "/fontimage/python.png",
     },
     {
       title: "AutoCAD",
-      description: "Design and draft 2D/3D models for engineering and architecture.",
+      description:
+        "Design and draft 2D/3D models for engineering and architecture.",
       link: "https://your-google-form-link.com/autocad",
-      image: "/courses/autocad.jpg",
+      image: "/fontimage/autocad.png",
     },
     {
       title: "Revit",
-      description: "Learn building information modeling (BIM) for architecture.",
+      description:
+        "Learn building information modeling (BIM) for architecture.",
       link: "https://your-google-form-link.com/revit",
-      image: "/courses/revit.jpg",
+      image: "/fontimage/revit.jpg",
     },
     {
       title: "STAAD Pro",
-      description: "Structural analysis and design software for civil engineers.",
+      description:
+        "Structural analysis and design software for civil engineers.",
       link: "https://your-google-form-link.com/staadpro",
-      image: "/courses/staadpro.jpg",
+      image: "/fontimage/staadpro.jpg",
     },
     {
       title: "SolidWorks",
       description: "Mechanical design and simulation using SolidWorks CAD.",
       link: "https://your-google-form-link.com/solidworks",
-      image: "/courses/solidworks.jpg",
+      image: "/fontimage/solid.png",
     },
     {
       title: "CATIA",
-      description: "Advanced CAD/CAM for aerospace, automotive, and engineering.",
+      description:
+        "Advanced CAD/CAM for aerospace, automotive, and engineering.",
       link: "https://your-google-form-link.com/catia",
       image: "/courses/catia.jpg",
     },
@@ -49,13 +54,14 @@ const CoursesSection = () => {
       title: "Android / iOS Development",
       description: "Build mobile applications using modern frameworks.",
       link: "https://your-google-form-link.com/mobile",
-      image: "/courses/mobile.jpg",
+      image: "/fontimage/iosand.png",
     },
     {
       title: "MATLAB",
-      description: "Programming and simulation for engineering and scientific tasks.",
+      description:
+        "Programming and simulation for engineering and scientific tasks.",
       link: "https://your-google-form-link.com/matlab",
-      image: "/courses/matlab.jpg",
+      image: "/fontimage/matlab.png",
     },
   ];
 
@@ -66,7 +72,7 @@ const CoursesSection = () => {
     >
       <div className="container mx-auto px-4">
         <h2 className="mb-12 text-center text-3xl font-extrabold text-gray-900 sm:text-4xl dark:text-white">
-          Explore Our Foundation Courses & Enroll
+          Explore Our FoundationCourses & Enroll
         </h2>
 
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
@@ -81,8 +87,8 @@ const CoursesSection = () => {
                   src={course.image}
                   alt={course.title}
                   layout="fill"
-                  objectFit="cover"
-                  className="transition-transform duration-300 group-hover:scale-105"
+                //   objectFit="cover"
+                  className="transition-transform duration-300 group-hover:scale-105 object-contain"
                 />
               </div>
 
