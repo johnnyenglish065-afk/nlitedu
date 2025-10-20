@@ -41,27 +41,27 @@ const CoursesSection = () => {
       title: "SolidWorks",
       description: "Mechanical design and simulation using SolidWorks CAD.",
       link: "https://your-google-form-link.com/solidworks",
-      image: "/fontimage/solid.png",
+      image: "/fontimage/solid2.png",
     },
     {
       title: "CATIA",
       description:
         "Advanced CAD/CAM for aerospace, automotive, and engineering.",
       link: "https://your-google-form-link.com/catia",
-      image: "/courses/catia.jpg",
+      image: "/fontimage/CATI2.png",
     },
     {
       title: "Android / iOS Development",
       description: "Build mobile applications using modern frameworks.",
       link: "https://your-google-form-link.com/mobile",
-      image: "/fontimage/iosand.png",
+      image: "/fontimage/iosand2.png",
     },
     {
       title: "MATLAB",
       description:
         "Programming and simulation for engineering and scientific tasks.",
       link: "https://your-google-form-link.com/matlab",
-      image: "/fontimage/matlab.png",
+      image: "/fontimage/matlab2.png",
     },
   ];
 
