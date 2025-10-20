@@ -71,7 +71,14 @@ const HiringSection = () => {
 <div className="mt-12 border-4 border-blue-500 rounded-lg px-6 py-8">
   <div className="grid grid-cols-2 md:grid-cols-4 gap-10 place-items-center">
     <Image
-      src="/iss/aicte.png"
+      src="/iss/mcf.png"
+      width={180}
+      height={120}
+      className="object-contain"
+      alt=""
+    />
+    <Image
+      src="/iss/msme.png"
       width={180}
       height={120}
       className="object-contain"
@@ -85,16 +92,9 @@ const HiringSection = () => {
       alt=""
     />
     <Image
-      src="/iss/mcf.png"
+      src="/iss/aicte.png"
       width={180}
-      height={120}
-      className="object-contain"
-      alt=""
-    />
-    <Image
-      src="/iss/msme.png"
-      width={180}
-      height={120}
+      height={110}
       className="object-contain"
       alt=""
     />
