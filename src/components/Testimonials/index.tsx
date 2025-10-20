@@ -119,12 +119,13 @@ const Testimonials = () => {
     >
       {testimonialData.map((t) => (
         <SwiperSlide key={t.id}>
-          <div className="flex h-full flex-col items-center rounded-lg bg-white p-6 text-center shadow">
+          <div className="flex h-full flex-col items-center rounded-lg bg-white p-6 text-center shadow border-dashed border-bule-500">
+
             {/* Avatar */}
             <img
               src={t.image}
               alt={t.name}
-              className="mb-4 h-16 w-16 rounded-full border-2 border-gray-200 object-cover"
+              className="mb-4 h-16 w-16 rounded-full border-2 border-bule-500 object-cover"
             />
 
             {/* Testimonial Content */}
