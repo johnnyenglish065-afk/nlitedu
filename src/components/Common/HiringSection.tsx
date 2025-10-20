@@ -100,10 +100,6 @@ const HiringSection = () => {
     />
   </div>
 </div>
-
-
-
-
       </div>
     </section>
   );
