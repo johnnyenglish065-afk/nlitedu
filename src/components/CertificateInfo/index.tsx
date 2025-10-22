@@ -3,6 +3,7 @@ import Image from "next/image";
 const CertificateInfo = () => {
   return (
     <>
+    
       <section
         id="certificate-info"
         className="overflow-hidden bg-white py-16 md:py-20 lg:py-28 dark:bg-gray-900"
@@ -60,7 +61,7 @@ const CertificateInfo = () => {
             </div>
 
             {/* Sample Certificate Image */}
-            <div className="max-w-md flex-shrink-0 rounded-lg border border-gray-300 shadow-lg dark:border-gray-700">
+            <div className="max-w-md flex-shrink-0 rounded-lg border border-yellow-800 shadow-lg dark:border-yellow-700">
               <div className="relative w-full overflow-hidden rounded-lg">
                 <Image
                   src="/company/cert-sample.jpg"
@@ -73,7 +74,6 @@ const CertificateInfo = () => {
           </div>
         </div>
       </section>
-
       {/* ✅ Certificate Verification Section */}
       <section
         id="certificate-verification"

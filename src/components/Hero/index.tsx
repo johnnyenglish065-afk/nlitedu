@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+
 const Hero = () => {
   const [showModal, setShowModal] = useState(false);
   const [sending, setSending] = useState(false);
@@ -541,6 +542,7 @@ const Hero = () => {
                   onClick={() => setShowModal(false)}
                   className="text-sm text-gray-600 hover:underline dark:text-gray-300"
                 >
+                  
                   Close
                 </button>
               </div>
