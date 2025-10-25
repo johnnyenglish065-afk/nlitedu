@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import GlareHover from "./GlareHover";
 
 const teamMembers = [
   {
@@ -20,14 +21,15 @@ const teamMembers = [
     qulafication: "B-Tech & M-Tech in Mechanical Engineering",
   },
 
-{ name: "Er. Vishal Kumar",
+  {
+    name: "Er. Vishal Kumar",
     image: "/company/vishal-kumar.jpg",
     expertise: "MetLab,Crucit design, Power System,Contral System etc",
     experience: " 6+ Years Experience",
-    qulafication: " B-Tech in Electrical Engineering, M-Tech in Instrumentation Engineering and Control system",
-   
-},
-  
+    qulafication:
+      " B-Tech in Electrical Engineering, M-Tech in Instrumentation Engineering and Control system",
+  },
+
   {
     name: "Er. Prem Ranjan Kumar",
     image: "/company/prem-ranjan-kumar.jpg",
@@ -35,9 +37,6 @@ const teamMembers = [
     experience: "10+ Years Experience teaching techinical software",
     qulafication: "Diploma in Civil Engineering",
   },
-  
-  
-
 ];
 
 const TeamDisplay = () => {
@@ -55,47 +54,50 @@ const TeamDisplay = () => {
 
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
           {teamMembers.map((member, index) => (
-            <motion.div
-              key={index}
-              className="flex flex-col rounded-lg bg-white shadow-md transition duration-300 hover:shadow-xl dark:bg-gray-800"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              viewport={{ once: true }}
-            >
-              {/* Image */}
-              {/* Image */}
-              <div className="relative h-[250px] w-full overflow-hidden rounded-t-lg">
-                <Image
-                  src={member.image}
-                  alt={member.name}
-                  width={400}
-                  height={250}
-                  className="h-full w-full object-contain "
-                />
-              </div>
-
-              {/* Content */}
-              <div className="flex flex-grow flex-col justify-between p-6">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    {member.name}
-                  </h3><p className="mt-1 text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                     {member.qulafication}
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                    Expertise: {member.expertise}
-                  </p>
+            <GlareHover key={index}>
+              <motion.div
+                key={index}
+                className="flex flex-col rounded-lg bg-white shadow-md transition duration-300 hover:shadow-xl dark:bg-gray-800"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                {/* Image */}
+                {/* Image */}
+                <div className="relative h-[250px] w-full overflow-hidden rounded-t-lg">
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    width={400}
+                    height={250}
+                    className="h-full w-full object-contain"
+                  />
                 </div>
 
-                {/* Footer Section */}
-                <div className="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700">
-                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    {member.experience}
-                  </p>
+                {/* Content */}
+                <div className="flex flex-grow flex-col justify-between p-6">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      {member.name}
+                    </h3>
+                    <p className="mt-1 text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                      {member.qulafication}
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                      Expertise: {member.expertise}
+                    </p>
+                  </div>
+
+                  {/* Footer Section */}
+                  <div className="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700">
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      {member.experience}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </GlareHover>
           ))}
         </div>
       </div>

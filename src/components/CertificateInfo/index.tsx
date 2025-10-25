@@ -3,7 +3,6 @@ import Image from "next/image";
 const CertificateInfo = () => {
   return (
     <>
-    
       <section
         id="certificate-info"
         className="overflow-hidden bg-white py-16 md:py-20 lg:py-28 dark:bg-gray-900"
@@ -97,6 +96,46 @@ const CertificateInfo = () => {
           >
             Verify Certificate
           </a>
+          {/* Image Row Below CTA */}
+          {/* Image Row Below CTA */}
+          <div className="mt-12 rounded-lg border-4 border-blue-500 px-6 py-8 text-center">
+            {/* Heading inside the box */}
+            <h3 className="!w-half bg-primary hover:bg-primary-dark border-primary-500 text-black-600 mt-12 mb-6 justify-self-center rounded-lg border-[2px]  px-8 py-4 text-2xl font-bold text-white">
+              Wits Education Tag / Certification
+            </h3>
+
+            {/* Logo Grid */}
+            <div className="grid grid-cols-2 place-items-center gap-10 md:grid-cols-4">
+              <Image
+                src="/iss/mcf.png"
+                width={180}
+                height={120}
+                className="object-contain"
+                alt="MCF Logo"
+              />
+              <Image
+                src="/iss/msme.png"
+                width={180}
+                height={120}
+                className="object-contain"
+                alt="MSME Logo"
+              />
+              <Image
+                src="/iss/niti.png"
+                width={170}
+                height={100}
+                className="object-contain"
+                alt="ISO Logo"
+              />
+              <Image
+                src="/iss/iso5-.png"
+                width={180}
+                height={110}
+                className="object-contain"
+                alt="AICTE Logo"
+              />
+            </div>
+          </div>
         </div>
       </section>
     </>

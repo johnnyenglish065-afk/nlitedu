@@ -2,13 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import ShinyText from "./shinnytext";
+import EnrollDropdown from "./EnrollDropdown";
+
 
 
 const Hero = () => {
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(true);
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -18,11 +23,35 @@ const Hero = () => {
     consent: false,
   });
 
+  // useEffect(() => {
+  //   // show modal 1s after mount — change/remove timeout as you like
+  //   const t = setTimeout(() => setShowModal(true), 800);
+  //   return () => clearTimeout(t);
+  // }, []);
+  // 👇 close modal on scroll
   useEffect(() => {
-    // show modal 1s after mount — change/remove timeout as you like
-    const t = setTimeout(() => setShowModal(true), 800);
-    return () => clearTimeout(t);
-  }, []);
+    // setTimeout(() => setShowModal(true), 800);
+    if (!showEnrollModal) return;
+
+    let scrollTimer: NodeJS.Timeout | null = null;
+
+    const handleScroll = () => {
+      // clear any previous timer
+      if (scrollTimer) clearTimeout(scrollTimer);
+
+      // close 400ms after scroll stops
+      scrollTimer = setTimeout(() => {
+        setShowEnrollModal(false);
+      }, 100);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (scrollTimer) clearTimeout(scrollTimer);
+    };
+  }, [showEnrollModal]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -117,15 +146,17 @@ const Hero = () => {
     <>
       <section
         id="home"
-        className="dark:bg-gray-dark relative z-10 overflow-hidden bg-white pt-[90px] pb-16 md:pt-[120px] md:pb-[90px] xl:pt-[150px] xl:pb-[160px] 2xl:pt-[210px] 2xl:pb-[200px]"
+        className="dark:bg-gray-dark relative z-10 bg-white pt-[90px] md:pt-[120px] xl:pt-[150px] 2xl:pt-[210px]"
       >
         <div className="container">
           <div className="-mx-2 flex flex-wrap">
             <div className="w-full px-4">
               <div className="mx-auto max-w-[800px] text-center">
                 <h1 className="mb-5 text-3xl leading-tight font-bold text-black sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight dark:text-white">
-                  Transform Your Future with Hands-On Tech Training &
-                  Internships
+                  <ShinyText
+                    text=" Transform Your Future with Hands-On Tech Training &
+                  Internships"
+                  />
                 </h1>
                 <p className="text-body-color dark:text-body-color-dark mb-8 text-base sm:text-lg md:text-xl">
                   At Nexgen Learning Institute of Technology (NLIT), we
@@ -135,13 +166,48 @@ const Hero = () => {
                   certifications in Java, Python, AutoCAD, Revit, StaadPro,Solid
                   Work,Catia, Android/iOS, MATLAB, and more.
                 </p>
-                <div className="flex justify-center space-x-4">
-                  <Link
-                    href="https://forms.gle/hxmbFF9MfopLTXGo6"
+
+                {/* Enroll Button */}
+                {/* Enroll Button */}
+                <div className="relative flex justify-center space-x-4">
+                  {/* Enroll Now Button */}
+                  <button
+                    onClick={() => setShowEnrollModal(true)}
                     className="inline-block rounded bg-blue-600 px-6 py-3 text-base font-medium text-white transition hover:bg-blue-700"
                   >
-                    Enroll Now
-                  </Link>
+                    Enroll Now ▾
+                  </button>
+
+                  {/* Dropdown Popover */}
+                  {/* Enroll Now Button */}
+
+                  {/* Enroll Modal */}
+                  {showEnrollModal && (
+                    <div
+                      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40"
+                      onClick={(e) => {
+                        if (e.target === e.currentTarget)
+                          setShowEnrollModal(false);
+                      }}
+                    >
+                      <div className="animate-fade-in relative mx-4 max-h-[90vh] w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-700">
+                        <div className="max-h-[50vh] space-y-6 overflow-y-auto p-6">
+                          <EnrollDropdown />
+                        </div>
+
+                        <div className="flex justify-end border-t border-gray-100 px-6 py-4 dark:border-gray-800">
+                          <button
+                            onClick={() => setShowEnrollModal(false)}
+                            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Learn More Button */}
                   <Link
                     href="#about"
                     className="inline-block rounded border border-blue-600 px-6 py-3 text-base font-medium text-blue-600 transition hover:bg-blue-50"
@@ -219,7 +285,7 @@ const Hero = () => {
                 y2="288"
                 gradientUnits="userSpaceOnUse"
               >
-                <stop stopColor="#4A6CF7" />
+                <stop stopColor="#4af792ff" />
                 <stop offset="1" stopColor="#4A6CF7" stopOpacity="0" />
               </linearGradient>
               <radialGradient
@@ -405,7 +471,8 @@ const Hero = () => {
                   Quick Signup
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Enter a few details and we&apos;ll contact you with next steps.
+                  Enter a few details and we&apos;ll contact you with next
+                  steps.
                 </p>
               </div>
               <button
@@ -542,7 +609,6 @@ const Hero = () => {
                   onClick={() => setShowModal(false)}
                   className="text-sm text-gray-600 hover:underline dark:text-gray-300"
                 >
-                  
                   Close
                 </button>
               </div>

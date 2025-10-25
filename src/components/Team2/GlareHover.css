@@ -1,0 +1,41 @@
+.glare-hover {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+  transition: transform 0.3s ease;
+}
+
+.glare-hover:hover {
+  transform: translateY(-5px);
+}
+
+/* Glare animation effect */
+.glare-hover::before {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  animation: shine 2s;
+  transform: rotate(0deg);
+  z-index: 1;
+}
+
+/* Keyframes for infinite diagonal animation */
+@keyframes shine {
+  0% {
+    transform: translate(0%, 0%);
+  }
+  100% {
+    transform: translate(100%, 100%);
+  }
+}

@@ -7,60 +7,60 @@ const CoursesSection = () => {
       title: "Java Programming",
       description:
         "Learn object-oriented programming and backend fundamentals.",
-      link: "https://your-google-form-link.com/java",
+      link: "https://forms.gle/sTGcypKnp8DvNowy7",
       image: "/fontimage/java.png",
     },
     {
       title: "Python Programming",
       description: "Master Python for data science, automation, and scripting.",
-      link: "https://your-google-form-link.com/python",
+      link: "https://forms.gle/sTGcypKnp8DvNowy7",
       image: "/fontimage/python.png",
     },
     {
       title: "AutoCAD",
       description:
         "Design and draft 2D/3D models for engineering and architecture.",
-      link: "https://your-google-form-link.com/autocad",
+      link: "https://forms.gle/sTGcypKnp8DvNowy7",
       image: "/fontimage/autocad.png",
     },
     {
       title: "Revit",
       description:
         "Learn building information modeling (BIM) for architecture.",
-      link: "https://your-google-form-link.com/revit",
+      link: "https://forms.gle/sTGcypKnp8DvNowy7",
       image: "/fontimage/revit.jpg",
     },
     {
       title: "STAAD Pro",
       description:
         "Structural analysis and design software for civil engineers.",
-      link: "https://your-google-form-link.com/staadpro",
+      link: "https://forms.gle/sTGcypKnp8DvNowy7",
       image: "/fontimage/staadpro.jpg",
     },
     {
       title: "SolidWorks",
       description: "Mechanical design and simulation using SolidWorks CAD.",
-      link: "https://your-google-form-link.com/solidworks",
+      link: "https://forms.gle/sTGcypKnp8DvNowy7",
       image: "/fontimage/solid2.png",
     },
     {
       title: "CATIA",
       description:
         "Advanced CAD/CAM for aerospace, automotive, and engineering.",
-      link: "https://your-google-form-link.com/catia",
+      link: "https://forms.gle/sTGcypKnp8DvNowy7",
       image: "/fontimage/CATI2.png",
     },
     {
       title: "Android / iOS Development",
       description: "Build mobile applications using modern frameworks.",
-      link: "https://your-google-form-link.com/mobile",
+      link: "https://forms.gle/sTGcypKnp8DvNowy7",
       image: "/fontimage/iosand2.png",
     },
     {
       title: "MATLAB",
       description:
         "Programming and simulation for engineering and scientific tasks.",
-      link: "https://your-google-form-link.com/matlab",
+      link: "https://forms.gle/sTGcypKnp8DvNowy7",
       image: "/fontimage/matlab2.png",
     },
   ];

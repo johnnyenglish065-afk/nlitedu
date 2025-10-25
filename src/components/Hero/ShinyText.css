@@ -1,0 +1,22 @@
+.shiny-text {
+  display: inline-block;
+  background: linear-gradient(90deg, #155dfc, #000000, #5d93a8);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+  font-weight: bold;
+}
+
+.shiny-text.disabled {
+  animation: none;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}

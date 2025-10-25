@@ -164,12 +164,12 @@ const Header = () => {
               </div>
               <div className="flex items-center justify-end pr-16 lg:pr-0">
                 {/* Google Form Link */}
-                <Link
+                {/*<Link
                   href="https://forms.gle/hxmbFF9MfopLTXGo6"
                   className="ease-in-up shadow-btn hover:shadow-btn-hover bg-primary hover:bg-primary/90 rounded-xl px-8 py-2 text-base font-medium text-white transition duration-300 md:block md:px-9 lg:px-6 xl:px-9"
                 >
                   Register
-                </Link>
+                </Link>*/}
 
                 <div>
                   <ThemeToggler />
