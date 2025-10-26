@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import ShinyText from "./shinnytext";
 import EnrollDropdown from "./EnrollDropdown";
 
-
 const Hero = () => {
   const [showModal, setShowModal] = useState(true);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
@@ -21,6 +20,12 @@ const Hero = () => {
     message: "",
     consent: false,
   });
+
+ // selection state for EnrollDropdown
+const [selection, setSelection] = useState<
+  { type: "govt" | "private"; state: string } | null
+>(null);
+
 
   // useEffect(() => {
   //   // show modal 1s after mount — change/remove timeout as you like
@@ -191,15 +196,50 @@ const Hero = () => {
                     >
                       <div className="animate-fade-in relative mx-4 max-h-[90vh] w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-700">
                         <div className="max-h-[50vh] space-y-6 overflow-y-auto p-6">
-                          <EnrollDropdown />
+                          {/* Pass selection handler down */}
+                          <EnrollDropdown onSelectionChange={setSelection} />
                         </div>
 
-                        <div className="flex justify-end border-t border-gray-100 px-6 py-4 dark:border-gray-800">
+                        {/* Buttons section */}
+                        <div className="flex justify-end space-x-3 border-t border-gray-100 px-6 py-4 dark:border-gray-800">
+                          {/* Close button */}
                           <button
                             onClick={() => setShowEnrollModal(false)}
                             className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                           >
                             Close
+                          </button>
+
+                          {/* Next button */}
+                          <button
+                            onClick={() => {
+                              if (!selection) {
+                                alert(
+                                  "Please select a state and college type first!",
+                                );
+                                return;
+                              }
+                              const formLink =
+                                selection.type === "govt"
+                                  ? selection.state === "Bihar"
+                                    ? "https://forms.gle/xsFxaEjdXPKPi6ZK9" // Bihar Govt
+                                    : "https://forms.gle/EUWHf7F3nVg3tb4H8" // Other Govt
+                                  : selection.state === "Bihar"
+                                    ? "https://forms.gle/m3AcGciiqKxfFUKK9" // Bihar Pvt
+                                    : "https://forms.gle/DKPKjqEpdH9t55CH8"; // Other Pvt
+                              window.open(
+                                formLink,
+                                "_blank",
+                                "noopener,noreferrer",
+                              );
+                            }}
+                            className={`rounded-md px-4 py-2 text-sm font-medium text-white transition ${
+                              selection
+                                ? "bg-blue-600 hover:bg-blue-700"
+                                : "cursor-not-allowed bg-gray-400 hover:bg-gray-500"
+                            }`}
+                          >
+                            Next
                           </button>
                         </div>
                       </div>

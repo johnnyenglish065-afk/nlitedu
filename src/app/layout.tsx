@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import ScrollToTop from "@/components/ScrollToTop";
 import WelcomeAnimation from "@/components/Common/WelcomeAnimation";
 import { Inter } from "next/font/google";
+// @ts-ignore: allow side-effect import of global CSS (global stylesheet)
 import "../styles/index.css";
 import { Providers } from "./providers";
 import { usePathname } from "next/navigation";

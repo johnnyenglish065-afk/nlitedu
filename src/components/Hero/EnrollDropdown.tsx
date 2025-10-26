@@ -1,10 +1,11 @@
 import { useState } from "react";
 
-export default function EnrollDropdown() {
-  const [selected, setSelected] = useState<{
-    state: string;
-    type: "govt" | "private";
-  } | null>(null);
+interface EnrollDropdownProps {
+  onSelectionChange: (selection: { state: string; type: "govt" | "private" } | null) => void;
+}
+
+export default function EnrollDropdown({ onSelectionChange }: EnrollDropdownProps) {
+  const [selected, setSelected] = useState<{ state: string; type: "govt" | "private" } | null>(null);
 
   const states = [
     "Bihar",
@@ -38,24 +39,9 @@ export default function EnrollDropdown() {
   ];
 
   const handleSelect = (state: string, type: "govt" | "private") => {
-    setSelected({ state, type });
-
-    let formLink = "";
-
-    if (type === "govt") {
-      formLink =
-        state === "Bihar"
-          ? "https://forms.gle/xsFxaEjdXPKPi6ZK9" // Bihar Govt
-          : "https://forms.gle/EUWHf7F3nVg3tb4H8"; // Other Govt
-    } else {
-      formLink =
-        state === "Bihar"
-          ? "https://forms.gle/m3AcGciiqKxfFUKK9" // Bihar Pvt
-          : "https://forms.gle/DKPKjqEpdH9t55CH8"; // Other Pvt
-    }
-
-    // Open link in new tab
-    window.open(formLink, "_blank", "noopener,noreferrer");
+    const newSelection = { state, type };
+    setSelected(newSelection);
+    onSelectionChange(newSelection);
   };
 
   return (
@@ -74,23 +60,18 @@ export default function EnrollDropdown() {
             key={state}
             className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-gray-700"
           >
-            {/* State Name */}
             <span>{state}</span>
 
-            {/* Private Radio */}
             <div className="text-center">
               <input
                 type="radio"
                 name={`${state}-college`}
-                checked={
-                  selected?.state === state && selected?.type === "private"
-                }
+                checked={selected?.state === state && selected?.type === "private"}
                 onChange={() => handleSelect(state, "private")}
                 className="h-4 w-4 accent-blue-600"
               />
             </div>
 
-            {/* Government Radio */}
             <div className="text-center">
               <input
                 type="radio"

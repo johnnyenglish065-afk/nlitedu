@@ -1,5 +1,7 @@
 'use client';
 
+// ignore TS error for side-effect CSS import
+// @ts-ignore
 import './ShinyText.css';
 
 const ShinyText = ({
