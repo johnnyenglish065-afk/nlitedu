@@ -22,6 +22,26 @@ const teamMembers = [
     bio: `Er. Ashutosh Kumar has been instrumental in shaping NLIT's academic rigor. With an extensive background in civil engineering and management, Ashutosh brings a wealth of knowledge in both technical and operational domains.`,
     expertise: "Operations, Team Management, Civil Engineering, Consulting",
   },
+  
+  {
+    name: "Sourav Raj",
+    role: "Co.Founder OF NLIT",
+    image: "/company/sourav-raj.jpg",
+    description: "(Marketing Specialist)",
+    bio: `Sourav Raj has played a key role in building the brand and presence of NLIT. His strategic approach to marketing helps expand NLIT’s reach, making it a household name in the education sector.`,
+    expertise: "Digital Marketing, Brand Management, Content Strategy",
+  },
+  
+   {
+    name: "Mr. Ravi Kant",
+    role: "Director of WITS Education",
+    image: "/company/Picture1.png",
+    description: "(Master of Computer Application)",
+    bio: `Dedicated Mechanical Engineer with hands-on experience in AutoCAD, Revit, SolidWorks, and STAAD.Pro. Skilled in 2D/3D modeling, structural analysis, and product design. Passionate about research and development, with a strong focus on innovation, precision, and efficient engineering solutions.`,
+    expertise:
+      "AutoCAD, Revit, SolidWorks, StaadPro, Mechanical Engineering, Research & Development",
+  },
+  
   {
     name: "Er. Rajni Kant",
     role: "Senior Managing Director Of NLIT",
@@ -30,14 +50,6 @@ const teamMembers = [
     bio: `A seasoned Mechanical Engineer, Er. Rajni Kant's extensive experience in the industry allows him to steer NLIT’s academic projects and ensure a seamless integration between theoretical learning and hands-on applications.`,
     expertise:
       "AutoCAD, Revit, SolidWorks, StaadPro, Mechanical Engineering, Research & Development",
-  },
-  {
-    name: "Sourav Raj",
-    role: "Marketing OF NLIT",
-    image: "/company/sourav-raj.jpg",
-    description: "(Marketing Specialist)",
-    bio: `Sourav Raj has played a key role in building the brand and presence of NLIT. His strategic approach to marketing helps expand NLIT’s reach, making it a household name in the education sector.`,
-    expertise: "Digital Marketing, Brand Management, Content Strategy",
   },
   {
     name: "Sundaram Manmohan",
@@ -67,6 +79,19 @@ const teamMembers = [
     bio: `Er. Vishal Kumar holds a B.Tech in Electrical Engineering from Muzaffarpur Institute of Technology and an M.Tech in Instrumental Engineering and Control System from Dr. APJ Abdul Kalam Technical University. His academic excellence and technical expertise make him proficient in designing, analyzing, and implementing advanced electrical and control systems.`,
     expertise:
       "Electrical Engineering, Instrumentation, Control Systems, Power Systems, Circuit Design",
+  },
+   {
+    name: "Mr.Sunny Kumar",
+    role: "Marketing Executive Department ",
+    image: "/company/sunny.jpg",
+    description:
+      "(Marketing Specialist)",
+    bio: `Sunny Kumar served as a Marketing Executive at Supoul Micro Foundation in Samastipur, Bihar, from January 2015 to March 2019. This role focused heavily on aligning marketing efforts directly with sales goals.
+
+
+His key responsibilities involved collaboration and coordination with the sales team. Specifically, he worked to`,
+    expertise:
+      "Digital Marketing Brand Management Content Strategy, Marketing Specialist,Team Management.",
   },
 ];
 

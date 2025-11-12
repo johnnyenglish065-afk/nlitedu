@@ -46,9 +46,10 @@ export default function EnrollDropdown({ onSelectionChange }: EnrollDropdownProp
 
   return (
     <div className="h-full rounded-xl border border-gray-300 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+      <h1> Please choose your <b>college type</b> and select your <b>college state</b> to open the registration form.</h1>
       {/* Header */}
       <div className="grid grid-cols-3 bg-gray-100 px-4 py-3 font-semibold text-gray-800 dark:bg-gray-900 dark:text-gray-200">
-        <div>State</div>
+        <div> College State</div>
         <div className="text-center">Private College</div>
         <div className="text-center">Government College</div>
       </div>
