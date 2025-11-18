@@ -128,7 +128,7 @@ const Hero = () => {
                 </h1>
                 <p className="text-body-color dark:text-body-color-dark mb-8 text-base sm:text-lg md:text-xl">
                   At Nexgen Learning Institute of Technology (NLIT), we
-                  don&apos;t just teach theory — we build careers. Gain
+                  don't just teach theory — we build careers. Gain
                   real-world skills, work on live projects,Workshop in all
                   branches and earn industry-recognized internship
                   certifications in Java, Python, AutoCAD, Revit, StaadPro,Solid
