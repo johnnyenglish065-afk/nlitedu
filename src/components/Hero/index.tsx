@@ -22,7 +22,7 @@ const Hero = () => {
                   don&apos;t just teach theory — we build careers. Gain
                   real-world skills, work on live projects, and earn
                   industry-recognized internship certifications in Java, Python,
-                  AutoCAD, Revit, Android/iOS, MATLAB, and more.
+                  AutoCAD, Revit, StaadPro, Android/iOS, MATLAB, and more.
                 </p>
                 <div className="flex justify-center space-x-4">
                   <Link
