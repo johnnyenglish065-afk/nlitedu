@@ -40,7 +40,7 @@ export default function Home() {
 
       {/* 5. Strategic Partners */}
       <Brands />
-
+      
       {/* 6. About the Company (History, Mission, Vision) */}
       <AboutSectionOne />
 

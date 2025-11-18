@@ -1,8 +1,117 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const Hero = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    course: "",
+    message: "",
+    consent: false,
+  });
+
+  useEffect(() => {
+    // show modal 1s after mount — change/remove timeout as you like
+    const t = setTimeout(() => setShowModal(true), 800);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      setForm((prev) => ({
+        ...prev,
+        [name]: (e.target as HTMLInputElement).checked,
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const validate = () => {
+    if (!form.name.trim()) return "Please enter your name.";
+    if (!form.email.trim()) return "Please enter your email.";
+    if (!/\S+@\S+\.\S+/.test(form.email)) return "Please enter a valid email.";
+    if (!form.course) return "Please select a course.";
+    if (!form.consent) return "Please accept contact consent.";
+    return null;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    const v = validate();
+    if (v) {
+      setError(v);
+      return;
+    }
+
+    setSending(true);
+
+    try {
+      // Replace with your Formspree ID: e.g. https://formspree.io/f/mnqzleky
+      const FORM_ENDPOINT = "https://formspree.io/f/xanpvgqk";
+
+      const payload = {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        course: form.course,
+        message: form.message || "-",
+        consent: form.consent ? "yes" : "no",
+        source: "Website modal - Hero",
+        timestamp: new Date().toISOString(),
+      };
+
+      const res = await fetch(FORM_ENDPOINT, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Submission failed");
+      }
+
+      setSuccess(
+        "Thank you! We received your request — we'll contact you soon.",
+      );
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        course: "",
+        message: "",
+        consent: false,
+      });
+
+      // optionally close after a short delay
+      setTimeout(() => setShowModal(false), 1600);
+    } catch (err: any) {
+      setError(err?.message || "Something went wrong. Try again.");
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <>
       <section
@@ -20,9 +129,10 @@ const Hero = () => {
                 <p className="text-body-color dark:text-body-color-dark mb-8 text-base sm:text-lg md:text-xl">
                   At Nexgen Learning Institute of Technology (NLIT), we
                   don&apos;t just teach theory — we build careers. Gain
-                  real-world skills, work on live projects,Workshop in all branches and earn
-                  industry-recognized internship certifications in Java, Python,
-                  AutoCAD, Revit, StaadPro,Solid Work,Catia, Android/iOS, MATLAB, and more.
+                  real-world skills, work on live projects,Workshop in all
+                  branches and earn industry-recognized internship
+                  certifications in Java, Python, AutoCAD, Revit, StaadPro,Solid
+                  Work,Catia, Android/iOS, MATLAB, and more.
                 </p>
                 <div className="flex justify-center space-x-4">
                   <Link
@@ -284,6 +394,160 @@ const Hero = () => {
           </svg>
         </div>
       </section>
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/10 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800">
+            <div className="mb-3 flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Quick Signup
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Enter a few details and we'll contact you with next steps.
+                </p>
+              </div>
+              <button
+                aria-label="Close modal"
+                onClick={() => setShowModal(false)}
+                className="ml-4 rounded-md px-2 py-1 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+              {error && (
+                <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+              {success && (
+                <div className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+                  {success}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Name*
+                  </label>
+                  <input
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    placeholder="Your name"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Email*
+                  </label>
+                  <input
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Phone
+                </label>
+                <input
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  placeholder="+91 98765 43210"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Which course are you interested in?*
+                </label>
+                <select
+                  name="course"
+                  value={form.course}
+                  onChange={handleChange}
+                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  required
+                >
+                  <option value="">Select a course</option>
+                  <option>Java Programming</option>
+                  <option>Python Programming</option>
+                  <option>AutoCAD</option>
+                  <option>Revit</option>
+                  <option>STAAD Pro</option>
+                  <option>SolidWorks</option>
+                  <option>CATIA</option>
+                  <option>Android / iOS Development</option>
+                  <option>MATLAB</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Message (optional)
+                </label>
+                <textarea
+                  name="message"
+                  value={form.message}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  placeholder="Any questions or details..."
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  id="consent"
+                  name="consent"
+                  type="checkbox"
+                  checked={form.consent}
+                  onChange={handleChange}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
+                />
+                <label
+                  htmlFor="consent"
+                  className="text-xs text-gray-600 dark:text-gray-300"
+                >
+                  I agree to be contacted about this course.
+                </label>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="inline-flex h-10 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60 dark:bg-blue-500"
+                >
+                  {sending ? "Sending..." : "Submit"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="text-sm text-gray-600 hover:underline dark:text-gray-300"
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 };

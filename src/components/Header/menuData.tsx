@@ -19,11 +19,18 @@ const menuData: Menu[] = [
     path: "/team",
     newTab: false,
   },
+  { id: 33, title: "Faculty", path: "/faculty", newTab: false },
   {
     id: 4,
     title: "Services",
     newTab: false,
     submenu: [
+      {
+        id: 43,
+        title: "Foundation Courses",
+        path: "/courses",
+        newTab: false,
+      },
       {
         id: 41,
         title: "Certification",

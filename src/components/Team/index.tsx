@@ -7,7 +7,7 @@ import Image from "next/image";
 const teamMembers = [
   {
     name: "Er. Nikhil Raj",
-    role: "CEO & FOUNDER OF NLIT",
+    role: "MD & FOUNDER OF NLIT",
     image: "/company/nikhil-raj.jpg",
     description: "(Civil Engineer)",
     bio: `Er. Nikhil Raj, the visionary founder of NLIT, brings extensive expertise in AutoCAD, Revit, and StaadPro, blending advanced technical skills with over a decade of civil engineering experience. His leadership ensures that NLIT stays at the forefront of industry-relevant education, empowering students with practical knowledge and cutting-edge tools.`,
@@ -16,7 +16,7 @@ const teamMembers = [
   },
   {
     name: "Er. Ashutosh Kumar",
-    role: "Co. Founder & MD of NLIT",
+    role: "Co. Founder of NLIT",
     image: "/company/ashutosh-kumar.jpg",
     description: "(Civil Engineer)",
     bio: `Er. Ashutosh Kumar has been instrumental in shaping NLIT's academic rigor. With an extensive background in civil engineering and management, Ashutosh brings a wealth of knowledge in both technical and operational domains.`,
@@ -33,7 +33,7 @@ const teamMembers = [
   },
   {
     name: "Sourav Raj",
-    role: "Marketing Department OF NLIT",
+    role: "Marketing OF NLIT",
     image: "/company/sourav-raj.jpg",
     description: "(Marketing Specialist)",
     bio: `Sourav Raj has played a key role in building the brand and presence of NLIT. His strategic approach to marketing helps expand NLIT’s reach, making it a household name in the education sector.`,
@@ -56,14 +56,8 @@ const teamMembers = [
     expertise:
       "Video Editing, Graphic Design, Motion Graphics, Visual Storytelling,  Content Creation",
   },
-  {
-    name: "Er. Prem Ranjan Kumar",
-    role: "Civil Engineer",
-    image: "/company/prem-ranjan-kumar.jpg",
-    description: "(Specialist in AutoCAD, Revit, StadPro, E-Tab)",
-    bio: `Er. Prem Ranjan Kumar is a skilled Civil Engineer with expertise in structural design and drafting. He has hands-on experience using industry-leading tools like AutoCAD, Revit, StadPro, and E-Tab to deliver precise and efficient engineering solutions.`,
-    expertise: "AutoCAD, Revit, StadPro, E-Tab, Structural Design, Drafting",
-  },
+  
+  
   {
     name: "Er. Vishal Kumar",
     role: "Electrical Engineer",
