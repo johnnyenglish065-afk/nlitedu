@@ -25,7 +25,7 @@ const teamMembers = [
   {
     name: "Er. Rajni Kant",
     role: "Senior Managing Director Of NLIT",
-    image: "/company/rajni-kant.jpg",
+    image: "/company/takla.jpg",
     description: "(Mechanical Engineer)",
     bio: `A seasoned Mechanical Engineer, Er. Rajni Kant's extensive experience in the industry allows him to steer NLIT’s academic projects and ensure a seamless integration between theoretical learning and hands-on applications.`,
     expertise:

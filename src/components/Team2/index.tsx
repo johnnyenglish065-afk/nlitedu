@@ -8,34 +8,35 @@ const teamMembers = [
   {
     name: "Er. Nikhil Raj",
     image: "/review/beta2-removebg-preview.png",
-    expertise: "AutoCAD, SolidWorks, CATIA",
+    expertise: "AutoCAD, SolidWorks, Revit, StaadPro",
     experience: "5+ Years in Technical Training & Designing",
-    qulafication: "B.Tech Civil Engineering",
+    qulafication: "Diploma & B-Tech in Civil Engineering",
   },
   {
     name: "Er. Rajni Kant",
     image: "/review/takla.jpg",
-    expertise: "AutoCAD, Revit, SolidWorks, StaadPro",
+    expertise: "AutoCAD, Revit, SolidWorks, StaadPro Catia",
     experience: "8+ Years in technical training",
-    qulafication: "B.Tech Mechanical Engineering",
+    qulafication: "B-Tech & M-Tech in Mechanical Engineering",
   },
 
-
+{ name: "Er. Vishal Kumar",
+    image: "/company/vishal-kumar.jpg",
+    expertise: "MetLab,Crucit design, Pwoer System,Contral System etc",
+    experience: " 6+ Years Experience",
+    qulafication: " B-Tech in Electrical Engineering, M-Tech in Instrumentation Engineering and Control system",
+   
+},
   
   {
     name: "Er. Prem Ranjan Kumar",
     image: "/company/prem-ranjan-kumar.jpg",
-    expertise: "AutoCAD, Revit, StadPro, E-Tab",
-    experience: "5 Years Experience teaching software",
-    qulafication: "B.Tech Civil Engineering",
+    expertise: "AutoCAD, Revit, StadPro, E-Tab,Site engineer,",
+    experience: "10+ Years Experience teaching techinical software",
+    qulafication: "Diploma in Civil Engineering",
   },
-  {
-    name: "Er. Vishal Kumar",
-    image: "/company/vishal-kumar.jpg",
-    expertise: "Electrical Engg, Instrumentation",
-    experience: "B.Tech & M.Tech | 6+ Years Experience",
-    qulafication: "B.Tech Electrical Engineering",
-  }
+  
+  
 
 ];
 
