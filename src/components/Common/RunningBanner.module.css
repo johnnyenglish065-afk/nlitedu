@@ -1,0 +1,58 @@
+.bannerWrapper {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, #4f46e5, #6d28d9, #1e3a8a);
+    padding: 3px 0;
+    color: white;
+    font-family: 'Inter', sans-serif;
+}
+
+.marquee {
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.text {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.item {
+    display: inline-block;
+    padding-right: 2rem;
+}
+
+/* SVG Decoration Styles */
+.svgWrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.svg1 {
+    position: absolute;
+    top: -20px;
+    left: 10px;
+    opacity: 0.3;
+}
+
+.svg2 {
+    position: absolute;
+    bottom: -15px;
+    right: 30px;
+    opacity: 0.2;
+}
+
+.svg3 {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.1;
+}
