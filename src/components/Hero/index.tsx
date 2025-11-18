@@ -92,7 +92,7 @@ const Hero = () => {
       }
 
       setSuccess(
-        "Thank you! We received your request — we'll contact you soon.",
+        "Thank you! We received your request — we&apos;ll contact you soon.",
       );
       setForm({
         name: "",
@@ -128,7 +128,7 @@ const Hero = () => {
                 </h1>
                 <p className="text-body-color dark:text-body-color-dark mb-8 text-base sm:text-lg md:text-xl">
                   At Nexgen Learning Institute of Technology (NLIT), we
-                  don't just teach theory — we build careers. Gain
+                  don&apos;t just teach theory — we build careers. Gain
                   real-world skills, work on live projects,Workshop in all
                   branches and earn industry-recognized internship
                   certifications in Java, Python, AutoCAD, Revit, StaadPro,Solid
@@ -404,7 +404,7 @@ const Hero = () => {
                   Quick Signup
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Enter a few details and we'll contact you with next steps.
+                  Enter a few details and we&apos;ll contact you with next steps.
                 </p>
               </div>
               <button
