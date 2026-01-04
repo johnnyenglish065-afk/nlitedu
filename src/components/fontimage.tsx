@@ -10,7 +10,7 @@ const images = [
   "/fornt page image/image7.jpeg",
   "/fornt page image/IMG4.jpg",
   "/fornt page image/image15.jpeg",
-  "/fornt page image/image 20264.jpeg",
+  "/fornt page image/Image 20264.jpeg",
   "/fornt page image/image0.jpeg",
   "/fornt page image/IMG3.jpg",
   "/fornt page image/IMG2.jpg",
