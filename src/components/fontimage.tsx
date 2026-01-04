@@ -12,9 +12,10 @@ const images = [
   "/fornt page image/image15.jpeg",
   "/fornt page image/image 20264.jpeg",
   "/fornt page image/image0.jpeg",
+  "/fornt page image/IMG3.jpg",
   "/fornt page image/IMG2.jpg",
   "/fornt page image/IMG-20251009-WA0024.jpg",
-  "/fornt page image/image9.jpeg",
+  "/fornt page image/Image 01.jpeg",
   
 ];
 

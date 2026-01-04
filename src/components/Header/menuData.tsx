@@ -43,13 +43,13 @@ const menuData: Menu[] = [
         path: "/internship",
         newTab: false,
       },
-    ],
+    ], 
   },
   {
-    // id: 5,
-    // title: "Contact Us",
-    // path: "/contact",
-    // newTab: false,
+    id: 5,
+    title: "Contact Us",
+    path: "/contact",
+    newTab: false,
   },
 ];
 export default menuData;

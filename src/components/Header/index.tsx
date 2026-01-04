@@ -5,74 +5,63 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import ThemeToggler from "./ThemeToggler";
 import menuData from "./menuData";
-import RunningBanner from "../Common/RunningBanner";
 
 const Header = () => {
-  // Navbar toggle
   const [navbarOpen, setNavbarOpen] = useState(false);
-  const navbarToggleHandler = () => {
-    setNavbarOpen(!navbarOpen);
-  };
+  const navbarToggleHandler = () => setNavbarOpen(!navbarOpen);
 
-  // Sticky Navbar
   const [sticky, setSticky] = useState(false);
-  const handleStickyNavbar = () => {
-    if (window.scrollY >= 80) {
-      setSticky(true);
-    } else {
-      setSticky(false);
-    }
-  };
+  const handleStickyNavbar = () => setSticky(window.scrollY >= 80);
   useEffect(() => {
     window.addEventListener("scroll", handleStickyNavbar);
   }, []);
 
-  // submenu handler
   const [openIndex, setOpenIndex] = useState(-1);
-  const handleSubmenu = (index) => {
-    if (openIndex === index) {
-      setOpenIndex(-1);
-    } else {
-      setOpenIndex(index);
-    }
-  };
+  const handleSubmenu = (index: number) => setOpenIndex(openIndex === index ? -1 : index);
 
   const usePathName = usePathname();
 
   return (
     <>
-      <div className="topBannerSection">
-        <RunningBanner />
+      {/* Scrolling Announcement Top Bar */}
+      <div className="fixed top-0 left-0 w-full bg-primary text-white text-sm overflow-hidden z-50">
+        <div className="flex animate-marquee whitespace-nowrap py-2">
+          <span className="px-4">
+            🚀 4-Week & 6-Week Internship Registration Open - Limited Slots!
+          </span>
+          <span className="px-4">
+            🎓 Get Certified in Python, AutoCAD, Java, Android - Apply Now!
+          </span>
+          <span className="px-4">
+            🏆 Top 5 Test Performers Will Receive Surprise Gifts!
+          </span>
+          <span className="px-4">
+            📢 NLIT Internships Now Count for Academic Credits - Ask Your College!
+          </span>
+          {/* Duplicate for continuous scroll */}
+          <span className="px-4">
+            🚀 4-Week & 6-Week Internship Registration Open - Limited Slots!
+          </span>
+          <span className="px-4">
+            🎓 Get Certified in Python, AutoCAD, Java, Android - Apply Now!
+          </span>
+        </div>
       </div>
-      <header
-         className="header fixed top-0 left-0 z-40 flex w-full items-center bg-white shadow-md dark:bg-white"
 
-      >
+      {/* Spacer so header doesn't overlap the top bar */}
+      <div className="h-8"></div>
+
+      {/* Main Header */}
+      <header className="header fixed top-8 left-0 z-40 w-full bg-white shadow-md dark:bg-white">
         <div className="container">
           <div className="relative -mx-4 flex items-center justify-between">
             <div className="w-60 max-w-full px-4 xl:mr-12">
-              <Link
-                href="/"
-                className={`header-logo block w-full ${
-                  sticky ? "py-5 lg:py-2" : "py-8"
-                } `}
-              >
-                <Image
-                  src="/company/logo.jpg"
-                  alt="logo"
-                  width={140}
-                  height={30}
-                  className="w-full dark:hidden"
-                />
-                <Image
-                  src="/company/logo-trans-p.png"
-                  alt="logo"
-                  width={140}
-                  height={30}
-                  className="hidden w-full dark:block"
-                />
+              <Link href="/" className={`header-logo block w-full ${sticky ? "py-5 lg:py-2" : "py-8"}`}>
+                <Image src="/company/logo.jpg" alt="logo" width={140} height={30} className="w-full dark:hidden" />
+                <Image src="/company/logo-trans-p.png" alt="logo" width={140} height={30} className="hidden w-full dark:block" />
               </Link>
             </div>
+
             <div className="flex w-full items-center justify-end px-4">
               <div className="mr-4">
                 <button
@@ -81,29 +70,16 @@ const Header = () => {
                   aria-label="Mobile Menu"
                   className="ring-primary absolute top-1/2 right-4 block translate-y-[-50%] rounded-lg px-3 py-[6px] focus:ring-2 lg:hidden"
                 >
-                  <span
-                    className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${
-                      navbarOpen ? "top-[7px] rotate-45" : " "
-                    }`}
-                  />
-                  <span
-                    className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${
-                      navbarOpen ? "opacity-0" : " "
-                    }`}
-                  />
-                  <span
-                    className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${
-                      navbarOpen ? "top-[-8px] -rotate-45" : " "
-                    }`}
-                  />
+                  <span className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${navbarOpen ? "top-[7px] rotate-45" : ""}`} />
+                  <span className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${navbarOpen ? "opacity-0" : ""}`} />
+                  <span className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${navbarOpen ? "top-[-8px] -rotate-45" : ""}`} />
                 </button>
+
                 <nav
                   id="navbarCollapse"
                   className={`navbar border-body-color/50 dark:border-body-color/20 dark:bg-dark absolute right-0 z-30 w-full max-w-[600px] rounded border-[.5px] bg-white px-6 py-4 duration-300 md:visible md:static md:w-full md:border-none md:!bg-transparent md:p-0 md:opacity-100 ${
-                    navbarOpen
-                      ? "visibility top-full opacity-100"
-                      : "invisible top-[120%] opacity-0"
-                  } `}
+                    navbarOpen ? "visibility top-full opacity-100" : "invisible top-[120%] opacity-0"
+                  }`}
                 >
                   <ul className="block w-full space-y-4 md:flex md:justify-end md:space-y-0 md:space-x-12">
                     {menuData.map((menuItem, index) => (
@@ -142,7 +118,7 @@ const Header = () => {
                                 openIndex === index ? "block" : "hidden"
                               }`}
                             >
-                              {menuItem.submenu.map((submenuItem, index) => (
+                              {menuItem.submenu?.map((submenuItem, index) => (
                                 <Link
                                   href={submenuItem.path}
                                   key={index}
@@ -159,15 +135,8 @@ const Header = () => {
                   </ul>
                 </nav>
               </div>
-              <div className="flex items-center justify-end pr-16 lg:pr-0">
-                {/* Google Form Link */}
-                {/*<Link
-                  href="https://forms.gle/hxmbFF9MfopLTXGo6"
-                  className="ease-in-up shadow-btn hover:shadow-btn-hover bg-primary hover:bg-primary/90 rounded-xl px-8 py-2 text-base font-medium text-white transition duration-300 md:block md:px-9 lg:px-6 xl:px-9"
-                >
-                  Register
-                </Link>*/}
 
+              <div className="flex items-center justify-end pr-16 lg:pr-0">
                 <div>
                   <ThemeToggler />
                 </div>
