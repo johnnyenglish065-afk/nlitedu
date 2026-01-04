@@ -16,6 +16,7 @@ import Testimonials from "@/components/Testimonials";
 import Contact from "@/components/Contact";
 import FAQ from "@/components/FAQ"; // Optional but recommended
 import HiringSection from "@/components/Common/HiringSection";
+import HomePage from "@/components/fontimage";
 export const metadata: Metadata = {
   title: "NLIT | Empowering Future Innovators, Today!",
   description:
@@ -26,48 +27,50 @@ export default function Home() {
   return (
     <>
       <ScrollUp />
+      {/*1.Fornt page*/}
+      <HomePage />
 
-      {/* 1. Hero Section */}
+      {/* 2. Hero Section */}
       <Hero />
 
-      {/* 2. Announcement / Offer Banner */}
+      {/* 3. Announcement / Offer Banner */}
 
-      {/* 3. Key Features of NLIT */}
+      {/* 4. Key Features of NLIT */}
       <Features />
 
-      {/* 4. Company Intro Video */}
+      {/* 5. Company Intro Video */}
       <Video />
 
-      {/* 5. Strategic Partners */}
+      {/* 6. Strategic Partners */}
       <Brands />
       
-      {/* 6. About the Company (History, Mission, Vision) */}
+      {/* 7. About the Company (History, Mission, Vision) */}
       <AboutSectionOne />
 
-      {/* 7. Importance of Courses, Skill Focus */}
+      {/* 8. Importance of Courses, Skill Focus */}
       <AboutSectionTwo />
 
       <HiringSection />
 
-      {/* 8. Internship Program Details */}
+      {/* 9. Internship Program Details */}
       <InternshipProgram />
 
-      {/* 9. Course Enrollment Instructions */}
+      {/* 10. Course Enrollment Instructions */}
       <CourseEnrollment />
 
-      {/* 10. Sample Certificate & Benefits */}
+      {/* 11. Sample Certificate & Benefits */}
       <CertificateInfo />
 
-      {/* 11. Testimonials / Student Feedback */}
+      {/* 12. Testimonials / Student Feedback */}
       <Testimonials />
 
-      {/* 12. Course Pricing (Optional, only if public) */}
+      {/* 13. Course Pricing (Optional, only if public) */}
       {/* <Pricing /> */}
 
-      {/* 13. Frequently Asked Questions (Optional) */}
+      {/* 14. Frequently Asked Questions (Optional) */}
       <FAQ />
 
-      {/* 14. Contact Info */}
+      {/* 15. Contact Info */}
       <Contact />
     </>
   );

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+
 import { useEffect, useState } from "react";
 import ShinyText from "./shinnytext";
 import EnrollDropdown from "./EnrollDropdown";
@@ -20,6 +22,7 @@ const Hero = () => {
     message: "",
     consent: false,
   });
+   
 
  // selection state for EnrollDropdown
 const [selection, setSelection] = useState<
@@ -145,6 +148,7 @@ const [selection, setSelection] = useState<
       setSending(false);
     }
   };
+  
 
   return (
     <>

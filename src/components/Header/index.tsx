@@ -45,11 +45,8 @@ const Header = () => {
         <RunningBanner />
       </div>
       <header
-        className={`header top-0 left-0 z-40 flex w-full items-center ${
-          sticky
-            ? "dark:bg-gray-dark dark:shadow-sticky-dark shadow-sticky fixed z-9999 bg-white/80 backdrop-blur-xs transition"
-            : "absolute bg-transparent"
-        }`}
+         className="header fixed top-0 left-0 z-40 flex w-full items-center bg-white shadow-md dark:bg-white"
+
       >
         <div className="container">
           <div className="relative -mx-4 flex items-center justify-between">
