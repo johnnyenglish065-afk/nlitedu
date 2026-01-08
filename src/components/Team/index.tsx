@@ -87,11 +87,28 @@ const teamMembers = [
     description:
       "(Marketing Specialist)",
     bio: `Sunny Kumar served as a Marketing Executive at Supoul Micro Foundation in Samastipur, Bihar, from January 2015 to March 2019. This role focused heavily on aligning marketing efforts directly with sales goals.
-
-
-His key responsibilities involved collaboration and coordination with the sales team. Specifically, he worked to`,
+          His key responsibilities involved collaboration and coordination with the sales team. Specifically, he worked to`,
     expertise:
       "Digital Marketing Brand Management Content Strategy, Marketing Specialist,Team Management.",
+  },
+  {
+    name: "Mr.Ganesh Kumar",
+    role: "Marketing Department ",
+    image: "/company/ganesh image.jpeg",
+    description:
+      "(Marketing Specialist)",
+    bio: `Results-driven marketing content professional with hands-on experience in creating SEO-optimized content, brand-aligned messaging, and audience-focused campaigns. Skilled at supporting digital marketing efforts through engaging blogs, website copy, and social media content to increase visibility, traffic, and brand engagement`,
+    expertise:
+      "SEO-Optimized Content Writing,Blog & Long-Form Article Writing & Landing Pages,Content Strategy & Social Media Content Creation,Audience Engagement.",
+  },
+   {name: "Mr.Sumit Kumar",
+    role: "Marketing Department ",
+    image: "/company/summit image.png",
+    description:
+      "(Marketing Specialist)",
+    bio: `Enthusiastic graduate with basic computer knowledge and strong communication skills, eager to start a career in the marketing department. Capable of supporting marketing activities through data handling, coordination, customer interaction, and promotional tasks while continuously learning modern marketing techniques`,
+    expertise:
+      "Basic Marketing Support,Customer Communication,Data Entry & Record Management,Computer Operations,MS Word, Excel,Promotional & Field Marketing Assistance,Team Coordination.",
   },
 ];
 
