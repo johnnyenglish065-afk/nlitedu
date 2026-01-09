@@ -50,7 +50,7 @@ const AddressInfo = () => {
         {/* --- Right Column: Map --- */}
         <div className="h-full w-full min-h-[180px] overflow-hidden rounded-lg shadow-lg">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3581.670693006323!2d85.37894327599015!3d26.14227899276527!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ed11000b0e52a9%3A0xe5f7454f0a996f2e!2sPanchwati%20Colony!5e0!3m2!1sen!2sin!4v1704719000000!5m2!1sen!2sin" 
+             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3372.750603981014!2d85.35793321060227!3d26.10959619404776!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ed110070eb3d1f%3A0x103106be3d7f9c22!2sNLIT(Nexgen%20Learning%20Institute%20Of%20Technology)!5e1!3m2!1sen!2sin!4v1767961544718!5m2!1sen!2sin" 
             className="h-full w-full"
             style={{ border: 0 }}
             allowFullScreen={true}
