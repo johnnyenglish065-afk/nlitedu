@@ -27,8 +27,7 @@ export default function Home() {
   return (
     <>
       <ScrollUp />
-      {/*1.Fornt page*/}
-      <HomePage />
+    
 
       {/* 2. Hero Section */}
       <Hero />
