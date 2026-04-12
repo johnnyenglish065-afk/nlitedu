@@ -1,0 +1,25 @@
+.bannerWrapper {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, #4f46e5, #6d28d9, #1e3a8a);
+    padding: 3px 0;
+    color: white;
+    font-family: 'Inter', sans-serif;
+}
+
+.marquee {
+    display: flex;
+    width: max-content;
+    white-space: nowrap;
+    animation: marquee 20s linear infinite;
+}
+
+.item {
+    display: inline-block;
+    padding-right: 2rem;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
