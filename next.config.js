@@ -22,6 +22,9 @@ const nextConfig = {
   images: {
     unoptimized: true, // ✅ This is the key fix
   },
+  devIndicators: {
+    appIsrStatus: false,
+  },
 };
 
 module.exports = nextConfig;
