@@ -83,11 +83,11 @@ const Header = () => {
 
                 <nav
                   id="navbarCollapse"
-                  className={`navbar border-body-color/50 dark:border-body-color/20 dark:bg-dark absolute right-0 z-30 w-full max-w-[600px] rounded border-[.5px] bg-white px-6 py-4 duration-300 md:visible md:static md:w-full md:border-none md:!bg-transparent md:p-0 md:opacity-100 ${
+                  className={`navbar border-body-color/50 dark:border-body-color/20 dark:bg-dark absolute right-0 z-30 w-full max-w-[600px] rounded border-[.5px] bg-white px-6 py-4 duration-300 lg:visible lg:static lg:w-full lg:border-none lg:!bg-transparent lg:p-0 lg:opacity-100 ${
                     navbarOpen ? "visibility top-full opacity-100" : "invisible top-[120%] opacity-0"
                   }`}
                 >
-                  <ul className="block w-full space-y-4 md:flex md:justify-end md:space-y-0 md:space-x-12">
+                  <ul className="block w-full space-y-4 lg:flex lg:justify-end lg:space-y-0 lg:space-x-12">
                     {menuData.map((menuItem, index) => (
                       <li key={index} className="group relative">
                         {menuItem.path ? (
