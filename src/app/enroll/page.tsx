@@ -552,10 +552,18 @@ const EnrollmentPage = () => {
         <div className="mx-auto max-w-6xl">
           {/* Header */}
           <div className="mb-12 text-center">
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-purple-400 dark:to-blue-400">
-              🚀 Nexgen Learning Institute of Technology 🚀
+            <h2 className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-2xl font-extrabold sm:text-3xl md:text-4xl lg:text-5xl">
+              <span className="inline-block transform transition-transform hover:scale-125 duration-300">
+                🚀
+              </span>
+              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-purple-400 dark:to-blue-400">
+                Nexgen Learning Institute of Technology
+              </span>
+              <span className="inline-block transform transition-transform hover:scale-125 duration-300">
+                🚀
+              </span>
             </h2>
-            <p className="mt-3 text-lg font-semibold text-slate-700 dark:text-slate-300">
+            <p className="mt-4 text-base font-medium text-slate-600 dark:text-slate-400 sm:text-lg">
               Empowering Your Future with Online Training & Internships
             </p>
           </div>

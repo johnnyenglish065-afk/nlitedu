@@ -26,24 +26,30 @@ const Header = () => {
       {/* Scrolling Announcement Top Bar */}
       <div className="fixed top-0 left-0 w-full bg-primary text-white text-sm overflow-hidden z-50">
         <div className="flex animate-marquee whitespace-nowrap py-2">
-          <span className="px-4">
+          <span className="px-8 flex items-center">
             🚀 4-Week & 6-Week Internship Registration Open - Limited Slots!
           </span>
-          <span className="px-4">
+          <span className="px-8 flex items-center">
             🎓 Get Certified in Python, AutoCAD, Java, Android - Apply Now!
           </span>
-          <span className="px-4">
+          <span className="px-8 flex items-center">
             🏆 Top 5 Test Performers Will Receive Surprise Gifts!
           </span>
-          <span className="px-4">
+          <span className="px-8 flex items-center">
             📢 NLIT Internships Now Count for Academic Credits - Ask Your College!
           </span>
-          {/* Duplicate for continuous scroll */}
-          <span className="px-4">
+          {/* Duplicate ALL for seamless continuous scroll */}
+          <span className="px-8 flex items-center">
             🚀 4-Week & 6-Week Internship Registration Open - Limited Slots!
           </span>
-          <span className="px-4">
+          <span className="px-8 flex items-center">
             🎓 Get Certified in Python, AutoCAD, Java, Android - Apply Now!
+          </span>
+          <span className="px-8 flex items-center">
+            🏆 Top 5 Test Performers Will Receive Surprise Gifts!
+          </span>
+          <span className="px-8 flex items-center">
+            📢 NLIT Internships Now Count for Academic Credits - Ask Your College!
           </span>
         </div>
       </div>
@@ -57,8 +63,8 @@ const Header = () => {
           <div className="relative -mx-4 flex items-center justify-between">
             <div className="w-40 max-w-full px-4 xl:mr-12 sm:w-60">
               <Link href="/" className={`header-logo block w-full ${sticky ? "py-3 lg:py-2" : "py-4 sm:py-8"}`}>
-                <Image src="/company/logo.png" alt="logo" width={140} height={30} className="w-full dark:hidden" />
-                <Image src="/company/logo-trans-p.png" alt="logo" width={140} height={30} className="hidden w-full dark:block" />
+                <Image src="/company/logo.png" alt="logo" width={120} height={26} className="w-[120px] dark:hidden" />
+                <Image src="/company/logo-trans-p.png" alt="logo" width={120} height={26} className="hidden w-[120px] dark:block" />
               </Link>
             </div>
 
@@ -87,6 +93,7 @@ const Header = () => {
                         {menuItem.path ? (
                           <Link
                             href={menuItem.path}
+                            onClick={() => setNavbarOpen(false)}
                             className={`flex py-2 text-base lg:inline-flex lg:px-0 lg:py-6 ${
                               usePathName === menuItem.path
                                 ? "text-primary dark:text-white"
@@ -122,6 +129,7 @@ const Header = () => {
                                 <Link
                                   href={submenuItem.path}
                                   key={index}
+                                  onClick={() => setNavbarOpen(false)}
                                   className="text-dark hover:text-primary block rounded-sm py-2.5 text-sm lg:px-3 dark:text-white/70 dark:hover:text-white"
                                 >
                                   {submenuItem.title}

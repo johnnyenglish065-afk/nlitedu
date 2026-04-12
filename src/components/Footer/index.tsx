@@ -6,28 +6,28 @@ import AddressInfo from "./addressinfo";
 const Footer = () => {
   return (
     <>
-      <footer className="dark:bg-gray-dark relative z-10 bg-white pt-16 md:pt-20 lg:pt-24">
+      <footer className="dark:bg-gray-dark relative z-10 bg-white pt-10 md:pt-14 lg:pt-16">
         <div className="container">
           <div className="-mx-4 flex flex-wrap">
-            <div className="w-full px-4 md:w-1/2 lg:w-4/12 xl:w-4/12">
-              <div className="mb-12 max-w-[260px] lg:mb-16">
+            <div className="w-full px-4 md:w-1/2 lg:w-4/12 xl:w-5/12">
+              <div className="mb-12 max-w-[360px] lg:mb-16">
                 <Link href="/" className="mb-8 inline-block">
                   <Image
-                    src="/company/logo.jpg"
+                    src="/company/logo.png"
                     alt="logo"
-                    className="w-full dark:hidden"
-                    width={140}
-                    height={30}
+                    className="w-[120px] dark:hidden"
+                    width={120}
+                    height={26}
                   />
                   <Image
-                    src="/company/logo.jpg"
+                    src="/company/logo.png"
                     alt="logo"
-                    className="hidden w-full dark:block"
-                    width={140}
-                    height={30}
+                    className="hidden w-[120px] dark:block"
+                    width={120}
+                    height={26}
                   />
                 </Link>
-                <p className="text-body-color dark:text-body-color-dark mb-9 text-base leading-relaxed">
+                <p className="text-body-color dark:text-body-color-dark mb-6 text-sm leading-relaxed">
                   Empowering Future Innovators, Today!
                 </p>
                 <div className="flex items-center">
@@ -124,81 +124,74 @@ const Footer = () => {
               </div>
             </div>
 
-            <div className="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-2/12 xl:w-2/12">
-              <div className="mb-12 lg:mb-16">
-                <h2 className="mb-10 text-xl font-bold text-black dark:text-white">
-                  Useful Links
-                </h2>
-                <ul>
-                  <li>
-                    <Link
-                      href="/certification"
-                      className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary mb-4 inline-block text-base duration-300"
-                    >
-                      Certification
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/internship"
-                      className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary mb-4 inline-block text-base duration-300"
-                    >
-                      Internship
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/about"
-                      className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary mb-4 inline-block text-base duration-300"
-                    >
-                      About
-                    </Link>
-                  </li>
-                </ul>
+            <div className="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-4/12 xl:w-3/12">
+              <div className="grid grid-cols-2 gap-4 mb-12 lg:mb-16">
+                <div>
+                  <h2 className="mb-6 text-lg font-bold text-black dark:text-white">
+                    Useful Links
+                  </h2>
+                  <ul className="space-y-2">
+                    <li>
+                      <Link
+                        href="/certification"
+                        className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary inline-block text-sm duration-300"
+                      >
+                        Certification
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/internship"
+                        className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary inline-block text-sm duration-300"
+                      >
+                        Internship
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/about"
+                        className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary inline-block text-sm duration-300"
+                      >
+                        About
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h2 className="mb-6 text-lg font-bold text-black dark:text-white">
+                    Terms & Help
+                  </h2>
+                  <ul className="space-y-2">
+                    <li>
+                      <Link
+                        href="/"
+                        className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary inline-block text-sm duration-300"
+                      >
+                        Privacy Policy
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/"
+                        className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary inline-block text-sm duration-300"
+                      >
+                        Refund Policy
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/contact"
+                        className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary inline-block text-sm duration-300"
+                      >
+                        Open Support
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
-            <div className="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-2/12 xl:w-2/12">
-              <div className="mb-12 lg:mb-16">
-                <h2 className="mb-10 text-xl font-bold text-black dark:text-white">
-                  Terms, Support & Help
-                </h2>
-                <ul>
-                  <li>
-                    <Link
-                      href="/"
-                      className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary mb-4 inline-block text-base duration-300"
-                    >
-                      Privacy Policy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/"
-                      className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary mb-4 inline-block text-base duration-300"
-                    >
-                      Refund Policy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/contact"
-                      className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary mb-4 inline-block text-base duration-300"
-                    >
-                      Open Support
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/"
-                      className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary mb-4 inline-block text-base duration-300"
-                    >
-                      Terms of Use
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
-            <div className="w-full px-4 md:w-1/2 lg:w-4/12 xl:w-3/12">
+
+            <div className="w-full px-4 lg:w-full xl:w-full">
               <AddressInfo />
             </div>
           </div>
@@ -206,8 +199,23 @@ const Footer = () => {
           <div className="h-px w-full bg-linear-to-r from-transparent via-[#D2D8E183] to-transparent dark:via-[#959CB183]"></div>
           {/* Add Footer */}
           <div className="py-8 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 mb-4">
               &copy; 2025 NLIT Education. All rights reserved.
+            </p>
+            <p className="text-[8px] font-medium uppercase tracking-[0.4em] text-body-color/30 dark:text-white/10 text-center">
+              website designed by{" "}
+              <Link
+                href="https://saveragraphics-in.web.app"
+                target="_blank"
+                className="text-amber-500/30 hover:text-amber-500/50 transition-colors duration-300"
+              >
+                saveragraphics
+              </Link>{" "}
+              a{" "}
+              <span className="text-body-color/40 dark:text-white/20 italic font-serif lowercase tracking-normal px-1">
+                sindhuragroup
+              </span>{" "}
+              company
             </p>
           </div>
           {/* <div className="py-8">
