@@ -80,68 +80,72 @@ const Contact = () => {
   };
 
   return (
-    <section className="py-24 bg-surface-container-lowest dark:bg-gray-900">
+    <section className="py-12 sm:py-24 bg-surface-container-lowest dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
-        <div className="bg-primary rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-12 lg:p-20 flex flex-col lg:flex-row gap-10 lg:gap-16 overflow-hidden relative shadow-2xl">
+        <div className="bg-primary rounded-3xl sm:rounded-[3rem] p-6 sm:p-12 lg:p-20 flex flex-col lg:flex-row gap-8 lg:gap-16 overflow-hidden relative shadow-2xl">
           <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+          
           <div className="lg:w-1/2 z-10">
-            <h2 className="font-headline text-3xl sm:text-4xl font-extrabold text-white mb-6">
+            <h2 className="font-headline text-2xl sm:text-4xl font-extrabold text-white mb-4 sm:mb-6">
               Ready to Start Your Tech Journey?
             </h2>
-            <p className="text-blue-100 text-lg mb-10">
+            <p className="text-blue-100 text-sm sm:text-lg mb-6 sm:mb-10">
               Get our career guide and weekly industry updates delivered straight to your inbox.
             </p>
-            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4 mb-8">
+            
+            <form onSubmit={handleSubscribe} className="flex flex-row gap-2 sm:gap-4 mb-6 sm:mb-8">
               <input
                 type="email"
                 value={subscribeEmail}
                 onChange={(e) => setSubscribeEmail(e.target.value)}
                 placeholder="Your work email"
-                className="flex-grow px-6 py-4 rounded-xl border-none focus:ring-2 focus:ring-secondary-container bg-white/10 text-white placeholder:text-blue-200"
+                className="flex-grow w-full px-4 sm:px-6 py-3 sm:py-4 rounded-lg sm:rounded-xl border-none focus:ring-2 focus:ring-secondary-container bg-white/10 text-white placeholder:text-blue-200 text-sm sm:text-base outline-none w-0"
               />
               <button
                 type="submit"
                 disabled={subscribeLoading}
-                className={`bg-white text-primary px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition-all ${subscribeLoading ? "opacity-60 cursor-not-allowed" : ""}`}
+                className={`bg-white text-primary px-4 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base hover:bg-blue-50 transition-all flex-shrink-0 ${subscribeLoading ? "opacity-60 cursor-not-allowed" : ""}`}
               >
-                {subscribeLoading ? "Subscribing..." : "Subscribe"}
+                {subscribeLoading ? "..." : "Subscribe"}
               </button>
             </form>
             {subscribeMessage && (
-              <p className="text-sm text-white/80 mb-8">{subscribeMessage}</p>
+              <p className="text-sm text-white/80 mb-6 sm:mb-8">{subscribeMessage}</p>
             )}
-            <div className="flex gap-6 items-center">
-              <div className="flex -space-x-3">
+            
+            <div className="flex gap-4 sm:gap-6 items-center">
+              <div className="flex -space-x-2 sm:-space-x-3">
                 <img
-                  className="w-10 h-10 rounded-full border-2 border-primary object-cover"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-primary sm:border-2 object-cover"
                   alt="small circular portrait of a young man"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7C-dwnRgOl9O7cEgpvm49MVH39Dc4jAzuguIl3aKxMhRjFx16qeJs27AA76NEwvE6A88JqzBwbbSqB0wMZMfktTn3XQMuhRTJGFkamtOA466ACkXXwkBLQ-vHROFX74H97apIgyXmO_EtQcR8a2CzUKNOOiizV4wDLR_mBpgsPDPGUXU0jUqVD0p3maNwAY3acojoukJLQfZCQsw8dutJMhlWLh2PW1gSVpi9zYDHyeC6HrqkQd9kT2h-jVbanpVI9IzLhMh8LfM"
                 />
                 <img
-                  className="w-10 h-10 rounded-full border-2 border-primary object-cover"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-primary sm:border-2 object-cover"
                   alt="small circular portrait of a young woman"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuCj0n6GF8C-gGkOeVm7z5J-rmv_4klQ6_I--efD2w4-Gv5uTfvAzy8S0tlxevldDafz6MkY80uH8JrT9mcjX7Z8y9sRMAGsCt8S7caLLHLL-0ERzmfAnZq1XVEtW-KpSsegMdmW_zBllhQoUfaSWXGMCqHnIX-ZpKdbdAmo6V9FnSPXdWSiW3MdiV9tFA8HgRNy_uhUf314j50k77xiaauajW_S9IzkRMGlqGhy9VIMVj6tiBZvj1KCC1Mepe51outsUFHr5BqCgPY"
                 />
                 <img
-                  className="w-10 h-10 rounded-full border-2 border-primary object-cover"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-primary sm:border-2 object-cover"
                   alt="small circular portrait of a smiling person"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGfcUa5YqFE4j1Qz7wCmnhVaT7bpuF23EGYbPCjlMvNwlu36DrBi-uiEFGMRQD9naYDTE0wDcAZxsJlFFXnTFzhFpuxE-tfswlRcWp5LCPg1aFlvDZeoKi5FjUCfwbI25hIeZUEtnI5cE-FyFgakxRG4QW7qjUu9xN4pVyEuKuRXC05MdGZtZ0UMipiIaTuOCrqj36RzSeLEYlKA47bAcsNBpIeMWkAC558Wh4s7bHz-ukkH1bUSzbgP_Rvs5Uv7lJNGRFnWOjjcI"
                 />
               </div>
-              <p className="text-sm text-blue-100 font-medium">Join 5,000+ ambitious learners</p>
+              <p className="text-xs sm:text-sm text-blue-100 font-medium">Join 5,000+ ambitious learners</p>
             </div>
           </div>
-          <div className="lg:w-1/2 bg-white/10 backdrop-blur-xl p-6 sm:p-10 rounded-3xl sm:rounded-[2rem] border border-white/20 z-10">
-            <h4 className="text-white font-bold text-xl mb-6">Drop us a line</h4>
+          
+          <div className="lg:w-1/2 bg-white/5 sm:bg-white/10 backdrop-blur-xl p-5 sm:p-10 rounded-2xl sm:rounded-[2rem] border border-white/10 sm:border-white/20 z-10 w-full mt-4 sm:mt-0">
+            <h4 className="text-white font-bold text-lg sm:text-xl mb-4 sm:mb-6">Drop us a line</h4>
             {message && (
-              <div className={`mb-6 rounded-lg p-4 ${message.type === "success" ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300"}`}>
+              <div className={`mb-4 sm:mb-6 rounded-lg p-3 sm:p-4 text-sm sm:text-base ${message.type === "success" ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300"}`}>
                 {message.text}
               </div>
             )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 flex-row">
                 <input
-                  className="bg-white/5 border-none rounded-xl px-6 py-3 text-white placeholder:text-blue-200 focus:ring-2 focus:ring-white/30"
+                  className="bg-white/10 sm:bg-white/5 border-none rounded-lg sm:rounded-xl px-4 sm:px-6 py-3 text-white placeholder:text-blue-200 focus:ring-2 focus:ring-white/30 text-sm outline-none"
                   placeholder="Full Name"
                   type="text"
                   name="name"
@@ -150,7 +154,7 @@ const Contact = () => {
                   required
                 />
                 <input
-                  className="bg-white/5 border-none rounded-xl px-6 py-3 text-white placeholder:text-blue-200 focus:ring-2 focus:ring-white/30"
+                  className="bg-white/10 sm:bg-white/5 border-none rounded-lg sm:rounded-xl px-4 sm:px-6 py-3 text-white placeholder:text-blue-200 focus:ring-2 focus:ring-white/30 text-sm outline-none"
                   placeholder="Phone Number"
                   type="text"
                   name="phone"
@@ -163,7 +167,7 @@ const Contact = () => {
                 aria-label="Select Program"
                 value={formData.program}
                 onChange={handleChange}
-                className="w-full bg-white/5 border-none rounded-xl px-6 py-3 text-white focus:ring-2 focus:ring-white/30 appearance-none"
+                className="w-full bg-white/10 sm:bg-white/5 border-none rounded-lg sm:rounded-xl px-4 sm:px-6 py-3 text-white focus:ring-2 focus:ring-white/30 appearance-none text-sm outline-none"
               >
                 <option value="" className="text-gray-900 dark:text-white">Select Program</option>
                 <option value="AutoCAD & BIM" className="text-gray-900 dark:text-white">AutoCAD & BIM</option>
@@ -171,7 +175,7 @@ const Contact = () => {
                 <option value="Python AI/ML" className="text-gray-900 dark:text-white">Python AI/ML</option>
               </select>
               <textarea
-                className="w-full bg-white/5 border-none rounded-xl px-6 py-3 text-white placeholder:text-blue-200 focus:ring-2 focus:ring-white/30"
+                className="w-full bg-white/10 sm:bg-white/5 border-none rounded-lg sm:rounded-xl px-4 sm:px-6 py-3 text-white placeholder:text-blue-200 focus:ring-2 focus:ring-white/30 text-sm outline-none"
                 placeholder="Your Message"
                 rows={3}
                 name="message"
@@ -182,7 +186,7 @@ const Contact = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full bg-secondary-container text-white py-4 rounded-xl font-bold hover:bg-secondary transition-all ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
+                className={`w-full bg-secondary-container text-white py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base hover:bg-secondary transition-all ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
               >
                 {loading ? "Sending..." : "Send Message"}
               </button>
@@ -195,3 +199,4 @@ const Contact = () => {
 };
 
 export default Contact;
+
