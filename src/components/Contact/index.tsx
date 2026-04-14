@@ -80,12 +80,14 @@ const Contact = () => {
   };
 
   return (
-    <section className="py-12 sm:py-24 bg-surface-container-lowest dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8">
-        <div className="bg-primary rounded-3xl sm:rounded-[3rem] p-6 sm:p-12 lg:p-20 flex flex-col lg:flex-row gap-8 lg:gap-16 overflow-hidden relative shadow-2xl">
-          <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-          
-          <div className="lg:w-1/2 z-10">
+    <section className="py-12 sm:py-20 bg-slate-950 text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900/90 border border-white/10 shadow-[0_40px_120px_-40px_rgba(15,23,42,0.9)] backdrop-blur-xl p-6 sm:p-8 lg:p-12">
+          <div className="absolute -right-20 -top-16 w-72 h-72 rounded-full bg-gradient-to-br from-cyan-400/15 to-sky-500/5 blur-3xl" />
+          <div className="absolute left-0 top-1/2 w-full h-1/2 rounded-full bg-white/5 blur-2xl" />
+
+          <div className="relative flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-14">
+            <div className="lg:w-1/2">
             <h2 className="font-headline text-2xl sm:text-4xl font-extrabold text-white mb-4 sm:mb-6">
               Ready to Start Your Tech Journey?
             </h2>
@@ -93,20 +95,24 @@ const Contact = () => {
               Get our career guide and weekly industry updates delivered straight to your inbox.
             </p>
             
-            <form onSubmit={handleSubscribe} className="flex flex-row gap-2 sm:gap-4 mb-6 sm:mb-8">
+            <form onSubmit={handleSubscribe} className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              <label className="sr-only" htmlFor="newsletter-email">
+                Your work email
+              </label>
               <input
+                id="newsletter-email"
                 type="email"
                 value={subscribeEmail}
                 onChange={(e) => setSubscribeEmail(e.target.value)}
                 placeholder="Your work email"
-                className="flex-grow w-full px-4 sm:px-6 py-3 sm:py-4 rounded-lg sm:rounded-xl border-none focus:ring-2 focus:ring-secondary-container bg-white/10 text-white placeholder:text-blue-200 text-sm sm:text-base outline-none w-0"
+                className="w-full min-w-0 rounded-[1.5rem] border border-white/10 bg-white/10 px-4 py-3 text-slate-950 placeholder:text-slate-500 focus:border-cyan-300 focus:bg-white/95 focus:outline-none focus:ring-2 focus:ring-cyan-300/30 transition duration-200 sm:px-5 sm:py-4"
               />
               <button
                 type="submit"
                 disabled={subscribeLoading}
-                className={`bg-white text-primary px-4 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base hover:bg-blue-50 transition-all flex-shrink-0 ${subscribeLoading ? "opacity-60 cursor-not-allowed" : ""}`}
+                className={`w-full sm:w-auto rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-500/10 transition duration-200 hover:bg-cyan-300 ${subscribeLoading ? "opacity-70 cursor-not-allowed" : ""}`}
               >
-                {subscribeLoading ? "..." : "Subscribe"}
+                {subscribeLoading ? "Subscribing..." : "Subscribe"}
               </button>
             </form>
             {subscribeMessage && (
@@ -142,10 +148,10 @@ const Contact = () => {
                 {message.text}
               </div>
             )}
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              <div className="grid grid-cols-2 gap-2 sm:gap-4 flex-row">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <input
-                  className="bg-white/10 sm:bg-white/5 border-none rounded-lg sm:rounded-xl px-4 sm:px-6 py-3 text-white placeholder:text-blue-200 focus:ring-2 focus:ring-white/30 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 outline-none transition duration-200"
                   placeholder="Full Name"
                   type="text"
                   name="name"
@@ -154,7 +160,7 @@ const Contact = () => {
                   required
                 />
                 <input
-                  className="bg-white/10 sm:bg-white/5 border-none rounded-lg sm:rounded-xl px-4 sm:px-6 py-3 text-white placeholder:text-blue-200 focus:ring-2 focus:ring-white/30 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 outline-none transition duration-200"
                   placeholder="Phone Number"
                   type="text"
                   name="phone"
@@ -167,15 +173,15 @@ const Contact = () => {
                 aria-label="Select Program"
                 value={formData.program}
                 onChange={handleChange}
-                className="w-full bg-white/10 sm:bg-white/5 border-none rounded-lg sm:rounded-xl px-4 sm:px-6 py-3 text-white focus:ring-2 focus:ring-white/30 appearance-none text-sm outline-none"
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-slate-100 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 appearance-none text-sm outline-none transition duration-200"
               >
-                <option value="" className="text-gray-900 dark:text-white">Select Program</option>
-                <option value="AutoCAD & BIM" className="text-gray-900 dark:text-white">AutoCAD & BIM</option>
-                <option value="Java Development" className="text-gray-900 dark:text-white">Java Development</option>
-                <option value="Python AI/ML" className="text-gray-900 dark:text-white">Python AI/ML</option>
+                <option value="" className="text-slate-900">Select Program</option>
+                <option value="AutoCAD & BIM" className="text-slate-900">AutoCAD & BIM</option>
+                <option value="Java Development" className="text-slate-900">Java Development</option>
+                <option value="Python AI/ML" className="text-slate-900">Python AI/ML</option>
               </select>
               <textarea
-                className="w-full bg-white/10 sm:bg-white/5 border-none rounded-lg sm:rounded-xl px-4 sm:px-6 py-3 text-white placeholder:text-blue-200 focus:ring-2 focus:ring-white/30 text-sm outline-none"
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 text-sm outline-none transition duration-200"
                 placeholder="Your Message"
                 rows={3}
                 name="message"
