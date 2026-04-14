@@ -196,6 +196,53 @@ const Footer = () => {
             </div>
           </div>
 
+          {/* Download App Section */}
+          <div className="py-8">
+            <div className="text-center">
+              <h3 className="mb-4 text-xl font-bold text-black dark:text-white">
+                Download NLITedu App
+              </h3>
+              <p className="mb-6 text-body-color dark:text-body-color-dark text-sm">
+                Download our mobile app to stay connected on the go.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <a
+                  href="#"
+                  className="inline-flex items-center px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors duration-300"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M17.523 15.3414C16.962 15.9244 16.473 16.2904 15.854 16.2904C15.235 16.2904 14.746 15.9244 14.185 15.3414C13.624 14.7584 12.976 13.9374 12.976 13.9374C12.976 13.9374 12.328 14.7584 11.767 15.3414C11.206 15.9244 10.717 16.2904 10.098 16.2904C9.479 16.2904 8.99 15.9244 8.429 15.3414L2.4 8.4C1.841 7.817 1.5 7.104 1.5 6.352V6.248C1.5 5.496 1.841 4.783 2.4 4.2L8.429 2.4C8.99 1.817 9.479 1.5 10.098 1.5C10.717 1.5 11.206 1.817 11.767 2.4L17.796 4.2C18.355 4.783 18.696 5.496 18.696 6.248V6.352C18.696 7.104 18.355 7.817 17.796 8.4L17.523 15.3414Z"/>
+                    <path d="M15.854 16.2904C15.235 16.2904 14.746 15.9244 14.185 15.3414C13.624 14.7584 12.976 13.9374 12.976 13.9374C12.976 13.9374 12.328 14.7584 11.767 15.3414C11.206 15.9244 10.717 16.2904 10.098 16.2904C9.479 16.2904 8.99 15.9244 8.429 15.3414L2.4 8.4C1.841 7.817 1.5 7.104 1.5 6.352V6.248C1.5 5.496 1.841 4.783 2.4 4.2L8.429 2.4C8.99 1.817 9.479 1.5 10.098 1.5C10.717 1.5 11.206 1.817 11.767 2.4L17.796 4.2C18.355 4.783 18.696 5.496 18.696 6.248V6.352C18.696 7.104 18.355 7.817 17.796 8.4L17.523 15.3414C17.523 15.3414 17.473 15.3414 17.523 15.3414Z"/>
+                  </svg>
+                  Google Play
+                </a>
+                <a
+                  href="#"
+                  className="inline-flex items-center px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors duration-300"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 17 2.94 12.45 4.7 9.39C5.57 7.87 7.13 6.91 8.82 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.19 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.57 2C16.35 2.15 17.22 2.67 17.73 3.5C18.21 4.29 18.37 5.08 18.29 5.86C17.21 5.95 16.1 5.39 15.42 4.63C14.79 3.89 14.14 3.27 13.37 3.18C13.29 3.04 13.21 2.9 13 3.5Z"/>
+                  </svg>
+                  App Store
+                </a>
+              </div>
+            </div>
+          </div>
+
           <div className="h-px w-full bg-linear-to-r from-transparent via-[#D2D8E183] to-transparent dark:via-[#959CB183]"></div>
           {/* Add Footer */}
           <div className="py-8 text-center">
@@ -243,7 +290,7 @@ const Footer = () => {
             <circle opacity="0.8" cx="49.5" cy="49.5" r="49.5" fill="#959CB1" />
             <mask
               id="mask0_94:899"
-              style={{ maskType: "alpha" }}
+              className="svg-mask-alpha"
               maskUnits="userSpaceOnUse"
               x="0"
               y="0"

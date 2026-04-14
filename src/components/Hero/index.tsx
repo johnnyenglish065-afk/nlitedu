@@ -156,101 +156,132 @@ const [selection, setSelection] = useState<
     <>
       <section
         id="home"
-        className="dark:bg-gray-dark relative z-10 bg-white pt-[70px] sm:pt-[90px] md:pt-[120px] xl:pt-[150px] 2xl:pt-[210px]"
+        className="dark:bg-gray-dark relative z-10 bg-white pt-[70px] sm:pt-[90px] md:pt-[120px] xl:pt-[150px] 2xl:pt-[210px] pb-12 md:pb-20"
       >
         <div className="container">
-          <div className="-mx-2 flex flex-wrap">
-            <div className="w-full px-4">
-              <div className="mx-auto max-w-[800px] text-center">
-                <h1 className="mb-5 text-3xl leading-tight font-bold text-black sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight dark:text-white">
-                  <ShinyText
-                    text=" Transform Your Future with Hands-On Tech Training &
-                  Internships"
-                  />
-                </h1>
-                <p className="text-body-color dark:text-body-color-dark mb-8 text-base sm:text-lg md:text-xl">
-                  At Nexgen Learning Institute of Technology (NLIT), we
-                  don&apos;t just teach theory — we build careers. Gain
-                  real-world skills, work on live projects,Workshop in all
-                  branches and earn industry-recognized internship
-                  certifications in Java, Python, AutoCAD, Revit, StaadPro,Solid
-                  Work,Catia, Android/iOS, MATLAB, and more.
-                </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left Column - Text Content */}
+            <div className="w-full order-2 lg:order-1">
+              <h1 className="mb-5 text-3xl leading-tight font-bold text-black sm:text-4xl sm:leading-tight md:text-5xl lg:text-5xl dark:text-white">
+                <ShinyText
+                  text="Transform Your Future with Hands-On Tech Training & Internships"
+                />
+              </h1>
+              <p className="text-body-color dark:text-body-color-dark mb-8 text-base sm:text-lg">
+                At Nexgen Learning Institute of Technology (NLIT), we
+                don&apos;t just teach theory — we build careers. Gain
+                real-world skills, work on live projects, workshop in all
+                branches and earn industry-recognized internship
+                certifications in Java, Python, AutoCAD, Revit, StaadPro, Solid
+                Work, Catia, Android/iOS, MATLAB, and more.
+              </p>
 
-                {/* Enroll Button */}
-                {/* Enroll Button */}
-                <div className="relative flex justify-center space-x-4">
-                  {/* Enroll Now Button */}
-                  <button
-                    onClick={() => setShowEnrollModal(true)}
-                    className="inline-block rounded bg-blue-600 px-6 py-3 text-base font-medium text-white transition hover:bg-blue-700"
-                  >
-                    Enroll Now ▾
-                  </button>
+              {/* Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Enroll Now Button */}
+                <button
+                  onClick={() => setShowEnrollModal(true)}
+                  className="inline-block rounded bg-blue-600 px-8 py-3 text-base font-medium text-white transition hover:bg-blue-700 w-full sm:w-auto text-center"
+                >
+                  Enroll Now ▾
+                </button>
 
-                  {/* Dropdown Popover */}
-                  {/* Enroll Now Button */}
+                {/* Learn More Button */}
+                <Link
+                  href="#about"
+                  className="inline-block rounded border border-blue-600 px-8 py-3 text-base font-medium text-blue-600 transition hover:bg-blue-50 w-full sm:w-auto text-center"
+                >
+                  Learn More
+                </Link>
+              </div>
 
-                  {/* Enroll Modal */}
-                  {showEnrollModal && (
-                    <div
-                      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40"
-                      onClick={(e) => {
-                        if (e.target === e.currentTarget)
-                          setShowEnrollModal(false);
-                      }}
-                    >
-                      <div className="animate-fade-in relative mx-4 max-h-[90vh] w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-700">
-                        <div className="max-h-[50vh] space-y-6 overflow-y-auto p-6">
-                          {/* Pass selection handler down */}
-                          <EnrollDropdown onSelectionChange={setSelection} />
-                        </div>
-
-                        {/* Buttons section */}
-                        <div className="flex justify-end space-x-3 border-t border-gray-100 px-6 py-4 dark:border-gray-800">
-                          {/* Close button */}
-                          <button
-                            onClick={() => setShowEnrollModal(false)}
-                            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                          >
-                            Close
-                          </button>
-
-                          {/* Next button */}
-                          <button
-                            onClick={() => {
-                              if (!selection) {
-                                alert(
-                                  "Please select a state and college type first!",
-                                );
-                                return;
-                              }
-                              router.push(
-                                `/enroll?course=general&type=${selection.type}&state=${encodeURIComponent(
-                                  selection.state,
-                                )}`,
-                              );
-                            }}
-                            className={`rounded-md px-4 py-2 text-sm font-medium text-white transition ${
-                              selection
-                                ? "bg-blue-600 hover:bg-blue-700"
-                                : "cursor-not-allowed bg-gray-400 hover:bg-gray-500"
-                            }`}
-                          >
-                            Next
-                          </button>
-                        </div>
-                      </div>
+              {/* Enroll Modal */}
+              {showEnrollModal && (
+                <div
+                  className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40"
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget)
+                      setShowEnrollModal(false);
+                  }}
+                >
+                  <div className="animate-fade-in relative mx-4 max-h-[90vh] w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-700">
+                    <div className="max-h-[50vh] space-y-6 overflow-y-auto p-6">
+                      {/* Pass selection handler down */}
+                      <EnrollDropdown onSelectionChange={setSelection} />
                     </div>
-                  )}
 
-                  {/* Learn More Button */}
-                  <Link
-                    href="#about"
-                    className="inline-block rounded border border-blue-600 px-6 py-3 text-base font-medium text-blue-600 transition hover:bg-blue-50"
-                  >
-                    Learn More
-                  </Link>
+                    {/* Buttons section */}
+                    <div className="flex justify-end space-x-3 border-t border-gray-100 px-6 py-4 dark:border-gray-800">
+                      {/* Close button */}
+                      <button
+                        onClick={() => setShowEnrollModal(false)}
+                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      >
+                        Close
+                      </button>
+
+                      {/* Next button */}
+                      <button
+                        onClick={() => {
+                          if (!selection) {
+                            alert(
+                              "Please select a state and college type first!",
+                            );
+                            return;
+                          }
+                          router.push(
+                            `/enroll?course=general&type=${selection.type}&state=${encodeURIComponent(
+                              selection.state,
+                            )}`,
+                          );
+                        }}
+                        className={`rounded-md px-4 py-2 text-sm font-medium text-white transition ${
+                          selection
+                            ? "bg-blue-600 hover:bg-blue-700"
+                            : "cursor-not-allowed bg-gray-400 hover:bg-gray-500"
+                        }`}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column - Hero Image */}
+            <div className="relative w-full order-1 lg:order-2 pt-6 lg:pt-0">
+              {/* Decorative Glow */}
+              <div className="absolute -top-20 -right-20 w-64 h-64 sm:w-96 sm:h-96 bg-blue-600/10 rounded-full blur-3xl hidden lg:block"></div>
+              
+              {/* Hero Image Container */}
+              <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden shadow-lg lg:shadow-2xl w-full aspect-[4/3]">
+                <Image
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcRkZkRwnkAActPCUpBDXAWILWAzsIUm-suEqSRyCN0kkJFjo_nWtHF_fIXBCFUe3P0ILvZfPNNKFhb85tST6VNAtIeJ4e3-MSGkZ58UQ8GTyBN0ea02y4NvT3TQaWQVQZeoKNmTDiyzCwvO9u8gIj0KmmyMPSZ5zraFWXwh68193EM2KRU4xwwQwc-zokJfhNs6zbjJAXql8vuUbWeuNGEluJn_gNDPRlChaZdemyMvvLOS5tXiLB40k42DZFfBWieabo-0Ha4m0"
+                  alt="A diverse group of focused engineering students working together in a modern high-tech laboratory with blueprints and computer screens"
+                  fill
+                  className="w-full h-full object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 50vw"
+                  priority
+                />
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-600/40 to-transparent"></div>
+              </div>
+
+              {/* Floating Badge */}
+              <div className="absolute -bottom-4 left-4 sm:bottom-4 sm:left-6 bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-lg max-w-[200px] sm:max-w-xs">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex-shrink-0 flex items-center justify-center text-green-600">
+                    <span className="text-sm sm:text-base">✓</span>
+                  </div>
+                  <div>
+                    <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                      Industry Certified
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400">
+                      Globally recognized programs
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

@@ -83,113 +83,85 @@ const EnrollDropdown: React.FC<{ onSelectionChange: (sel: Selection) => void }> 
 
 const courses = [
   {
-    title: "AutoCAD 2D & 3D Design",
+    title: "AutoCAD & BIM",
     slug: "autocad-2d-3d-design",
     description:
-      "Master industry-standard AutoCAD tools for precise 2D drafting and 3D modeling essential for architects, engineers, and designers.",
-    icon: (
-      <svg
-        className="text-primary mb-4 h-12 w-12"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l9 21H3L12 2z" />
-      </svg>
-    ),
+      "Master industrial drafting and 3D modeling for modern construction and engineering projects.",
+    icon: "architecture",
+    color: "text-orange-600",
+    bgColor: "bg-orange-100",
   },
   {
-    title: "Revit Building Information Modeling (BIM)",
-    slug: "revit-bim",
-    description:
-      "Learn BIM workflows and Revit software to create collaborative building designs with real-world applications.",
-    icon: (
-      <svg
-        className="text-primary mb-4 h-12 w-12"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" />
-      </svg>
-    ),
-  },
-  {
-    title: "Java Programming",
+    title: "Java Full Stack",
     slug: "java-programming",
     description:
-      "Develop robust enterprise-level applications by mastering Java fundamentals and advanced programming concepts.",
-    icon: (
-      <svg
-        className="text-primary mb-4 h-12 w-12"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16 8c1.5 0 3 1 3 3s-1.5 3-3 3H8v-6h8z" />
-      </svg>
-    ),
+      "Build robust enterprise-grade applications using the world's most versatile programming language.",
+    icon: "code",
+    color: "text-red-600",
+    bgColor: "bg-red-100",
   },
   {
-    title: "Python for Data Science & AI",
+    title: "Python for AI",
     slug: "python-data-science-ai",
     description:
-      "Dive into Python programming with a focus on data analysis, AI, and machine learning applications.",
-    icon: (
-      <svg
-        className="text-primary mb-4 h-12 w-12"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a10 10 0 100 20 10 10 0 000-20z" />
-      </svg>
-    ),
+      "Dive into Data Science and Artificial Intelligence with Python scripting and automation.",
+    icon: "data_object",
+    color: "text-blue-600",
+    bgColor: "bg-blue-100",
   },
   {
-    title: "MATLAB for Scientific Computing",
+    title: "MATLAB Simulation",
     slug: "matlab-scientific-computing",
     description:
-      "Gain critical skills in MATLAB for data analysis, control systems, and engineering computations.",
-    icon: (
-      <svg
-        className="text-primary mb-4 h-12 w-12"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
-      </svg>
-    ),
+      "Advanced mathematical computation and algorithm development for engineering research.",
+    icon: "functions",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
   },
   {
-    title: "Android & iOS Mobile Development",
+    title: "Mobile App Dev",
     slug: "android-ios-mobile-development",
     description:
-      "Build modern mobile applications for Android and iOS platforms with hands-on project experience.",
-    icon: (
-      <svg
-        className="text-primary mb-4 h-12 w-12"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-        <path d="M8 16l4-4-4-4" stroke="currentColor" strokeWidth="2" />
-      </svg>
-    ),
+      "Create high-performance mobile applications from UI design to backend integration.",
+    icon: "smartphone",
+    color: "text-green-600",
+    bgColor: "bg-green-100",
+  },
+  {
+    title: "IoT & Embedded",
+    slug: "iot-embedded",
+    description:
+      "Connect the physical world to the digital with hardware programming and network sensors.",
+    icon: "settings_input_antenna",
+    color: "text-purple-600",
+    bgColor: "bg-purple-100",
+  },
+  {
+    title: "Revit & Architecture",
+    slug: "revit-bim",
+    description:
+      "Learn building information modeling (BIM) for modern architecture and construction.",
+    icon: "domain",
+    color: "text-indigo-600",
+    bgColor: "bg-indigo-100",
+  },
+  {
+    title: "SolidWorks CAD",
+    slug: "solidworks",
+    description:
+      "Mechanical design and simulation using SolidWorks for product development.",
+    icon: "precision_manufacturing",
+    color: "text-cyan-600",
+    bgColor: "bg-cyan-100",
+  },
+  {
+    title: "CATIA Design",
+    slug: "catia",
+    description:
+      "Advanced CAD/CAM for aerospace, automotive, and complex engineering.",
+    icon: "engineering",
+    color: "text-pink-600",
+    bgColor: "bg-pink-100",
   },
 ];
 
@@ -217,39 +189,79 @@ const CourseEnrollment = () => {
   return (
     <section
       id="course-enrollment"
-      className="overflow-hidden bg-white py-16 md:py-20 lg:py-28 dark:bg-gray-900"
+      className="py-24 bg-background dark:bg-gray-900"
     >
-      <div className="container mx-auto px-4">
-        <h2 className="mb-12 text-center text-3xl font-bold text-black sm:text-4xl dark:text-white">
-          Course Enrollment Instructions
-        </h2>
+      <div className="max-w-7xl mx-auto px-8">
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+          <div>
+            <h2 className="font-headline text-4xl font-extrabold mb-4 text-gray-900 dark:text-white">
+              Our Core Programs
+            </h2>
+            <p className="text-gray-600 max-w-md dark:text-gray-400">
+              Specialized tracks designed by industry leaders to take you from zero to expert.
+            </p>
+          </div>
+          
+          {/* Navigation Buttons */}
+          <div className="flex gap-4">
+            <button
+              className="w-12 h-12 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container-high transition-colors dark:hover:bg-gray-700"
+              aria-label="Scroll left"
+            >
+              <span className="material-symbols-outlined text-gray-900 dark:text-gray-300">
+                chevron_left
+              </span>
+            </button>
+            <button
+              className="w-12 h-12 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container-high transition-colors dark:hover:bg-gray-700"
+              aria-label="Scroll right"
+            >
+              <span className="material-symbols-outlined text-gray-900 dark:text-gray-300">
+                chevron_right
+              </span>
+            </button>
+          </div>
+        </div>
 
-        <p className="text-body-color mx-auto mb-14 max-w-3xl text-center leading-relaxed dark:text-gray-300">
-          To enroll in any of our industry-aligned courses, click the{" "}
-          <span className="font-semibold">Enroll Now</span> button below, select your college type and
-          state, and complete the form.
-        </p>
-
-        <div className="grid gap-10 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {courses.map(({ title, description, icon, slug }, index) => (
+        {/* Course Cards Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {courses.map(({ title, description, icon, slug, color, bgColor }, index) => (
             <div
               key={index}
-              className="flex flex-col justify-between rounded-lg border border-gray-200 bg-gray-50 p-8 shadow-lg transition-transform hover:scale-105 hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800"
+              className="bg-white dark:bg-gray-800 p-8 rounded-3xl group hover:shadow-xl transition-all duration-300"
             >
-              <div className="flex flex-col items-center text-center">
-                {icon}
-                <h3 className="mb-4 text-2xl font-semibold text-black dark:text-white">{title}</h3>
-                <p className="text-body-color mb-8 dark:text-gray-300">{description}</p>
+              {/* Icon Container */}
+              <div
+                className={`w-16 h-16 rounded-2xl ${bgColor} ${color} flex items-center justify-center mb-8 group-hover:scale-110 transition-transform`}
+              >
+                <span className="material-symbols-outlined text-4xl font-bold">
+                  {icon}
+                </span>
               </div>
 
+              {/* Title */}
+              <h3 className="font-headline text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+                {title}
+              </h3>
+
+              {/* Description */}
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-8 leading-relaxed">
+                {description}
+              </p>
+
+              {/* CTA Button */}
               <button
                 onClick={() => {
                   setSelectedCourseSlug(slug);
                   setShowEnrollModal(true);
                 }}
-                className="mx-auto inline-block rounded bg-blue-600 px-8 py-3 text-center text-base font-semibold text-white transition hover:bg-blue-700"
+                className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold group-hover:translate-x-2 transition-transform cursor-pointer"
               >
-                Enroll Now ▾
+                Enroll Now
+                <span className="material-symbols-outlined text-base">
+                  arrow_forward
+                </span>
               </button>
             </div>
           ))}
