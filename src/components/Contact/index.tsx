@@ -80,123 +80,127 @@ const Contact = () => {
   };
 
   return (
-    <section className="py-12 sm:py-20 bg-slate-950 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900/90 border border-white/10 shadow-[0_40px_120px_-40px_rgba(15,23,42,0.9)] backdrop-blur-xl p-6 sm:p-8 lg:p-12">
-          <div className="absolute -right-20 -top-16 w-72 h-72 rounded-full bg-gradient-to-br from-cyan-400/15 to-sky-500/5 blur-3xl" />
-          <div className="absolute left-0 top-1/2 w-full h-1/2 rounded-full bg-white/5 blur-2xl" />
+    <section className="py-10 sm:py-14 bg-[#f8fafc] text-slate-900">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-30px_rgba(15,23,42,0.12)]">
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.9fr] lg:items-stretch">
+            <div className="relative bg-slate-50 p-8 sm:p-10 lg:p-12">
+              <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-blue-200/40 blur-3xl" />
+              <div className="relative z-10 space-y-6">
+                <div className="space-y-4">
+                  <p className="text-sm uppercase tracking-[0.32em] text-primary/80">Stay updated</p>
+                <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                  Ready to start your tech journey?
+                </h2>
+                <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+                  Get our career guide and weekly industry updates delivered straight to your inbox. Designed with mobile-first clarity for clean, comfortable reading.
+                </p>
+              </div>
 
-          <div className="relative flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-14">
-            <div className="lg:w-1/2">
-            <h2 className="font-headline text-2xl sm:text-4xl font-extrabold text-white mb-4 sm:mb-6">
-              Ready to Start Your Tech Journey?
-            </h2>
-            <p className="text-blue-100 text-sm sm:text-lg mb-6 sm:mb-10">
-              Get our career guide and weekly industry updates delivered straight to your inbox.
-            </p>
-            
-            <form onSubmit={handleSubscribe} className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-              <label className="sr-only" htmlFor="newsletter-email">
-                Your work email
-              </label>
-              <input
-                id="newsletter-email"
-                type="email"
-                value={subscribeEmail}
-                onChange={(e) => setSubscribeEmail(e.target.value)}
-                placeholder="Your work email"
-                className="w-full min-w-0 rounded-[1.5rem] border border-white/10 bg-white/10 px-4 py-3 text-slate-950 placeholder:text-slate-500 focus:border-cyan-300 focus:bg-white/95 focus:outline-none focus:ring-2 focus:ring-cyan-300/30 transition duration-200 sm:px-5 sm:py-4"
-              />
-              <button
-                type="submit"
-                disabled={subscribeLoading}
-                className={`w-full sm:w-auto rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-500/10 transition duration-200 hover:bg-cyan-300 ${subscribeLoading ? "opacity-70 cursor-not-allowed" : ""}`}
-              >
-                {subscribeLoading ? "Subscribing..." : "Subscribe"}
-              </button>
-            </form>
-            {subscribeMessage && (
-              <p className="text-sm text-white/80 mb-6 sm:mb-8">{subscribeMessage}</p>
-            )}
-            
-            <div className="flex gap-4 sm:gap-6 items-center">
+              <form onSubmit={handleSubscribe} className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <label className="sr-only" htmlFor="newsletter-email">
+                    Your work email
+                  </label>
+                  <input
+                    id="newsletter-email"
+                    type="email"
+                    value={subscribeEmail}
+                    onChange={(e) => setSubscribeEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full min-w-0 rounded-full border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition duration-200 sm:px-5 sm:py-4"
+                  />
+                  <button
+                    type="submit"
+                    disabled={subscribeLoading}
+                    className={`w-full sm:w-auto rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/15 transition duration-200 hover:bg-blue-700 ${subscribeLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+                  >
+                    {subscribeLoading ? "Subscribing..." : "Subscribe"}
+                  </button>
+                </form>
+                {subscribeMessage && (
+                  <p className="text-sm text-slate-700">{subscribeMessage}</p>
+                )}
+
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex -space-x-2 sm:-space-x-3">
                 <img
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-primary sm:border-2 object-cover"
-                  alt="small circular portrait of a young man"
+                  className="w-10 h-10 rounded-full border border-slate-300 object-cover"
+                  alt="small circular portrait of a young professional"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7C-dwnRgOl9O7cEgpvm49MVH39Dc4jAzuguIl3aKxMhRjFx16qeJs27AA76NEwvE6A88JqzBwbbSqB0wMZMfktTn3XQMuhRTJGFkamtOA466ACkXXwkBLQ-vHROFX74H97apIgyXmO_EtQcR8a2CzUKNOOiizV4wDLR_mBpgsPDPGUXU0jUqVD0p3maNwAY3acojoukJLQfZCQsw8dutJMhlWLh2PW1gSVpi9zYDHyeC6HrqkQd9kT2h-jVbanpVI9IzLhMh8LfM"
                 />
                 <img
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-primary sm:border-2 object-cover"
-                  alt="small circular portrait of a young woman"
+                  className="w-10 h-10 rounded-full border border-slate-300 object-cover"
+                  alt="small circular portrait of a young professional"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuCj0n6GF8C-gGkOeVm7z5J-rmv_4klQ6_I--efD2w4-Gv5uTfvAzy8S0tlxevldDafz6MkY80uH8JrT9mcjX7Z8y9sRMAGsCt8S7caLLHLL-0ERzmfAnZq1XVEtW-KpSsegMdmW_zBllhQoUfaSWXGMCqHnIX-ZpKdbdAmo6V9FnSPXdWSiW3MdiV9tFA8HgRNy_uhUf314j50k77xiaauajW_S9IzkRMGlqGhy9VIMVj6tiBZvj1KCC1Mepe51outsUFHr5BqCgPY"
                 />
                 <img
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-primary sm:border-2 object-cover"
+                  className="w-10 h-10 rounded-full border border-slate-300 object-cover"
                   alt="small circular portrait of a smiling person"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGfcUa5YqFE4j1Qz7wCmnhVaT7bpuF23EGYbPCjlMvNwlu36DrBi-uiEFGMRQD9naYDTE0wDcAZxsJlFFXnTFzhFpuxE-tfswlRcWp5LCPg1aFlvDZeoKi5FjUCfwbI25hIeZUEtnI5cE-FyFgakxRG4QW7qjUu9xN4pVyEuKuRXC05MdGZtZ0UMipiIaTuOCrqj36RzSeLEYlKA47bAcsNBpIeMWkAC558Wh4s7bHz-ukkH1bUSzbgP_Rvs5Uv7lJNGRFnWOjjcI"
                 />
               </div>
-              <p className="text-xs sm:text-sm text-blue-100 font-medium">Join 5,000+ ambitious learners</p>
-            </div>
-          </div>
-          
-          <div className="lg:w-1/2 bg-white/5 sm:bg-white/10 backdrop-blur-xl p-5 sm:p-10 rounded-2xl sm:rounded-[2rem] border border-white/10 sm:border-white/20 z-10 w-full mt-4 sm:mt-0">
-            <h4 className="text-white font-bold text-lg sm:text-xl mb-4 sm:mb-6">Drop us a line</h4>
-            {message && (
-              <div className={`mb-4 sm:mb-6 rounded-lg p-3 sm:p-4 text-sm sm:text-base ${message.type === "success" ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300"}`}>
-                {message.text}
+              <p className="text-sm font-medium text-slate-600">Join 5,000+ ambitious learners</p>
+                </div>
               </div>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <input
-                  className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 outline-none transition duration-200"
-                  placeholder="Full Name"
-                  type="text"
-                  name="name"
-                  value={formData.name}
+            </div>
+
+          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 sm:p-8 lg:p-10 shadow-sm mt-4 lg:mt-0">
+              <h4 className="text-slate-900 font-semibold text-xl sm:text-2xl mb-5">Drop us a line</h4>
+              {message && (
+                <div className={`mb-5 rounded-2xl p-4 text-sm sm:text-base ${message.type === "success" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
+                  {message.text}
+                </div>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <input
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-500 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition duration-200"
+                    placeholder="Full Name"
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
+                  <input
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-500 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition duration-200"
+                    placeholder="Phone Number"
+                    type="text"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                  />
+                </div>
+                <select
+                  name="program"
+                  aria-label="Select Program"
+                  value={formData.program}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 appearance-none text-sm outline-none transition duration-200"
+                >
+                  <option value="" className="text-slate-900">Select Program</option>
+                  <option value="AutoCAD & BIM" className="text-slate-900">AutoCAD & BIM</option>
+                  <option value="Java Development" className="text-slate-900">Java Development</option>
+                  <option value="Python AI/ML" className="text-slate-900">Python AI/ML</option>
+                </select>
+                <textarea
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-500 focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm outline-none transition duration-200"
+                  placeholder="Your Message"
+                  rows={4}
+                  name="message"
+                  value={formData.message}
                   onChange={handleChange}
                   required
                 />
-                <input
-                  className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 outline-none transition duration-200"
-                  placeholder="Phone Number"
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
-              </div>
-              <select
-                name="program"
-                aria-label="Select Program"
-                value={formData.program}
-                onChange={handleChange}
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-slate-100 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 appearance-none text-sm outline-none transition duration-200"
-              >
-                <option value="" className="text-slate-900">Select Program</option>
-                <option value="AutoCAD & BIM" className="text-slate-900">AutoCAD & BIM</option>
-                <option value="Java Development" className="text-slate-900">Java Development</option>
-                <option value="Python AI/ML" className="text-slate-900">Python AI/ML</option>
-              </select>
-              <textarea
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 text-sm outline-none transition duration-200"
-                placeholder="Your Message"
-                rows={3}
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                required
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full bg-secondary-container text-white py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base hover:bg-secondary transition-all ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
-              >
-                {loading ? "Sending..." : "Send Message"}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition duration-200 hover:bg-blue-700 ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
+                >
+                  {loading ? "Sending..." : "Send Message"}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
