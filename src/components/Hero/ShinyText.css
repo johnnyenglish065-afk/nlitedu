@@ -8,6 +8,26 @@
   font-weight: bold;
 }
 
+.shiny-text[data-speed="2s"] {
+  animation-duration: 2s;
+}
+
+.shiny-text[data-speed="3s"] {
+  animation-duration: 3s;
+}
+
+.shiny-text[data-speed="4s"] {
+  animation-duration: 4s;
+}
+
+.shiny-text[data-speed="5s"] {
+  animation-duration: 5s;
+}
+
+.shiny-text[data-speed="6s"] {
+  animation-duration: 6s;
+}
+
 .shiny-text.disabled {
   animation: none;
 }

@@ -20,7 +20,7 @@ const ShinyText = ({
   return (
     <span
       className={`shiny-text ${disabled ? 'disabled' : ''} ${className}`}
-      style={{ animationDuration }}
+      data-speed={animationDuration}
     >
       {text}
     </span>

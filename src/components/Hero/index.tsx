@@ -614,6 +614,7 @@ const [selection, setSelection] = useState<
                 </label>
                 <select
                   name="course"
+                  aria-label="Select a course"
                   value={form.course}
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
