@@ -81,11 +81,11 @@ const Contact = () => {
 
   return (
     <section className="py-24 bg-surface-container-lowest dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-8">
-        <div className="bg-primary rounded-[3rem] p-12 lg:p-20 flex flex-col lg:flex-row gap-16 overflow-hidden relative shadow-2xl">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="bg-primary rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-12 lg:p-20 flex flex-col lg:flex-row gap-10 lg:gap-16 overflow-hidden relative shadow-2xl">
           <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
           <div className="lg:w-1/2 z-10">
-            <h2 className="font-headline text-4xl font-extrabold text-white mb-6">
+            <h2 className="font-headline text-3xl sm:text-4xl font-extrabold text-white mb-6">
               Ready to Start Your Tech Journey?
             </h2>
             <p className="text-blue-100 text-lg mb-10">
@@ -131,7 +131,7 @@ const Contact = () => {
               <p className="text-sm text-blue-100 font-medium">Join 5,000+ ambitious learners</p>
             </div>
           </div>
-          <div className="lg:w-1/2 bg-white/10 backdrop-blur-xl p-10 rounded-[2rem] border border-white/20 z-10">
+          <div className="lg:w-1/2 bg-white/10 backdrop-blur-xl p-6 sm:p-10 rounded-3xl sm:rounded-[2rem] border border-white/20 z-10">
             <h4 className="text-white font-bold text-xl mb-6">Drop us a line</h4>
             {message && (
               <div className={`mb-6 rounded-lg p-4 ${message.type === "success" ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300"}`}>
