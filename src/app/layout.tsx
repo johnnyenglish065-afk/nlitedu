@@ -12,6 +12,7 @@ import { Inter } from "next/font/google";
 import "../styles/index.css";
 import { Providers } from "./providers";
 import { usePathname } from "next/navigation";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 

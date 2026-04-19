@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { AnimatePresence, motion } from "framer-motion";
+import confetti from "canvas-confetti";
+import { FiCheckCircle, FiCopy, FiDownload, FiExternalLink, FiX } from "react-icons/fi";
 
 const courseList = [
   {
@@ -167,10 +170,118 @@ const EnrollmentPage = () => {
     course: course.title,
     message: "",
   });
+
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentVerified, setPaymentVerified] = useState(false);
   const supabaseConfigured = Boolean(supabase);
+
+  // Persistence helpers
+  const saveFormToLocal = (formData: any) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pending_enrollment", JSON.stringify(formData));
+    }
+  };
+
+  const loadFormFromLocal = () => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pending_enrollment");
+      return saved ? JSON.parse(saved) : null;
+    }
+    return null;
+  };
+
+  const clearFormFromLocal = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("pending_enrollment");
+    }
+  };
+
+  // Initialize Cashfree
+  const [cashfree, setCashfree] = useState<any>(null);
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).Cashfree) {
+      const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "sandbox";
+      setCashfree((window as any).Cashfree({ mode }));
+    }
+  }, []);
+
+  // Post-payment verification effect
+  useEffect(() => {
+    const status = searchParams.get("payment_status");
+    const orderId = searchParams.get("order_id");
+
+    if (status === "SUCCESS" && orderId) {
+      handleSuccessfulPayment(orderId);
+    } else if (status === "FAILED") {
+      setError("Payment failed. Please try again.");
+      const savedForm = loadFormFromLocal();
+      if (savedForm) setForm(savedForm);
+    }
+  }, [searchParams]);
+
+  const handleSuccessfulPayment = async (orderId: string) => {
+    setSubmitting(true);
+    try {
+      const savedForm = loadFormFromLocal();
+      const currentForm = savedForm || form;
+
+      if (!supabase) throw new Error("Database connection lost.");
+
+      const { error: dbError } = await supabase.from("enrollments").upsert([
+        {
+          ...currentForm,
+          payment_id: orderId,
+          payment_status: "PAID",
+          enrolled_at: new Date().toISOString(),
+        },
+      ], { onConflict: "payment_id" });
+
+      if (dbError) throw dbError;
+
+      setSuccess("Enrollment Successful!");
+      setPaymentVerified(true);
+      clearFormFromLocal();
+
+      // Trigger Confetti Celebration
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#2563eb", "#9333ea", "#10b981"],
+      });
+    } catch (err: any) {
+      console.error("Post-payment error:", err);
+      setError("Payment received, but we couldn't save your enrollment. Please contact support.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Determine fee based on college type
+  const enrollmentFee = useMemo(() => {
+    return form.collegeType === "govt" ? 999 : form.collegeType === "private" ? 1999 : 0;
+  }, [form.collegeType]);
+
+  // Check if form is fully filled
+  const isFormComplete = useMemo(() => {
+    return (
+      form.fullName.trim() !== "" &&
+      form.fatherName.trim() !== "" &&
+      form.gender !== "" &&
+      form.email.trim() !== "" &&
+      form.whatsapp.trim() !== "" &&
+      form.dob !== "" &&
+      form.brn.trim() !== "" &&
+      form.branch.trim() !== "" &&
+      form.semester !== "" &&
+      form.collegeName.trim() !== "" &&
+      form.collegeType !== "" &&
+      form.state !== ""
+    );
+  }, [form]);
 
   useEffect(() => {
     setForm((current) => ({
@@ -218,57 +329,85 @@ const EnrollmentPage = () => {
 
     if (!supabaseConfigured) {
       setError(
-        "Supabase is not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.",
+        "Supabase is not configured. Please contact support.",
       );
       return;
     }
 
-    setSubmitting(true);
+    setPaymentLoading(true);
 
-    const payload = {
-      full_name: form.fullName,
-      father_name: form.fatherName,
-      gender: form.gender,
-      email: form.email,
-      whatsapp: form.whatsapp,
-      dob: form.dob,
-      brn: form.brn,
-      branch: form.branch,
-      semester: form.semester,
-      college_name: form.collegeName,
-      college_type: form.collegeType,
-      state: form.state,
-      course_title: form.course,
-      message: form.message || null,
-    };
+    try {
+      const orderId = `NLIT_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-    const { data, error: supabaseError } = await supabase!.from("enrollments").insert([payload]);
+      // 1. Save Pending Enrollment
+      const { error: pendingError } = await supabase.from("enrollments").insert([
+        {
+          ...form,
+          payment_id: orderId,
+          payment_status: "PENDING",
+        },
+      ]);
 
-    setSubmitting(false);
+      if (pendingError) {
+        console.warn("Could not save pending enrollment:", pendingError);
+        // We continue anyway, as the payment is the priority
+      }
 
-    if (supabaseError) {
-      setError(supabaseError.message || "Unable to submit enrollment. Please try again.");
-      return;
+      // 2. Create Cashfree Order
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-cashfree-order`,
+        {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            amount: enrollmentFee,
+            order_id: orderId,
+            customer_id: form.email.replace(/[^a-zA-Z0-9]/g, "_"),
+            customer_email: form.email,
+            customer_phone: form.whatsapp,
+          }),
+        }
+      );
+
+      const orderData = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(orderData.message || orderData.error || "Payment system unavailable");
+      }
+
+
+      if (!orderData.payment_session_id) {
+        console.error("Missing payment_session_id. Full response:", orderData);
+        throw new Error("Payment session could not be created. Please try again.");
+      }
+
+      // Ensure SDK is initialized
+      let cfInstance = cashfree;
+      if (!cfInstance && typeof window !== "undefined" && (window as any).Cashfree) {
+        const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "sandbox";
+        cfInstance = (window as any).Cashfree({ mode });
+        setCashfree(cfInstance);
+      }
+
+      if (!cfInstance) {
+        throw new Error("Payment gateway (Cashfree SDK) failed to load. Please refresh the page.");
+      }
+
+      saveFormToLocal(form);
+
+      cfInstance.checkout({
+        paymentSessionId: orderData.payment_session_id,
+      });
+    } catch (err: any) {
+      console.error("Payment initiation error:", err);
+      setError(err.message || "Failed to initiate payment. Please try again.");
+    } finally {
+      setPaymentLoading(false);
     }
-
-    setSuccess("Enrollment submitted successfully! Our team will contact you soon.");
-    setForm({
-      fullName: "",
-      fatherName: "",
-      gender: "",
-      email: "",
-      whatsapp: "",
-      dob: "",
-      brn: "",
-      branch: "",
-      semester: "",
-      collegeName: "",
-      collegeType: form.collegeType,
-      state: form.state,
-      course: course.title,
-      message: "",
-    });
   };
+
 
   return (
     <main className="min-h-screen bg-gray-50 pt-[160px] pb-14 px-4 text-slate-900 dark:bg-slate-950 dark:text-white sm:px-6 lg:px-8">
@@ -290,12 +429,6 @@ const EnrollmentPage = () => {
           </div>
 
           <p className="mb-8 text-base text-slate-600 leading-relaxed dark:text-slate-300 border-l-4 border-blue-500 pl-4">{course.description}</p>
-
-          {!supabaseConfigured && (
-            <div className="rounded-2xl bg-yellow-50 p-4 mb-6 text-sm text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-700">
-              <strong>⚠️ Supabase not configured:</strong> Add your project URL and anon key to <code className="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-slate-800 font-mono text-xs">.env.local</code>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
@@ -487,10 +620,18 @@ const EnrollmentPage = () => {
             <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between border-t border-slate-200 dark:border-slate-800">
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || paymentLoading}
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3 text-base font-semibold text-white transition hover:shadow-lg hover:from-blue-700 hover:to-blue-800 disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-500"
               >
-                {submitting ? "⏳ Submitting..." : "✓ Submit Enrollment"}
+                {paymentLoading ? (
+                  <>⏳ Initiating Payment...</>
+                ) : submitting ? (
+                  <>⏳ Processing...</>
+                ) : isFormComplete ? (
+                  <>💳 Pay ₹{enrollmentFee} & Enroll</>
+                ) : (
+                  <>✓ Fill Form to Enroll</>
+                )}
               </button>
               <button
                 type="button"
@@ -502,6 +643,16 @@ const EnrollmentPage = () => {
             </div>
           </form>
         </section>
+
+        <AnimatePresence>
+          {success && (
+            <SuccessModal 
+              onClose={() => setSuccess(null)} 
+              courseTitle={course.title} 
+              orderId={searchParams.get("order_id") || "N/A"}
+            />
+          )}
+        </AnimatePresence>
 
         <aside className="sticky top-[170px] space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900 sm:p-8 h-fit">
           <div>
@@ -538,199 +689,103 @@ const EnrollmentPage = () => {
                 <dt className="font-medium">College Type</dt>
                 <dd>{form.collegeType || "Not selected"}</dd>
               </div>
-              <div className="flex items-center justify-between">
+               <div className="flex items-center justify-between">
                 <dt className="font-medium">State</dt>
                 <dd>{form.state || "Not selected"}</dd>
               </div>
+              {isFormComplete && enrollmentFee > 0 && (
+                <div className="flex items-center justify-between pt-3 border-t border-green-200 dark:border-green-700">
+                  <dt className="font-bold text-green-700 dark:text-green-400">Total Fee</dt>
+                  <dd className="font-bold text-green-700 dark:text-green-400">₹{enrollmentFee}</dd>
+                </div>
+              )}
             </dl>
           </div>
         </aside>
       </div>
+    </main>
+  );
+};
 
-      {/* Enhanced Footer */}
-      <footer className="mt-20 pt-16 border-t-2 border-slate-200 dark:border-slate-800">
-        <div className="mx-auto max-w-6xl">
-          {/* Header */}
-          <div className="mb-12 text-center">
-            <h2 className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-2xl font-extrabold sm:text-3xl md:text-4xl lg:text-5xl">
-              <span className="inline-block transform transition-transform hover:scale-125 duration-300">
-                🚀
-              </span>
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-purple-400 dark:to-blue-400">
-                Nexgen Learning Institute of Technology
-              </span>
-              <span className="inline-block transform transition-transform hover:scale-125 duration-300">
-                🚀
-              </span>
-            </h2>
-            <p className="mt-4 text-base font-medium text-slate-600 dark:text-slate-400 sm:text-lg">
-              Empowering Your Future with Online Training & Internships
-            </p>
+const SuccessModal = ({ onClose, courseTitle, orderId }: { onClose: () => void, courseTitle: string, orderId: string }) => {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+      />
+      
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-slate-800"
+      >
+        <div className="absolute top-0 left-0 h-2 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-emerald-600" />
+        
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700"
+        >
+          <FiX className="h-5 w-5" />
+        </button>
+
+        <div className="p-8 pt-10 text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+            <FiCheckCircle className="h-10 w-10" />
           </div>
 
-          {/* About Section */}
-          <div className="mb-12 grid gap-8 lg:grid-cols-2">
-            <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 p-8 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700">
-              <h3 className="mb-4 text-xl font-bold text-slate-900 dark:text-white">About NLIT</h3>
-              <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                Welcome to Nexgen Learning Institute of Technology (NLIT), affiliated with Wits Education. We are your premier destination for industry-relevant online training and certified internships, designed to bridge the gap between academic knowledge and professional expertise.
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                We specialize in delivering high-impact, practical education across crucial domains in Engineering Design, Software Development, and Data Science, ensuring our participants are not just skilled, but truly job-ready.
-              </p>
-            </div>
+          <h2 className="mb-2 text-3xl font-bold text-slate-900 dark:text-white">
+            Welcome to the Course!
+          </h2>
+          <p className="mb-8 text-slate-600 dark:text-slate-400">
+            Your enrollment for <span className="font-semibold text-blue-600 dark:text-blue-400">{courseTitle}</span> has been confirmed.
+          </p>
 
-            <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 p-8 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700">
-              <h3 className="mb-4 text-xl font-bold text-slate-900 dark:text-white">💡 Diverse Curriculum</h3>
-              <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 text-blue-600 dark:text-blue-400">▸</span>
-                  <strong>CAD/CAE:</strong> AutoCAD, Revit, StaadPro, CATIA, SolidWorks
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 text-purple-600 dark:text-purple-400">▸</span>
-                  <strong>Programming:</strong> Java, Python, Web Development
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 text-pink-600 dark:text-pink-400">▸</span>
-                  <strong>Mobile Apps:</strong> Android & iOS Development
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 text-green-600 dark:text-green-400">▸</span>
-                  <strong>Data Science:</strong> MATLAB, Python, Data Analysis
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* What You Get */}
-          <div className="mb-12 rounded-2xl bg-gradient-to-r from-yellow-50 to-orange-50 p-8 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-700">
-            <h3 className="mb-6 text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              ✨ What You Get in This Course
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">📚</span>
-                <span className="text-slate-700 dark:text-slate-300"><strong>Proper Live Classes</strong></span>
+          <div className="mb-8 rounded-2xl border border-slate-100 bg-slate-50 p-6 text-left dark:border-slate-700 dark:bg-slate-900/50">
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">Enrollment Details</h4>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Transaction ID</span>
+                <span className="flex items-center gap-2 font-mono text-sm font-medium">
+                  {orderId.substring(0, 12)}...
+                  <FiCopy className="cursor-pointer text-slate-400 hover:text-blue-600" />
+                </span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🎓</span>
-                <span className="text-slate-700 dark:text-slate-300"><strong>Online & Offline Certification</strong></span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">📖</span>
-                <span className="text-slate-700 dark:text-slate-300"><strong>Free E-Books</strong></span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🎁</span>
-                <span className="text-slate-700 dark:text-slate-300"><strong>Surprise Gifts</strong></span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🆘</span>
-                <span className="text-slate-700 dark:text-slate-300"><strong>24/7 Doubt Support</strong></span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🏆</span>
-                <span className="text-slate-700 dark:text-slate-300"><strong>Real-World Projects</strong></span>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Status</span>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">
+                  PAID & VERIFIED
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Contact & Social Media */}
-          <div className="mb-12 grid gap-8 lg:grid-cols-2">
-            <div className="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 p-8 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-700">
-              <h3 className="mb-6 text-xl font-bold text-slate-900 dark:text-white">📞 Get in Touch</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">💬</span>
-                  <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">WhatsApp Support (24/7)</p>
-                    <a
-                      href="https://wa.me/918092378320"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-lg font-bold text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-                    >
-                      +91 8092378320
-                    </a>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">✉️</span>
-                  <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Email</p>
-                    <a
-                      href="mailto:info@nlitedu.com"
-                      className="text-lg font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                    >
-                      info@nlitedu.com
-                    </a>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🌐</span>
-                  <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Website</p>
-                    <a
-                      href="https://www.nlitedu.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-lg font-bold text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
-                    >
-                      www.nlitedu.com
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 p-8 dark:from-indigo-900/20 dark:to-blue-900/20 border border-indigo-200 dark:border-indigo-700">
-              <h3 className="mb-6 text-xl font-bold text-slate-900 dark:text-white">🌍 Follow Us On Social Media</h3>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                <a
-                  href="https://www.facebook.com/share/17FWqVtL9b/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-3 rounded-2xl bg-blue-100 p-6 transition hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-900/60"
-                >
-                  <span className="text-4xl">📘</span>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Facebook</span>
-                </a>
-                <a
-                  href="https://www.instagram.com/nlitedu?igsh=MXNqZW1udjY2eHg3bA=="
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-3 rounded-2xl bg-pink-100 p-6 transition hover:bg-pink-200 dark:bg-pink-900/40 dark:hover:bg-pink-900/60"
-                >
-                  <span className="text-4xl">📷</span>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Instagram</span>
-                </a>
-                <a
-                  href="https://wa.me/918092378320"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-3 rounded-2xl bg-green-100 p-6 transition hover:bg-green-200 dark:bg-green-900/40 dark:hover:bg-green-900/60"
-                >
-                  <span className="text-4xl">💬</span>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">WhatsApp</span>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Internship Experience */}
-          <div className="mb-12 rounded-2xl bg-gradient-to-r from-orange-50 to-red-50 p-8 dark:from-orange-900/20 dark:to-red-900/20 border border-orange-200 dark:border-orange-700">
-            <h3 className="mb-4 text-xl font-bold text-slate-900 dark:text-white">🌟 Real-World Internship Experience & Certification</h3>
-            <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-              What sets Nexgen apart is our commitment to practical application. Every program culminates in an online internship component where learners work on real-world projects and case studies under the guidance of seasoned industry mentors. This project-based approach ensures you gain practical experience, develop problem-solving skills, and build a powerful portfolio.
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-              Upon successful completion of the training and internship, you receive an <strong>industry-recognized certification from Nexgen Learning Institute of Technology</strong>. This certification validates your proficiency, significantly boosting your resume and providing a competitive edge in job applications.
-            </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <button className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
+              <FiDownload className="h-4 w-4" />
+              Receipt
+            </button>
+            <Link 
+              href="/profile"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              Go to Dashboard
+              <FiExternalLink className="h-4 w-4" />
+            </Link>
           </div>
         </div>
-      </footer>
-    </main>
+
+        <div className="bg-slate-50 px-8 py-4 text-center dark:bg-slate-900/30">
+          <p className="text-xs text-slate-500">
+            A confirmation has been sent to your WhatsApp and Email.
+          </p>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 

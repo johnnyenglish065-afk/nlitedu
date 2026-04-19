@@ -5,8 +5,14 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import ThemeToggler from "./ThemeToggler";
 import menuData from "./menuData";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "motion/react";
+import { FaUserCircle, FaSignOutAlt, FaUser } from "react-icons/fa";
 
 const Header = () => {
+  const { user, signOut } = useAuth();
+  const router = useRouter();
   const [navbarOpen, setNavbarOpen] = useState(false);
   const navbarToggleHandler = () => setNavbarOpen(!navbarOpen);
 
@@ -14,6 +20,7 @@ const Header = () => {
   const handleStickyNavbar = () => setSticky(window.scrollY >= 80);
   useEffect(() => {
     window.addEventListener("scroll", handleStickyNavbar);
+    return () => window.removeEventListener("scroll", handleStickyNavbar);
   }, []);
 
   const [openIndex, setOpenIndex] = useState(-1);
@@ -21,11 +28,17 @@ const Header = () => {
 
   const usePathName = usePathname();
 
+  const handleLogout = async () => {
+    await signOut();
+    router.push("/");
+    router.refresh();
+  };
+
   return (
     <>
       {/* Scrolling Announcement Top Bar */}
-      <div className="fixed top-0 left-0 w-full bg-primary text-white text-sm overflow-hidden z-50">
-        <div className="flex animate-marquee whitespace-nowrap py-2">
+      <div className="fixed top-0 left-0 w-full bg-primary text-white text-sm overflow-hidden z-[60]">
+        <div className="flex animate-marquee whitespace-nowrap py-2 font-medium">
           <span className="px-8 flex items-center">
             🚀 4-Week & 6-Week Internship Registration Open - Limited Slots!
           </span>
@@ -58,13 +71,13 @@ const Header = () => {
       <div className="h-8"></div>
 
       {/* Main Header */}
-      <header className="header fixed top-8 left-0 z-40 w-full bg-white shadow-md dark:bg-dark">
+      <header className={`header fixed top-8 left-0 z-50 w-full transition-all duration-300 ${sticky ? "bg-white/90 shadow-md backdrop-blur-md dark:bg-dark/90" : "bg-white dark:bg-dark"}`}>
         <div className="container">
           <div className="relative -mx-4 flex items-center justify-between">
             <div className="w-40 max-w-full px-4 xl:mr-12 sm:w-60">
-              <Link href="/" className={`header-logo block w-full ${sticky ? "py-3 lg:py-2" : "py-4 sm:py-8"}`}>
-                <Image src="/company/logo.png" alt="logo" width={120} height={26} className="w-[120px] dark:hidden" />
-                <Image src="/company/logo-trans-p.png" alt="logo" width={120} height={26} className="hidden w-[120px] dark:block" />
+              <Link href="/" className={`header-logo block w-full ${sticky ? "py-3 lg:py-2" : "py-4 sm:py-6"}`}>
+                <Image src="/company/logo.png" alt="logo" width={140} height={30} className="w-[120px] sm:w-[140px] dark:hidden transition-all" />
+                <Image src="/company/logo-trans-p.png" alt="logo" width={140} height={30} className="hidden w-[120px] sm:w-[140px] dark:block transition-all" />
               </Link>
             </div>
 
@@ -87,14 +100,14 @@ const Header = () => {
                     navbarOpen ? "visibility top-full opacity-100" : "invisible top-[120%] opacity-0"
                   }`}
                 >
-                  <ul className="block w-full space-y-4 lg:flex lg:justify-end lg:space-y-0 lg:space-x-12">
+                  <ul className="block w-full space-y-4 lg:flex lg:justify-end lg:items-center lg:space-y-0 lg:space-x-10">
                     {menuData.map((menuItem, index) => (
                       <li key={index} className="group relative">
                         {menuItem.path ? (
                           <Link
                             href={menuItem.path}
                             onClick={() => setNavbarOpen(false)}
-                            className={`flex py-2 text-base lg:inline-flex lg:px-0 lg:py-6 ${
+                            className={`flex py-2 text-base font-semibold lg:inline-flex lg:px-0 lg:py-6 ${
                               usePathName === menuItem.path
                                 ? "text-primary dark:text-white"
                                 : "text-dark hover:text-primary dark:text-white/70 dark:hover:text-white"
@@ -106,31 +119,27 @@ const Header = () => {
                           <>
                             <p
                               onClick={() => handleSubmenu(index)}
-                              className="text-dark group-hover:text-primary flex cursor-pointer items-center justify-between py-2 text-base lg:inline-flex lg:px-0 lg:py-6 dark:text-white/70 dark:group-hover:text-white"
+                              className="text-dark group-hover:text-primary flex cursor-pointer items-center justify-between py-2 text-base font-semibold lg:inline-flex lg:px-0 lg:py-6 dark:text-white/70 dark:group-hover:text-white"
                             >
                               {menuItem.title}
                               <span className="pl-3">
-                                <svg width="25" height="24" viewBox="0 0 25 24">
-                                  <path
-                                    fillRule="evenodd"
-                                    clipRule="evenodd"
-                                    d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                                    fill="currentColor"
-                                  />
+                                <svg width="15" height="14" viewBox="0 0 15 14" className="fill-current">
+                                  <path d="M7.5 10.5L2.5 5.5L3.9 4.1L7.5 7.7L11.1 4.1L12.5 5.5L7.5 10.5Z" />
                                 </svg>
+                                
                               </span>
                             </p>
                             <div
-                              className={`submenu dark:bg-dark relative top-full left-0 rounded-sm bg-white transition-[top] duration-300 group-hover:opacity-100 lg:invisible lg:absolute lg:top-[110%] lg:block lg:w-[250px] lg:p-4 lg:opacity-0 lg:shadow-lg lg:group-hover:visible lg:group-hover:top-full ${
+                              className={`submenu dark:bg-dark relative top-full left-0 rounded-xl bg-white transition-all duration-300 group-hover:opacity-100 lg:invisible lg:absolute lg:top-[110%] lg:block lg:w-[250px] lg:p-4 lg:opacity-0 lg:shadow-2xl lg:group-hover:visible lg:group-hover:top-full ${
                                 openIndex === index ? "block" : "hidden"
                               }`}
                             >
-                              {menuItem.submenu?.map((submenuItem, index) => (
+                              {menuItem.submenu?.map((submenuItem, idx) => (
                                 <Link
                                   href={submenuItem.path || '#'}
-                                  key={index}
+                                  key={idx}
                                   onClick={() => setNavbarOpen(false)}
-                                  className="text-dark hover:text-primary block rounded-sm py-2.5 text-sm lg:px-3 dark:text-white/70 dark:hover:text-white"
+                                  className="text-dark hover:text-primary block rounded-lg px-4 py-3 text-sm font-medium transition-all hover:bg-primary/5 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/5"
                                 >
                                   {submenuItem.title}
                                 </Link>
@@ -144,8 +153,43 @@ const Header = () => {
                 </nav>
               </div>
 
-              <div className="flex items-center justify-end pr-16 lg:pr-0">
-                <div>
+              <div className="flex items-center justify-end space-x-2 sm:space-x-4 pr-16 lg:pr-0">
+                {user ? (
+                  <div className="flex items-center gap-3 sm:gap-6">
+                    <Link
+                      href="/profile"
+                      className={`flex items-center gap-2 text-sm font-bold text-dark hover:text-primary transition-all dark:text-white ${usePathName === '/profile' ? 'text-primary' : ''}`}
+                    >
+                      <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-sm">
+                         <FaUser size={16} />
+                      </div>
+                      <span className="hidden sm:inline whitespace-nowrap">
+                        {user.user_metadata.full_name?.split(' ')[0] || "Profile"}
+                      </span>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 sm:space-x-5">
+                    <Link
+                      href="/signin"
+                      className="hidden text-base font-bold text-dark hover:text-primary md:block dark:text-white transition-all"
+                    >
+                      Sign In
+                    </Link>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Link
+                        href="/signup"
+                        className="rounded-xl bg-primary px-5 sm:px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/30 transition-all hover:bg-primary/90"
+                      >
+                        Sign Up
+                      </Link>
+                    </motion.div>
+                  </div>
+                )}
+                <div className="ml-2 sm:ml-4 border-l border-stroke dark:border-white/10 pl-2 sm:pl-4">
                   <ThemeToggler />
                 </div>
               </div>

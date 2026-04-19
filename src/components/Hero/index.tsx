@@ -3,15 +3,24 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
+import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import ShinyText from "./shinnytext";
 import EnrollDropdown from "./EnrollDropdown";
 
 const Hero = () => {
   const router = useRouter();
-  const [showModal, setShowModal] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const [showModal, setShowModal] = useState(false);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
+
+  // Show Quick Signup modal only for non-logged in users after mount
+  useEffect(() => {
+    if (!authLoading && !user) {
+      const timer = setTimeout(() => setShowModal(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [user, authLoading]);
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
