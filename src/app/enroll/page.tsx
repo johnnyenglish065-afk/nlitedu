@@ -169,7 +169,34 @@ const EnrollmentPage = () => {
     state: searchParams.get("state") || "",
     course: course.title,
     message: "",
+    marks10: "",
+    marks12: "",
+    marksSem: "",
+    marksheet12Url: "",
+    marksheetSemUrl: "",
   });
+  const [marksheet12File, setMarksheet12File] = useState<File | null>(null);
+  const [marksheetSemFile, setMarksheetSemFile] = useState<File | null>(null);
+
+  const handle12FileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      if (e.target.files[0].size > 100 * 1024) {
+        alert("Maximum file size strictly limited to 100 KB.");
+        return;
+      }
+      setMarksheet12File(e.target.files[0]);
+    }
+  };
+
+  const handleSemFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      if (e.target.files[0].size > 100 * 1024) {
+        alert("Maximum file size strictly limited to 100 KB.");
+        return;
+      }
+      setMarksheetSemFile(e.target.files[0]);
+    }
+  };
 
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -279,9 +306,14 @@ const EnrollmentPage = () => {
       form.semester !== "" &&
       form.collegeName.trim() !== "" &&
       form.collegeType !== "" &&
-      form.state !== ""
+      form.state !== "" &&
+      form.marks10.trim() !== "" &&
+      form.marks12.trim() !== "" &&
+      form.marksSem.trim() !== "" &&
+      marksheet12File !== null &&
+      marksheetSemFile !== null
     );
-  }, [form]);
+  }, [form, marksheet12File, marksheetSemFile]);
 
   useEffect(() => {
     setForm((current) => ({
@@ -307,12 +339,17 @@ const EnrollmentPage = () => {
     if (!/\S+@\S+\.\S+/.test(form.email)) return "Please enter a valid email.";
     if (!form.whatsapp.trim()) return "Please enter your WhatsApp number.";
     if (!form.dob) return "Please select your date of birth.";
-    if (!form.brn.trim()) return "Please enter your BRN.";
+    if (!form.brn.trim()) return "Please enter your College/University Reg. No.";
     if (!form.branch.trim()) return "Please enter your branch.";
     if (!form.semester) return "Please select your semester.";
     if (!form.collegeName.trim()) return "Please enter your college name.";
     if (!form.collegeType) return "Please select your college type.";
     if (!form.state) return "Please select your state.";
+    if (!form.marks10.trim()) return "Please enter your 10th marks.";
+    if (!form.marks12.trim()) return "Please enter your 12th/Diploma marks.";
+    if (!form.marksSem.trim()) return "Please enter your Last semester marks.";
+    if (!marksheet12File) return "Please upload your 12th/Diploma marksheet.";
+    if (!marksheetSemFile) return "Please upload your latest semester marksheet.";
     return null;
   };
 
@@ -339,13 +376,42 @@ const EnrollmentPage = () => {
       const orderId = `NLIT_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       if (!supabase) throw new Error("Database not initialized");
 
+      let uploaded12Url = "";
+      let uploadedSemUrl = "";
+      
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+      
+      if ((marksheet12File || marksheetSemFile) && (!cloudName || !uploadPreset)) {
+        throw new Error("Cloudinary configuration is missing. Please set Environment Variables.");
+      }
+
+      const uploadToCloudinary = async (file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", uploadPreset!);
+        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!uploadRes.ok) throw new Error("Failed to upload marksheet to Cloudinary. Please try again.");
+        const cloudData = await uploadRes.json();
+        return cloudData.secure_url;
+      };
+
+      if (marksheet12File) uploaded12Url = await uploadToCloudinary(marksheet12File);
+      if (marksheetSemFile) uploadedSemUrl = await uploadToCloudinary(marksheetSemFile);
+
       // 1. Save Pending Enrollment
+      const pendingData = {
+        ...form,
+        marksheet12Url: uploaded12Url,
+        marksheetSemUrl: uploadedSemUrl,
+        payment_id: orderId,
+        payment_status: "PENDING",
+      };
       const { error: pendingError } = await supabase.from("enrollments").insert([
-        {
-          ...form,
-          payment_id: orderId,
-          payment_status: "PENDING",
-        },
+        pendingData
       ]);
 
       if (pendingError) {
@@ -524,13 +590,13 @@ const EnrollmentPage = () => {
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-medium">BRN</span>
+                <span className="mb-2 block text-sm font-medium">College/University Reg. No.</span>
                 <input
                   name="brn"
                   value={form.brn}
                   onChange={handleChange}
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Enter BRN"
+                  placeholder="Enter Registration No."
                   required
                 />
               </label>
@@ -602,6 +668,76 @@ const EnrollmentPage = () => {
                   placeholder="Enter state"
                   required
                 />
+              </label>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-3">
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium">10th Marks (%)</span>
+                <input
+                  name="marks10"
+                  value={form.marks10}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  placeholder="E.g. 85%"
+                  required
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium">12th/Diploma Marks (%)</span>
+                <input
+                  name="marks12"
+                  value={form.marks12}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  placeholder="E.g. 80%"
+                  required
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium">Last Sem Marks (CGPA/%)</span>
+                <input
+                  name="marksSem"
+                  value={form.marksSem}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  placeholder="E.g. 8.5 CGPA"
+                  required
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium">Upload 12th/Diploma Marksheet (Max 100KB)</span>
+                <div className="flex items-center justify-center w-full">
+                    <label htmlFor="dropzone-file-1" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                            <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                            </svg>
+                            <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{marksheet12File ? marksheet12File.name : "Click to upload"}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 100KB)</p>
+                        </div>
+                        <input id="dropzone-file-1" type="file" className="hidden" accept=".pdf,image/*" onChange={handle12FileChange} required/>
+                    </label>
+                </div>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium">Upload Latest Sem Marksheet (Max 100KB)</span>
+                <div className="flex items-center justify-center w-full">
+                    <label htmlFor="dropzone-file-2" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                            <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                            </svg>
+                            <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{marksheetSemFile ? marksheetSemFile.name : "Click to upload"}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 100KB)</p>
+                        </div>
+                        <input id="dropzone-file-2" type="file" className="hidden" accept=".pdf,image/*" onChange={handleSemFileChange} required/>
+                    </label>
+                </div>
               </label>
             </div>
 
