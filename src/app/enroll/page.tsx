@@ -333,11 +333,11 @@ const EnrollmentPage = () => {
       );
       return;
     }
-
     setPaymentLoading(true);
 
     try {
       const orderId = `NLIT_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      if (!supabase) throw new Error("Database not initialized");
 
       // 1. Save Pending Enrollment
       const { error: pendingError } = await supabase.from("enrollments").insert([
