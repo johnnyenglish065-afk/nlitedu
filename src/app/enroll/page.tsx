@@ -141,9 +141,20 @@ const semesters = [
   "6th",
   "7th",
   "8th",
+  "Passed Out"
 ];
 
 const genders = ["Male", "Female", "Prefer not to say"];
+
+const indianStates = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", 
+  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", 
+  "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", 
+  "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
+  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+  "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", 
+  "Lakshadweep", "Delhi", "Puducherry", "Ladakh", "Jammu and Kashmir"
+].sort();
 
 const EnrollmentPage = () => {
   const router = useRouter();
@@ -172,6 +183,7 @@ const EnrollmentPage = () => {
     marks10: "",
     marks12: "",
     marksSem: "",
+    qualification: "",
     marksheet12Url: "",
     marksheetSemUrl: "",
   });
@@ -287,10 +299,13 @@ const EnrollmentPage = () => {
     }
   };
 
-  // Determine fee based on college type
+  // Determine fee based on college type and state
   const enrollmentFee = useMemo(() => {
-    return form.collegeType === "govt" ? 999 : form.collegeType === "private" ? 1999 : 0;
-  }, [form.collegeType]);
+    if (form.collegeType === "govt") {
+      return form.state === "Bihar" ? 999 : 1499;
+    }
+    return form.collegeType === "private" ? 1999 : 0;
+  }, [form.collegeType, form.state]);
 
   // Check if form is fully filled
   const isFormComplete = useMemo(() => {
@@ -307,6 +322,7 @@ const EnrollmentPage = () => {
       form.collegeName.trim() !== "" &&
       form.collegeType !== "" &&
       form.state !== "" &&
+      form.qualification !== "" &&
       form.marks10.trim() !== "" &&
       form.marks12.trim() !== "" &&
       form.marksSem.trim() !== "" &&
@@ -345,10 +361,11 @@ const EnrollmentPage = () => {
     if (!form.collegeName.trim()) return "Please enter your college name.";
     if (!form.collegeType) return "Please select your college type.";
     if (!form.state) return "Please select your state.";
+    if (!form.qualification) return "Please select your qualification.";
     if (!form.marks10.trim()) return "Please enter your 10th marks.";
     if (!form.marks12.trim()) return "Please enter your 12th/Diploma marks.";
     if (!form.marksSem.trim()) return "Please enter your Last semester marks.";
-    if (!marksheet12File) return "Please upload your 12th/Diploma marksheet.";
+    if (!marksheet12File) return "Please upload your 10th/12th marksheet.";
     if (!marksheetSemFile) return "Please upload your latest semester marksheet.";
     return null;
   };
@@ -590,15 +607,24 @@ const EnrollmentPage = () => {
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-medium">College/University Reg. No.</span>
-                <input
-                  name="brn"
-                  value={form.brn}
+                <span className="mb-2 block text-sm font-medium">Course Name / Qualification</span>
+                <select
+                  name="qualification"
+                  value={form.qualification}
                   onChange={handleChange}
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Enter Registration No."
                   required
-                />
+                >
+                  <option value="">Select Qualification</option>
+                  <option value="Diploma">Diploma</option>
+                  <option value="B-Tech">B-Tech</option>
+                  <option value="BBA/BMS">BBA/BMS</option>
+                  <option value="BCA">BCA</option>
+                  <option value="MCA">MCA</option>
+                  <option value="MBA">MBA</option>
+                  <option value="MBBS">MBBS</option>
+                  <option value="B.Pharma">B.Pharma</option>
+                </select>
               </label>
 
               <label className="block">
@@ -644,6 +670,18 @@ const EnrollmentPage = () => {
               </label>
 
               <label className="block">
+                <span className="mb-2 block text-sm font-medium">College/University Reg. No.</span>
+                <input
+                  name="brn"
+                  value={form.brn}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  placeholder="Enter Registration No."
+                  required
+                />
+              </label>
+
+              <label className="block">
                 <span className="mb-2 block text-sm font-medium">College Type</span>
                 <select
                   name="collegeType"
@@ -660,14 +698,20 @@ const EnrollmentPage = () => {
 
               <label className="block">
                 <span className="mb-2 block text-sm font-medium">State</span>
-                <input
+                <select
                   name="state"
                   value={form.state}
                   onChange={handleChange}
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Enter state"
                   required
-                />
+                >
+                  <option value="">Select State</option>
+                  {indianStates.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
 
@@ -709,7 +753,7 @@ const EnrollmentPage = () => {
 
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block text-sm font-medium">Upload 12th/Diploma Marksheet (Max 100KB)</span>
+                <span className="mb-2 block text-sm font-medium">Upload 10th/12th Marksheet (Max 100KB)</span>
                 <div className="flex items-center justify-center w-full">
                     <label htmlFor="dropzone-file-1" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
                         <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
