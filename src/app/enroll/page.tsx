@@ -697,7 +697,7 @@ const EnrollmentPage = () => {
                     <FiLock className="text-slate-400 h-3.5 w-3.5" />
                   </div>
                 </div>
-                <p className="mt-1.5 text-[10px] text-blue-600 dark:text-blue-400 uppercase tracking-widest font-bold px-1">✓ Verified via Supabase Account</p>
+                <p className="mt-1.5 text-[10px] text-blue-600 dark:text-blue-400 uppercase tracking-widest font-bold px-1">✓ Verified via Nlitedu Account</p>
               </label>
 
               <label className="block">
