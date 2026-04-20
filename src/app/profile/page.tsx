@@ -124,8 +124,12 @@ const ProfilePage = () => {
                 <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
                   <div className="p-6 text-center border-b border-slate-100 dark:border-slate-800">
                     <div className="relative mx-auto mb-4 h-24 w-24 overflow-hidden rounded-full border-4 border-blue-50 bg-gradient-to-tr from-primary to-blue-400 p-0 text-white shadow-inner flex items-center justify-center">
-                      {profile?.avatar_url ? (
-                        <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                      {profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture ? (
+                        <img 
+                          src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} 
+                          alt="Avatar" 
+                          className="h-full w-full object-cover" 
+                        />
                       ) : (
                         <span className="text-3xl font-bold">
                           {profile?.full_name?.charAt(0) || user.email?.charAt(0).toUpperCase()}
@@ -135,7 +139,7 @@ const ProfilePage = () => {
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-1">
                       {profile?.full_name || "New Student"}
                     </h3>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Student ID: {user.id.slice(0, 8).toUpperCase()}</p>
+                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mt-1">Student ID: {user.id.slice(0, 8).toUpperCase()}</p>
                   </div>
 
                   <nav className="p-4 space-y-1">
