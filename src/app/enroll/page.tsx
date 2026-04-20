@@ -6,7 +6,8 @@ import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
-import { FiCheckCircle, FiCopy, FiDownload, FiExternalLink, FiX } from "react-icons/fi";
+import { FiCheckCircle, FiCopy, FiDownload, FiExternalLink, FiLock, FiLogOut, FiMail, FiUser, FiX } from "react-icons/fi";
+import { useAuth } from "@/context/AuthContext";
 
 const courseList = [
   {
@@ -159,6 +160,7 @@ const indianStates = [
 const EnrollmentPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, loading: authLoading } = useAuth();
   const courseSlug = searchParams.get("course") || "general";
   const course = useMemo(
     () => courseList.find((item) => item.slug === courseSlug) ?? courseList.find((item) => item.slug === "general")!,
@@ -272,6 +274,7 @@ const EnrollmentPage = () => {
       const { error: dbError } = await supabase.from("enrollments").upsert([
         {
           ...currentForm,
+          user_id: user?.id,
           payment_id: orderId,
           payment_status: "PAID",
           enrolled_at: new Date().toISOString(),
@@ -348,8 +351,9 @@ const EnrollmentPage = () => {
       course: course.title,
       collegeType: searchParams.get("type") || current.collegeType,
       state: searchParams.get("state") || current.state,
+      email: user?.email || current.email,
     }));
-  }, [course.title, searchParams]);
+  }, [course.title, searchParams, user]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -433,6 +437,7 @@ const EnrollmentPage = () => {
       // 1. Save Pending Enrollment
       const pendingData = {
         ...form,
+        user_id: user?.id, // Link to Supabase User
         marksheet12Url: uploaded12Url,
         marksheetSemUrl: uploadedSemUrl,
         payment_id: orderId,
@@ -507,8 +512,71 @@ const EnrollmentPage = () => {
   // Maintenance Mode Check
   const isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
 
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-slate-50 pt-[160px] pb-14 px-4 dark:bg-slate-950">
+        <div className="mx-auto max-w-lg">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+          >
+            <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-blue-600 to-indigo-600" />
+            <div className="p-8 pt-10 text-center">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                <FiLock className="h-10 w-10" />
+              </div>
+              <h2 className="mb-3 text-3xl font-bold text-slate-900 dark:text-white">Account Required</h2>
+              <p className="mb-8 text-slate-600 dark:text-slate-400">
+                Please sign in to your NLITedu account to enroll in <span className="font-semibold text-blue-600">{course.title}</span> and track your certificates.
+              </p>
+              
+              <div className="grid gap-4">
+                <Link
+                  href="/signin"
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-8 py-4 font-bold text-white transition hover:bg-blue-700 shadow-lg shadow-blue-200 dark:shadow-none"
+                >
+                  Sign In to Continue
+                </Link>
+                <Link
+                  href="/signup"
+                  className="flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white px-8 py-4 font-bold text-slate-900 transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
+                >
+                  New Student? Register Now
+                </Link>
+              </div>
+              
+              <Link href="/" className="mt-8 inline-block text-sm font-medium text-slate-500 hover:text-blue-600 dark:text-slate-400">
+                ← Back to Courses
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 pt-[160px] pb-14 px-4 text-slate-900 dark:bg-slate-950 dark:text-white sm:px-6 lg:px-8 relative">
+      <div className="mx-auto max-w-6xl mb-8">
+        <div className="flex items-center gap-3 py-3 px-4 rounded-2xl bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
+           <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+             <FiUser className="text-blue-600 h-4 w-4" />
+           </div>
+           <p className="text-sm text-slate-600 dark:text-slate-400">
+             Logged in as <span className="font-bold text-slate-900 dark:text-white">{user.email}</span>
+           </p>
+        </div>
+      </div>
+
       {/* Maintenance Mode Overlay */}
       {isMaintenanceMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', backgroundColor: 'rgba(0,0,0,0.4)' }}>
@@ -614,16 +682,22 @@ const EnrollmentPage = () => {
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-medium">Email</span>
-                <input
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Enter your email"
-                  required
-                />
+                <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Email Address (Linked Account)</span>
+                <div className="relative">
+                  <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    readOnly
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-100 px-11 py-3 text-sm outline-none transition dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 cursor-not-allowed font-medium"
+                    placeholder="Enter your email"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <FiLock className="text-slate-400 h-3.5 w-3.5" />
+                  </div>
+                </div>
+                <p className="mt-1.5 text-[10px] text-blue-600 dark:text-blue-400 uppercase tracking-widest font-bold px-1">✓ Verified via Supabase Account</p>
               </label>
 
               <label className="block">
