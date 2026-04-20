@@ -11,19 +11,19 @@ import EnrollmentDetail from "../../components/Admin/EnrollmentDetail";
 
 interface Enrollment {
   id: string;
-  fullName: string;
+  full_name: string;
   email: string;
-  course: string;
-  payment_status: string;
-  payment_id: string;
+  course_title: string;
+  payment_status: string; // Keep this, assuming it exists or will be derived
+  cf_payment_id: string;
   created_at: string;
   user_id: string;
-  collegeName: string;
-  collegeType: string;
+  college_name: string;
+  college_type: string;
   branch: string;
   semester: string;
   whatsapp: string;
-  fatherName: string;
+  father_name: string;
   gender: string;
   dob: string;
   brn: string;
@@ -99,20 +99,20 @@ export default function AdminDashboard() {
     // Map data to rows
     const rows = enrollments.map(e => [
       e.user_id?.slice(0, 8).toUpperCase() || "N/A",
-      e.fullName,
+      e.full_name,
       e.email,
       e.whatsapp,
-      e.course,
-      e.payment_status,
-      e.payment_id,
-      e.collegeName,
+      e.course_title,
+      e.payment_status || "PAID",
+      e.cf_payment_id,
+      e.college_name,
       e.branch,
       e.semester,
       e.brn,
       e.state,
       e.dob,
       e.gender,
-      e.fatherName,
+      e.father_name,
       e.qualification,
       new Date(e.created_at).toLocaleDateString()
     ]);
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
   const filteredData = enrollments.filter(e => {
     const studentId = e.user_id?.slice(0, 8).toUpperCase();
     const matchesSearch = 
-      e.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      e.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       studentId?.includes(searchTerm.toUpperCase());
     
@@ -260,14 +260,14 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-900 dark:text-white">{e.fullName}</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{e.full_name}</span>
                           <span className="text-xs text-slate-500 dark:text-slate-400">{e.email}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2 mb-1">
                           <FaUniversity className="text-slate-400 text-xs" />
-                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{e.collegeName}</span>
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{e.college_name}</span>
                         </div>
                         <div className="flex gap-2">
                           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
@@ -280,7 +280,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          {e.course}
+                          {e.course_title}
                         </span>
                       </td>
                       <td className="px-6 py-4">

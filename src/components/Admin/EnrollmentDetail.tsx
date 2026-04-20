@@ -59,8 +59,8 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
                   <span className="w-1.5 h-4 bg-primary rounded-full" /> Personal Profile
                 </h3>
                 <div className="grid grid-cols-1 gap-5">
-                  <InfoItem icon={FaUser} label="Full Name" value={enrollment.fullName} />
-                  <InfoItem icon={FaUser} label="Father's Name" value={enrollment.fatherName} />
+                  <InfoItem icon={FaUser} label="Full Name" value={enrollment.full_name} />
+                  <InfoItem icon={FaUser} label="Father's Name" value={enrollment.father_name} />
                   <div className="grid grid-cols-2 gap-4">
                     <InfoItem icon={FaVenusMars} label="Gender" value={enrollment.gender} />
                     <InfoItem icon={FaCalendarAlt} label="Date of Birth" value={enrollment.dob} />
@@ -87,8 +87,8 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
                   <span className="w-1.5 h-4 bg-green-500 rounded-full" /> Academic Identity
                 </h3>
                 <div className="grid grid-cols-1 gap-5">
-                  <InfoItem icon={FaUniversity} label="Institution Name" value={enrollment.collegeName} />
-                  <InfoItem icon={FaBriefcase} label="College Type" value={enrollment.collegeType} />
+                  <InfoItem icon={FaUniversity} label="Institution Name" value={enrollment.college_name} />
+                  <InfoItem icon={FaBriefcase} label="College Type" value={enrollment.college_type} />
                   <div className="grid grid-cols-2 gap-4">
                     <InfoItem icon={FaRegIdBadge} label="Branch" value={enrollment.branch} />
                     <InfoItem icon={FaRegIdBadge} label="Semester" value={enrollment.semester} />
@@ -122,11 +122,11 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
           <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-6">
             <div className="bg-slate-100 dark:bg-slate-800 px-4 py-3 rounded-2xl">
               <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1">Transaction ID</p>
-              <p className="text-sm font-mono font-bold text-slate-700 dark:text-slate-300">{enrollment.payment_id}</p>
+              <p className="text-sm font-mono font-bold text-slate-700 dark:text-slate-300">{enrollment.cf_payment_id}</p>
             </div>
             <div className="bg-slate-100 dark:bg-slate-800 px-4 py-3 rounded-2xl">
               <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1">Enrolled Course</p>
-              <p className="text-sm font-bold text-primary">{enrollment.course}</p>
+              <p className="text-sm font-bold text-primary">{enrollment.course_title}</p>
             </div>
             {enrollment.message && (
               <div className="w-full bg-slate-100 dark:bg-slate-800 px-4 py-3 rounded-2xl">
