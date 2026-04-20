@@ -284,6 +284,18 @@ const EnrollmentPage = () => {
       setPaymentVerified(true);
       clearFormFromLocal();
 
+      // Trigger Email Notification (Non-blocking)
+      fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentName: currentForm.fullName,
+          studentEmail: currentForm.email,
+          courseTitle: currentForm.course,
+          orderId: orderId,
+        }),
+      }).catch(err => console.error("Failed to send confirmation email:", err));
+
       // Trigger Confetti Celebration
       confetti({
         particleCount: 150,
@@ -326,8 +338,7 @@ const EnrollmentPage = () => {
       form.marks10.trim() !== "" &&
       form.marks12.trim() !== "" &&
       form.marksSem.trim() !== "" &&
-      marksheet12File !== null &&
-      marksheetSemFile !== null
+      (marksheet12File !== null || marksheetSemFile !== null)
     );
   }, [form, marksheet12File, marksheetSemFile]);
 
@@ -365,8 +376,8 @@ const EnrollmentPage = () => {
     if (!form.marks10.trim()) return "Please enter your 10th marks.";
     if (!form.marks12.trim()) return "Please enter your 12th/Diploma marks.";
     if (!form.marksSem.trim()) return "Please enter your Last semester marks.";
-    if (!marksheet12File) return "Please upload your 10th/12th marksheet.";
-    if (!marksheetSemFile) return "Please upload your latest semester marksheet.";
+    if (!marksheet12File && !marksheetSemFile) return "Please upload your 10th/12th marksheet OR your latest semester marksheet.";
+    if (marksheet12File && marksheetSemFile) return "Please upload ONLY ONE certificate (do not upload both).";
     return null;
   };
 
@@ -785,6 +796,9 @@ const EnrollmentPage = () => {
               </label>
             </div>
 
+            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm font-medium text-amber-800 dark:text-amber-400">
+              Note: Please upload ONLY ONE certificate (Either 10th/12th OR Latest Semester Marksheet).
+            </div>
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-2 block text-sm font-medium">Upload 10th/12th Marksheet (Max 100KB)</span>
@@ -797,7 +811,7 @@ const EnrollmentPage = () => {
                             <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{marksheet12File ? marksheet12File.name : "Click to upload"}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 100KB)</p>
                         </div>
-                        <input id="dropzone-file-1" type="file" className="hidden" accept=".pdf,image/*" onChange={handle12FileChange} required/>
+                        <input id="dropzone-file-1" type="file" className="hidden" accept=".pdf,image/*" onChange={handle12FileChange} />
                     </label>
                 </div>
               </label>
@@ -813,7 +827,7 @@ const EnrollmentPage = () => {
                             <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{marksheetSemFile ? marksheetSemFile.name : "Click to upload"}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 100KB)</p>
                         </div>
-                        <input id="dropzone-file-2" type="file" className="hidden" accept=".pdf,image/*" onChange={handleSemFileChange} required/>
+                        <input id="dropzone-file-2" type="file" className="hidden" accept=".pdf,image/*" onChange={handleSemFileChange} />
                     </label>
                 </div>
               </label>
