@@ -19,6 +19,16 @@ interface ProfileData {
   email: string;
   avatar_url?: string;
   updated_at: string;
+  // New Institutional Fields
+  college_name?: string;
+  college_type?: string;
+  branch?: string;
+  semester?: string;
+  university_reg_no?: string;
+  father_name?: string;
+  whatsapp_no?: string;
+  resident_state?: string;
+  qualification?: string;
 }
 
 interface Enrollment {
@@ -38,6 +48,9 @@ const ProfilePage = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isEditingAcademic, setIsEditingAcademic] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [academicForm, setAcademicForm] = useState<Partial<ProfileData>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -58,7 +71,20 @@ const ProfilePage = () => {
           .eq("id", user.id)
           .single();
 
-        if (profileData) setProfile(profileData);
+        if (profileData) {
+          setProfile(profileData);
+          setAcademicForm({
+            college_name: profileData.college_name,
+            college_type: profileData.college_type,
+            branch: profileData.branch,
+            semester: profileData.semester,
+            university_reg_no: profileData.university_reg_no,
+            father_name: profileData.father_name,
+            whatsapp_no: profileData.whatsapp_no,
+            resident_state: profileData.resident_state,
+            qualification: profileData.qualification,
+          });
+        }
 
         // Fetch Enrollments
         const { data: enrollData, error: enrollError } = await supabase
@@ -67,7 +93,20 @@ const ProfilePage = () => {
           .eq("user_id", user.id)
           .order("enrolled_at", { ascending: false });
 
-        if (enrollData) setEnrollments(enrollData);
+        if (enrollData) {
+          setEnrollments(enrollData);
+          // If profile is empty, pre-fill from latest enrollment
+          if (profileData && !profileData.college_name && enrollData.length > 0) {
+            const latest = enrollData[0];
+            setAcademicForm(prev => ({
+              ...prev,
+              college_name: latest.collegeName,
+              branch: latest.branch,
+              semester: latest.semester,
+              college_type: latest.collegeType,
+            }));
+          }
+        }
 
       } catch (err) {
         console.error("Unexpected error:", err);
@@ -80,6 +119,33 @@ const ProfilePage = () => {
       fetchData();
     }
   }, [user, authLoading, router]);
+
+  const handleSaveAcademic = async () => {
+    if (!user || !supabase) return;
+    
+    try {
+      setSaving(true);
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({
+          id: user.id,
+          ...academicForm,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+      
+      // Update local profile state
+      setProfile(prev => prev ? { ...prev, ...academicForm } : null);
+      setIsEditingAcademic(false);
+      alert("Academic Profile updated successfully!");
+    } catch (error) {
+      console.error("Error saving academic profile:", error);
+      alert("Failed to update profile. Please check if you ran the SQL script in Supabase.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleLogout = async () => {
     if (!supabase) return;
@@ -338,44 +404,150 @@ const ProfilePage = () => {
                                <h3 className="text-3xl font-black mb-2">Institutional Profile</h3>
                                <p className="text-sm opacity-70">Official academic registration details verified by NLITedu.</p>
                              </div>
-                             <div className="rounded-2xl bg-white/10 px-6 py-3 backdrop-blur-xl border border-white/20">
-                                <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-1">Academic Status</p>
-                                <p className="text-lg font-black text-blue-400">Active Student</p>
-                             </div>
+                             {!isEditingAcademic ? (
+                               <button 
+                                 onClick={() => setIsEditingAcademic(true)}
+                                 className="flex items-center gap-2 rounded-2xl bg-white/10 px-6 py-3 backdrop-blur-xl border border-white/20 hover:bg-white/20 transition-all font-bold"
+                               >
+                                  <FaEdit /> Edit Profile
+                               </button>
+                             ) : (
+                               <div className="flex gap-3">
+                                 <button 
+                                   onClick={() => setIsEditingAcademic(false)}
+                                   className="rounded-2xl bg-white/5 px-6 py-3 border border-white/10 hover:bg-white/10 transition-all font-bold"
+                                 >
+                                    Cancel
+                                 </button>
+                                 <button 
+                                   onClick={handleSaveAcademic}
+                                   disabled={saving}
+                                   className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-all font-bold disabled:opacity-50"
+                                 >
+                                    {saving ? "Saving..." : "Save Profile"}
+                                 </button>
+                               </div>
+                             )}
                           </div>
                        </div>
                        
                        <div className="p-8">
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {[
-                              { label: "Primary Institution", value: academicDetails.collegeName || "Not Provided", icon: FaUniversity, color: "blue" },
-                              { label: "Branch / Stream", value: academicDetails.branch || "Not Provided", icon: FaGraduationCap, color: "purple" },
-                              { label: "Current Semester", value: academicDetails.semester || "Not Provided", icon: FaChartLine, color: "emerald" },
-                              { label: "Institution Type", value: academicDetails.collegeType || "Not Provided", icon: FaRegIdBadge, color: "amber" },
-                            ].map((item, i) => (
-                              <div key={i} className="flex gap-4 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 transition hover:border-primary/20 hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                                 <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400`}>
-                                   <item.icon size={20} />
-                                 </div>
-                                 <div>
-                                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{item.label}</p>
-                                   <p className="text-lg font-bold text-slate-900 dark:text-white">{item.value}</p>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
+                         {!isEditingAcademic ? (
+                           <>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {[
+                                  { label: "Primary Institution", value: profile?.college_name || academicDetails.collegeName || "Not Provided", icon: FaUniversity, color: "blue" },
+                                  { label: "Branch / Stream", value: profile?.branch || academicDetails.branch || "Not Provided", icon: FaGraduationCap, color: "purple" },
+                                  { label: "Current Semester", value: profile?.semester || academicDetails.semester || "Not Provided", icon: FaChartLine, color: "emerald" },
+                                  { label: "Institution Type", value: profile?.college_type || academicDetails.collegeType || "Not Provided", icon: FaRegIdBadge, color: "amber" },
+                                  { label: "Registration No", value: profile?.university_reg_no || "Not Provided", icon: FaRegIdBadge, color: "orange" },
+                                  { label: "Father's Name", value: profile?.father_name || "Not Provided", icon: FaUser, color: "pink" },
+                                ].map((item, i) => (
+                                  <div key={i} className="flex gap-4 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 transition hover:border-primary/20 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/5 text-primary">
+                                       <item.icon size={20} />
+                                     </div>
+                                     <div>
+                                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{item.label}</p>
+                                       <p className="text-lg font-bold text-slate-900 dark:text-white">{item.value}</p>
+                                     </div>
+                                  </div>
+                                ))}
+                             </div>
 
-                         <div className="mt-10 rounded-2xl bg-blue-50/50 p-6 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
-                            <div className="flex gap-4">
-                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
-                                  <FaCheck size={14} />
+                             <div className="mt-10 rounded-2xl bg-blue-50/50 p-6 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
+                                <div className="flex gap-4">
+                                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
+                                      <FaCheck size={14} />
+                                   </div>
+                                   <div>
+                                      <h4 className="font-bold text-blue-900 dark:text-blue-300">Profile Synchronization</h4>
+                                      <p className="text-sm text-blue-700/70 dark:text-blue-300/50">Your global profile is used to automatically fill future enrollment forms. Keep it updated for a faster experience.</p>
+                                   </div>
+                                </div>
+                             </div>
+                           </>
+                         ) : (
+                           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                               <div className="space-y-2">
+                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">College Name</label>
+                                 <input 
+                                   type="text"
+                                   value={academicForm.college_name || ""}
+                                   onChange={(e) => setAcademicForm({...academicForm, college_name: e.target.value})}
+                                   placeholder="Full name of your institution"
+                                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-primary dark:border-slate-800 dark:bg-slate-800/50 dark:text-white transition-all"
+                                 />
                                </div>
-                               <div>
-                                  <h4 className="font-bold text-blue-900 dark:text-blue-300">Information Verified</h4>
-                                  <p className="text-sm text-blue-700/70 dark:text-blue-300/50">These details were pre-validated during your enrollment process for <span className="font-bold">{academicDetails.course || "your course"}</span>. Contact support to update institutional data.</p>
+                               <div className="space-y-2">
+                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Branch / Department</label>
+                                 <input 
+                                   type="text"
+                                   value={academicForm.branch || ""}
+                                   onChange={(e) => setAcademicForm({...academicForm, branch: e.target.value})}
+                                   placeholder="e.g. Computer Science, Mechanical"
+                                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-primary dark:border-slate-800 dark:bg-slate-800/50 dark:text-white transition-all"
+                                 />
                                </div>
-                            </div>
-                         </div>
+                               <div className="space-y-2">
+                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Current Semester</label>
+                                 <select 
+                                   value={academicForm.semester || ""}
+                                   onChange={(e) => setAcademicForm({...academicForm, semester: e.target.value})}
+                                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-primary dark:border-slate-800 dark:bg-slate-800/50 dark:text-white transition-all"
+                                 >
+                                   <option value="">Select Semester</option>
+                                   {[1,2,3,4,5,6,7,8].map(s => <option key={s} value={`Semester ${s}`}>Semester {s}</option>)}
+                                   <option value="Completed">Course Completed</option>
+                                 </select>
+                               </div>
+                               <div className="space-y-2">
+                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Institution Type</label>
+                                 <select 
+                                   value={academicForm.college_type || ""}
+                                   onChange={(e) => setAcademicForm({...academicForm, college_type: e.target.value})}
+                                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-primary dark:border-slate-800 dark:bg-slate-800/50 dark:text-white transition-all"
+                                 >
+                                   <option value="">Select Type</option>
+                                   <option value="Government">Government</option>
+                                   <option value="Private">Private</option>
+                                   <option value="Semi-Government">Semi-Government</option>
+                                 </select>
+                               </div>
+                               <div className="space-y-2">
+                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Fathers Name</label>
+                                 <input 
+                                   type="text"
+                                   value={academicForm.father_name || ""}
+                                   onChange={(e) => setAcademicForm({...academicForm, father_name: e.target.value})}
+                                   placeholder="Full Name"
+                                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-primary dark:border-slate-800 dark:bg-slate-800/50 dark:text-white transition-all"
+                                 />
+                               </div>
+                               <div className="space-y-2">
+                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">University Reg No</label>
+                                 <input 
+                                   type="text"
+                                   value={academicForm.university_reg_no || ""}
+                                   onChange={(e) => setAcademicForm({...academicForm, university_reg_no: e.target.value})}
+                                   placeholder="e.g. 210111xxx"
+                                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-primary dark:border-slate-800 dark:bg-slate-800/50 dark:text-white transition-all"
+                                 />
+                               </div>
+                             </div>
+                             
+                             <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800">
+                                <button 
+                                  onClick={handleSaveAcademic}
+                                  disabled={saving}
+                                  className="rounded-2xl bg-primary px-12 py-4 font-black text-white shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                  {saving ? "Finalizing Update..." : "Update Institutional Profile"}
+                                </button>
+                             </div>
+                           </div>
+                         )}
                        </div>
                     </div>
                   </motion.div>
