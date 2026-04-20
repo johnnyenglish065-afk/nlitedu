@@ -7,7 +7,7 @@ import {
   FaClock, FaEye, FaUniversity, FaFilter, FaFileCsv 
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import EnrollmentDetail from "@/components/Admin/EnrollmentDetail";
+import EnrollmentDetail from "../../components/Admin/EnrollmentDetail";
 
 interface Enrollment {
   id: string;
@@ -45,9 +45,10 @@ export default function AdminDashboard() {
     fetchEnrollments();
 
     // Set up real-time subscription
-    if (!supabase) return;
+    const currentSupabase = supabase;
+    if (!currentSupabase) return;
     
-    const channel = supabase
+    const channel = currentSupabase
       .channel("admin_enrollments_realtime")
       .on(
         "postgres_changes",
@@ -60,7 +61,7 @@ export default function AdminDashboard() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      currentSupabase.removeChannel(channel);
     };
   }, []);
 
