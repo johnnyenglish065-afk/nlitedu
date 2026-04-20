@@ -493,8 +493,41 @@ const EnrollmentPage = () => {
   };
 
 
+  // Maintenance Mode Check
+  const isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
+
   return (
-    <main className="min-h-screen bg-gray-50 pt-[160px] pb-14 px-4 text-slate-900 dark:bg-slate-950 dark:text-white sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gray-50 pt-[160px] pb-14 px-4 text-slate-900 dark:bg-slate-950 dark:text-white sm:px-6 lg:px-8 relative">
+      {/* Maintenance Mode Overlay */}
+      {isMaintenanceMode && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+          <div className="mx-4 max-w-lg w-full rounded-3xl border border-amber-200 bg-white/95 p-10 shadow-2xl dark:border-amber-800 dark:bg-slate-900/95 text-center animate-[fadeIn_0.3s_ease-out]">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+              <svg className="h-10 w-10 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white sm:text-3xl">
+              Enrollment Temporarily Unavailable
+            </h1>
+            <p className="mt-4 text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+              We are currently performing scheduled maintenance and upgrades to improve your enrollment experience. The enrollment system will be back online shortly.
+            </p>
+            <div className="mt-6 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-6 py-4">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                📧 For urgent inquiries, please contact the development team.
+              </p>
+            </div>
+            <Link
+              href="/"
+              className="mt-8 inline-block rounded-full bg-blue-600 px-8 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              ← Return to Home
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900 sm:p-8">
           <div className="mb-10 flex items-start justify-between gap-4">
