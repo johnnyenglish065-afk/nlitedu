@@ -48,9 +48,10 @@ export default function RootLayout({
             <WelcomeAnimation />
           ) : (
             <>
-              <Header />
+              {/* Only show website header/footer if NOT in admin dashboard */}
+              {!pathname?.startsWith("/admin") && <Header />}
               {children}
-              <Footer />
+              {!pathname?.startsWith("/admin") && <Footer />}
               <ScrollToTop />
             </>
           )}

@@ -67,34 +67,36 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] dark:bg-slate-950">
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
-        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="bg-primary/10 p-2 rounded-xl">
-              <FaShieldAlt className="text-primary text-xl" />
+    <div className="min-h-screen bg-[#f8f9fc] dark:bg-slate-950 transition-colors duration-300">
+      <header className="fixed top-0 left-0 right-0 z-[100] bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b-2 border-primary/10 dark:border-primary/5 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)]">
+        <div className="container mx-auto px-6 h-22 flex items-center justify-between py-4">
+          <div className="flex items-center gap-5">
+            <div className="bg-primary p-2.5 rounded-2xl shadow-lg shadow-primary/20">
+              <FaShieldAlt className="text-white text-xl" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">Admin Portal</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Institutional Management</p>
+              <h1 className="text-xl font-black text-slate-900 dark:text-white leading-none tracking-tight">NLITedu <span className="text-primary">Admin</span></h1>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">Institutional Oversight</p>
             </div>
           </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Website</Link>
-            <Link href="/admin" className="text-sm font-bold text-primary">Dashboard</Link>
+          <nav className="hidden md:flex items-center gap-10">
+            <Link href="/" className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-primary transition-all">Public Portal</Link>
+            <Link href="/admin" className="text-xs font-black uppercase tracking-widest text-primary border-b-2 border-primary pb-1">Dashboard</Link>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
              <div className="text-right hidden sm:block">
-                <p className="text-xs font-bold text-slate-900 dark:text-white">{user?.email}</p>
-                <p className="text-[10px] text-green-500 font-bold uppercase tracking-wider">Super Admin</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">{user?.email?.split('@')[0]}</p>
+                <p className="text-[10px] text-primary font-black uppercase tracking-widest mt-1">Super Admin</p>
              </div>
-             <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center font-bold text-slate-600 dark:text-slate-400">
-                {user?.email?.charAt(0).toUpperCase()}
+             <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-primary to-blue-500 p-0.5 shadow-lg shadow-primary/20">
+                <div className="h-full w-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center font-black text-primary text-lg">
+                   {user?.email?.charAt(0).toUpperCase()}
+                </div>
              </div>
           </div>
         </div>
       </header>
-      <main className="pt-24 pb-12">
+      <main className="pt-28 pb-12">
         {children}
       </main>
     </div>

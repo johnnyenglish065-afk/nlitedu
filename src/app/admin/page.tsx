@@ -43,11 +43,31 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchEnrollments();
+
+    // Set up real-time subscription
+    if (!supabase) return;
+    
+    const channel = supabase
+      .channel("admin_enrollments_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "enrollments" },
+        (payload) => {
+          console.log("Real-time change detected:", payload);
+          fetchEnrollments(); // Re-fetch to update metrics and list
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchEnrollments = async () => {
     try {
-      setLoading(true);
+      // Only show loading on initial fetch to avoid flickering during real-time updates
+      if (enrollments.length === 0) setLoading(true);
       if (!supabase) return;
 
       const { data, error } = await supabase
