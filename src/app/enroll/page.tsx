@@ -271,15 +271,9 @@ const EnrollmentPage = () => {
 
       if (!supabase) throw new Error("Database connection lost.");
 
-      const { error: dbError } = await supabase.from("enrollments").upsert([
-        {
-          ...currentForm,
-          user_id: user?.id,
-          payment_id: orderId,
-          payment_status: "PAID",
-          enrolled_at: new Date().toISOString(),
-        },
-      ], { onConflict: "payment_id" });
+      const { error: dbError } = await supabase.from("enrollments")
+        .update({ status: "PAID" })
+        .eq("cf_payment_id", orderId);
 
       if (dbError) throw dbError;
 
@@ -339,7 +333,7 @@ const EnrollmentPage = () => {
       form.state !== "" &&
       form.qualification !== "" &&
       form.marks10.trim() !== "" &&
-      form.marks12.trim() !== "" &&
+      // marks12 is now optional
       form.marksSem.trim() !== "" &&
       (marksheet12File !== null || marksheetSemFile !== null)
     );
@@ -378,7 +372,6 @@ const EnrollmentPage = () => {
     if (!form.state) return "Please select your state.";
     if (!form.qualification) return "Please select your qualification.";
     if (!form.marks10.trim()) return "Please enter your 10th marks.";
-    if (!form.marks12.trim()) return "Please enter your 12th/Diploma marks.";
     if (!form.marksSem.trim()) return "Please enter your Last semester marks.";
     if (!marksheet12File && !marksheetSemFile) return "Please upload your 10th/12th marksheet OR your latest semester marksheet.";
     if (marksheet12File && marksheetSemFile) return "Please upload ONLY ONE certificate (do not upload both).";
@@ -436,12 +429,29 @@ const EnrollmentPage = () => {
 
       // 1. Save Pending Enrollment
       const pendingData = {
-        ...form,
-        user_id: user?.id, // Link to Supabase User
+        full_name: form.fullName,
+        father_name: form.fatherName,
+        gender: form.gender,
+        email: form.email,
+        whatsapp: form.whatsapp,
+        dob: form.dob,
+        brn: form.brn,
+        branch: form.branch,
+        semester: form.semester,
+        college_name: form.collegeName,
+        college_type: form.collegeType,
+        state: form.state,
+        course_title: form.course,
+        message: form.message,
+        qualification: form.qualification,
+        marks10: form.marks10,
+        marks12: form.marks12,
+        marksSem: form.marksSem,
         marksheet12Url: uploaded12Url,
         marksheetSemUrl: uploadedSemUrl,
-        payment_id: orderId,
-        payment_status: "PENDING",
+        user_id: user?.id,
+        cf_payment_id: orderId,
+        status: "PENDING",
       };
       const { error: pendingError } = await supabase.from("enrollments").insert([
         pendingData
@@ -854,7 +864,6 @@ const EnrollmentPage = () => {
                   onChange={handleChange}
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                   placeholder="E.g. 80%"
-                  required
                 />
               </label>
               <label className="block">

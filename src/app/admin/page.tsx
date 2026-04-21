@@ -32,7 +32,7 @@ interface Enrollment {
   full_name: string;
   email: string;
   course_title: string;
-  payment_status: string; 
+  status: string; 
   cf_payment_id: string;
   created_at: string;
   user_id: string;
@@ -101,7 +101,10 @@ export default function AdminDashboard() {
     if (!supabase) return;
     try {
       if (enrollments.length === 0) setLoading(true);
-      const { data, error } = await supabase.from("enrollments").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("id, full_name, email, course_title, status, cf_payment_id, created_at, user_id, college_name, college_type, branch, semester, whatsapp, father_name, gender, dob, brn, state, qualification, marksheet12Url, marksheetSemUrl, message")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       setEnrollments(data || []);
     } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -109,13 +112,13 @@ export default function AdminDashboard() {
 
   const fetchLiveSessions = async () => {
     if (!supabase) return;
-    const { data } = await supabase.from("live_sessions").select("*").eq("is_live", true);
+    const { data } = await supabase.from("live_sessions").select("id, course_id, course_title, session_url, is_live, started_at").eq("is_live", true);
     if (data) setLiveSessions(data);
   };
 
   const fetchAttendance = async () => {
     if (!supabase) return;
-    const { data } = await supabase.from("live_attendance").select("*").order("joined_at", { ascending: false }).limit(20);
+    const { data } = await supabase.from("live_attendance").select("id, session_id, student_name, student_email, joined_at").order("joined_at", { ascending: false }).limit(20);
     if (data) setLiveAttendance(data);
   };
 
@@ -139,7 +142,7 @@ export default function AdminDashboard() {
   const downloadCSV = () => {
     if (enrollments.length === 0) return;
     const headers = ["ID", "Name", "Email", "Course", "Status", "College"].join(",");
-    const rows = enrollments.map(e => [e.id, e.full_name, e.email, e.course_title, e.payment_status, e.college_name].join(","));
+    const rows = enrollments.map(e => [e.id, e.full_name, e.email, e.course_title, e.status, e.college_name].join(","));
     const blob = new Blob([[headers, ...rows].join("\n")], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -148,15 +151,15 @@ export default function AdminDashboard() {
 
   const filteredEnrollments = enrollments.filter(e => {
     const matchesSearch = e.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || e.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "ALL" || e.payment_status === statusFilter;
+    const matchesStatus = statusFilter === "ALL" || e.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const stats = {
     total: enrollments.length,
-    paid: enrollments.filter(e => e.payment_status === "PAID").length,
-    pending: enrollments.filter(e => e.payment_status === "PENDING").length,
-    revenue: enrollments.filter(e => e.payment_status === "PAID").length * 499
+    paid: enrollments.filter(e => e.status === "PAID").length,
+    pending: enrollments.filter(e => e.status === "PENDING").length,
+    revenue: enrollments.filter(e => e.status === "PAID").length * 499
   };
 
   return (
@@ -240,8 +243,8 @@ export default function AdminDashboard() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-black ${e.payment_status === "PAID" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-                            {e.payment_status}
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black ${e.status === "PAID" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                            {e.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">

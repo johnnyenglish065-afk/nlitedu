@@ -72,16 +72,15 @@ serve(async (req) => {
       const { error } = await supabase
         .from("enrollments")
         .update({ 
-          payment_status: "PAID",
+          status: "PAID",
           cf_payment_id: payment.cf_payment_id,
           payment_method: payment.payment_group,
           payment_amount: payment.payment_amount,
           payment_currency: payment.payment_currency || "INR",
           payment_time: payment.payment_time,
-          enrolled_at: new Date().toISOString()
         })
-        .eq("payment_id", orderId)
-        .eq("payment_status", "PENDING");
+        .eq("cf_payment_id", orderId)
+        .eq("status", "PENDING");
 
       if (error) {
         console.error("Database update error:", error);

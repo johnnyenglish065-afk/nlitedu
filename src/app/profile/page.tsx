@@ -34,8 +34,8 @@ interface ProfileData {
 interface Enrollment {
   id: string;
   course: string;
-  payment_status: string;
-  enrolled_at: string;
+  status: string;
+  created_at: string;
   collegeName?: string;
   branch?: string;
   semester?: string;
@@ -67,7 +67,7 @@ const ProfilePage = () => {
         // Fetch Profile
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("*")
+          .select("college_name, college_type, branch, semester, university_reg_no, father_name, whatsapp_no, resident_state, qualification, full_name, avatar_url, id")
           .eq("id", user.id)
           .single();
 
@@ -89,9 +89,9 @@ const ProfilePage = () => {
         // Fetch Enrollments
         const { data: enrollData, error: enrollError } = await supabase
           .from("enrollments")
-          .select("*")
+          .select("id, course_title, status, created_at, college_name, branch, semester, college_type")
           .eq("user_id", user.id)
-          .order("enrolled_at", { ascending: false });
+          .order("created_at", { ascending: false });
 
         if (enrollData) {
           setEnrollments(enrollData);
@@ -164,7 +164,7 @@ const ProfilePage = () => {
 
   if (!user) return null;
 
-  const paidEnrollments = enrollments.filter(e => e.payment_status === "PAID");
+  const paidEnrollments = enrollments.filter(e => e.status === "PAID");
   const academicDetails = enrollments[0] || {}; // Use latest enrollment for academic profile
 
   const tabs = [
@@ -307,15 +307,15 @@ const ProfilePage = () => {
                         {enrollments.length > 0 ? (
                           enrollments.slice(0, 3).map((enroll, i) => (
                             <div key={i} className="flex items-center gap-4 rounded-2xl border border-slate-100 p-4 transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/30">
-                              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${enroll.payment_status === 'PAID' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
-                                {enroll.payment_status === 'PAID' ? <FaCheckCircle /> : <FaClock />}
+                              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${enroll.status === 'PAID' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                                {enroll.status === 'PAID' ? <FaCheckCircle /> : <FaClock />}
                               </div>
                               <div className="flex-1">
                                 <h5 className="font-bold text-slate-900 dark:text-white line-clamp-1">{enroll.course} Enrollment</h5>
-                                <p className="text-xs text-slate-500">{new Date(enroll.enrolled_at).toLocaleDateString()}</p>
+                                <p className="text-xs text-slate-500">{new Date(enroll.created_at).toLocaleDateString()}</p>
                               </div>
-                              <div className={`rounded-lg px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${enroll.payment_status === 'PAID' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>
-                                {enroll.payment_status}
+                              <div className={`rounded-lg px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${enroll.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>
+                                {enroll.status}
                               </div>
                             </div>
                           ))
@@ -367,7 +367,7 @@ const ProfilePage = () => {
                                  <div className="mt-auto flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
                                     <div className="space-y-1">
                                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Enrolled On</p>
-                                      <p className="text-sm font-bold text-slate-600 dark:text-slate-300">{new Date(course.enrolled_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric'})}</p>
+                                      <p className="text-sm font-bold text-slate-600 dark:text-slate-300">{new Date(course.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric'})}</p>
                                     </div>
                                     <button className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
                                       Continue Learning
