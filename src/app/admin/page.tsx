@@ -5,10 +5,12 @@ import { supabase } from "@/lib/supabaseClient";
 import { 
   FaSearch, FaDownload, FaUserGraduate, FaCreditCard, 
   FaClock, FaEye, FaUniversity, FaFilter, FaFileCsv,
-  FaVideo, FaStop, FaPlay, FaUsers, FaLink, FaBroadcastTower
+  FaVideo, FaStop, FaPlay, FaUsers, FaLink, FaBroadcastTower,
+  FaClipboardList, FaPlus, FaTrash, FaEnvelope, FaEdit
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import EnrollmentDetail from "../../components/Admin/EnrollmentDetail";
+import { COURSE_LIST } from "@/data/courses";
 
 interface LiveSession {
   id: string;
@@ -52,6 +54,27 @@ interface Enrollment {
   message?: string;
 }
 
+interface Quiz {
+  id: string;
+  title: string;
+  description: string;
+  course_slug: string;
+  duration_minutes: number;
+  is_active: boolean;
+  created_at: string;
+  scheduled_for?: string | null;
+}
+
+interface QuizQuestion {
+  id: string;
+  quiz_id: string;
+  question_text: string;
+  options: string[];
+  correct_index: number;
+  points: number;
+  order_index: number;
+}
+
 export default function AdminDashboard() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,16 +83,31 @@ export default function AdminDashboard() {
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
   
   // Live Class State
-  const [activeAdminTab, setActiveAdminTab] = useState<"STUDENTS" | "LIVE">("STUDENTS");
+  const [activeAdminTab, setActiveAdminTab] = useState<"STUDENTS" | "LIVE" | "QUIZZES" | "EMAIL">("STUDENTS");
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
   const [liveAttendance, setLiveAttendance] = useState<LiveAttendance[]>([]);
   const [isStartingSession, setIsStartingSession] = useState(false);
   const [newSession, setNewSession] = useState({ course: "", url: "" });
 
+  // Quiz State
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [isCreatingQuiz, setIsCreatingQuiz] = useState(false);
+  const [newQuiz, setNewQuiz] = useState({ title: "", description: "", course_slug: "global", duration_minutes: 30, scheduled_for: "" });
+  const [newQuestion, setNewQuestion] = useState({ question_text: "", options: ["", "", "", ""], correct_index: 0, points: 1 });
+  const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+
+  // Email Blaster State
+  const [emailBlast, setEmailBlast] = useState({ audience: "ALL", subject: "", message: "" });
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
   useEffect(() => {
     fetchEnrollments();
     fetchLiveSessions();
     fetchAttendance();
+    fetchQuizzes();
 
     const currentSupabase = supabase;
     if (!currentSupabase) return;
@@ -122,6 +160,18 @@ export default function AdminDashboard() {
     if (data) setLiveAttendance(data);
   };
 
+  const fetchQuizzes = async () => {
+    if (!supabase) return;
+    const { data } = await supabase.from("quizzes").select("*").order("created_at", { ascending: false });
+    if (data) setQuizzes(data);
+  };
+
+  const fetchQuizQuestions = async (quizId: string) => {
+    if (!supabase) return;
+    const { data } = await supabase.from("quiz_questions").select("*").eq("quiz_id", quizId).order("order_index", { ascending: true });
+    if (data) setQuizQuestions(data);
+  };
+
   const handleStartLive = async () => {
     if (!newSession.course || !newSession.url || !supabase) {
       alert("Fill all fields"); return;
@@ -137,6 +187,155 @@ export default function AdminDashboard() {
   const handleEndLive = async (id: string) => {
     if (!supabase) return;
     await supabase.from("live_sessions").update({ is_live: false }).eq("id", id);
+  };
+
+  const handleCreateQuiz = async () => {
+    if (!newQuiz.title || !newQuiz.course_slug || !supabase) {
+      alert("Please fill title and course slug.");
+      return;
+    }
+    setIsCreatingQuiz(true);
+    try {
+      const payload = {
+        title: newQuiz.title,
+        description: newQuiz.description,
+        course_slug: newQuiz.course_slug,
+        duration_minutes: newQuiz.duration_minutes,
+        ...(newQuiz.scheduled_for ? { scheduled_for: new Date(newQuiz.scheduled_for).toISOString() } : {})
+      };
+
+      if (editingQuizId) {
+        const { error } = await supabase.from("quizzes").update(payload).eq("id", editingQuizId);
+        if (error) {
+          console.error("Error updating quiz:", error);
+          alert("Failed to update test: " + error.message);
+        } else {
+          setNewQuiz({ title: "", description: "", course_slug: "global", duration_minutes: 30, scheduled_for: "" });
+          setEditingQuizId(null);
+          fetchQuizzes();
+          alert("Test updated successfully!");
+        }
+      } else {
+        const { data, error } = await supabase.from("quizzes").insert([payload]).select();
+        if (error) {
+          console.error("Error creating quiz:", error);
+          alert("Failed to create test: " + error.message);
+        } else if (data) {
+          setNewQuiz({ title: "", description: "", course_slug: "global", duration_minutes: 30, scheduled_for: "" });
+          fetchQuizzes();
+          alert("Test created successfully!");
+        }
+      }
+    } catch (err: any) {
+      console.error("Exception creating quiz:", err);
+      alert("Exception: " + err.message);
+    }
+    setIsCreatingQuiz(false);
+  };
+
+  const handleDownloadQuizResults = async (quizId: string, quizTitle: string) => {
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from("quiz_attempts")
+        .select("user_email, score, total_points")
+        .eq("quiz_id", quizId)
+        .order("score", { ascending: false });
+        
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        alert("No attempts yet for this test.");
+        return;
+      }
+      
+      const headers = ["User Email", "Score", "Total Points"].join(",");
+      const rows = data.map(r => [r.user_email, r.score, r.total_points].join(","));
+      const blob = new Blob([[headers, ...rows].join("\n")], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; 
+      a.download = `Results_${quizTitle.replace(/\s+/g, '_')}.csv`; 
+      a.click();
+    } catch (e: any) {
+      alert("Failed to download results: " + e.message);
+    }
+  };
+
+  const handleSendEmailBlast = async () => {
+    if (!emailBlast.subject || !emailBlast.message) {
+      alert("Please fill subject and message.");
+      return;
+    }
+    setIsSendingEmail(true);
+    try {
+      const response = await fetch("/api/email/blast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailBlast)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert("Emails sent successfully!");
+        setEmailBlast({ audience: "ALL", subject: "", message: "" });
+      } else {
+        alert("Failed to send emails: " + (data.error || "Unknown error"));
+      }
+    } catch (e: any) {
+      alert("Error sending emails: " + e.message);
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  const handleAddQuestion = async () => {
+    if (!selectedQuiz || !newQuestion.question_text || newQuestion.options.some(o => !o) || !supabase) {
+      alert("Please fill question and all options.");
+      return;
+    }
+    const payload = {
+      quiz_id: selectedQuiz.id,
+      ...newQuestion
+    };
+
+    if (editingQuestionId) {
+      const { error } = await supabase.from("quiz_questions").update(payload).eq("id", editingQuestionId);
+      if (error) {
+        alert("Failed to update question: " + error.message);
+      } else {
+        setNewQuestion({ question_text: "", options: ["", "", "", ""], correct_index: 0, points: 1 });
+        setEditingQuestionId(null);
+        fetchQuizQuestions(selectedQuiz.id);
+        alert("Question updated!");
+      }
+    } else {
+      const { error } = await supabase.from("quiz_questions").insert([payload]);
+      if (error) {
+        alert("Failed to add question: " + error.message);
+      } else {
+        setNewQuestion({ question_text: "", options: ["", "", "", ""], correct_index: 0, points: 1 });
+        fetchQuizQuestions(selectedQuiz.id);
+        alert("Question added!");
+      }
+    }
+  };
+
+  const handleDeleteQuiz = async (id: string) => {
+    if (!supabase || !confirm("Are you sure you want to delete this test?")) return;
+    
+    // Explicitly delete attempts first to satisfy foreign keys lacking ON DELETE CASCADE
+    await supabase.from("quiz_attempts").delete().eq("quiz_id", id);
+    await supabase.from("quiz_questions").delete().eq("quiz_id", id);
+    
+    const { error } = await supabase.from("quizzes").delete().eq("id", id);
+    if (error) alert("Failed to delete test: " + error.message);
+    else fetchQuizzes();
+  };
+
+  const handleDeleteQuestion = async (id: string) => {
+    if (!supabase || !selectedQuiz) return;
+    const { error } = await supabase.from("quiz_questions").delete().eq("id", id);
+    if (error) alert("Failed to delete question: " + error.message);
+    else fetchQuizQuestions(selectedQuiz.id);
   };
 
   const downloadCSV = () => {
@@ -174,6 +373,12 @@ export default function AdminDashboard() {
             <FaVideo /> Live Control
             {liveSessions.length > 0 && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
           </button>
+          <button onClick={() => setActiveAdminTab("QUIZZES")} className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 ${activeAdminTab === "QUIZZES" ? "bg-white dark:bg-slate-700 text-primary shadow" : "text-slate-500"}`}>
+            <FaClipboardList /> Quizzes
+          </button>
+          <button onClick={() => setActiveAdminTab("EMAIL")} className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 ${activeAdminTab === "EMAIL" ? "bg-white dark:bg-slate-700 text-primary shadow" : "text-slate-500"}`}>
+            <FaEnvelope /> Email Blaster
+          </button>
         </div>
       </div>
 
@@ -196,7 +401,7 @@ export default function AdminDashboard() {
       </div>
 
       <AnimatePresence mode="wait">
-        {activeAdminTab === "STUDENTS" ? (
+        {activeAdminTab === "STUDENTS" && (
           <motion.div key="st" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             {/* Table Section */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
@@ -257,7 +462,9 @@ export default function AdminDashboard() {
               </div>
             </div>
           </motion.div>
-        ) : (
+        )}
+        
+        {activeAdminTab === "LIVE" && (
           <motion.div key="lv" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
               <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
@@ -314,10 +521,237 @@ export default function AdminDashboard() {
             </div>
           </motion.div>
         )}
+
+        {activeAdminTab === "QUIZZES" && (
+          <motion.div key="qz" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1 space-y-8">
+              {/* Create Quiz Form */}
+              <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+                <h3 className="text-xl font-black mb-6 flex items-center gap-3"><FaPlus className="text-primary" /> Create Test</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Test Title</label>
+                    <input type="text" placeholder="e.g. Weekly Aptitude Test" value={newQuiz.title} onChange={e => setNewQuiz({...newQuiz, title: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Description</label>
+                    <textarea placeholder="Instructions..." value={newQuiz.description} onChange={e => setNewQuiz({...newQuiz, description: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none h-24" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Duration (mins)</label>
+                      <input type="number" min="1" value={newQuiz.duration_minutes} onChange={e => setNewQuiz({...newQuiz, duration_minutes: parseInt(e.target.value) || 30})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Course Target</label>
+                      <select value={newQuiz.course_slug} onChange={e => setNewQuiz({...newQuiz, course_slug: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none">
+                        <option value="global">Global (All Users)</option>
+                        {COURSE_LIST.map(c => <option key={c.slug} value={c.slug}>{c.title}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Scheduled Date & Time (Optional)</label>
+                    <input type="datetime-local" value={newQuiz.scheduled_for || ""} onChange={e => setNewQuiz({...newQuiz, scheduled_for: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none" />
+                  </div>
+                  <div className="flex gap-3 mt-4">
+                    <button onClick={handleCreateQuiz} disabled={isCreatingQuiz || !newQuiz.title} className="flex-1 py-4 bg-primary text-white font-black rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                      {isCreatingQuiz ? "Saving..." : editingQuizId ? "Update Test" : "Create Test"}
+                    </button>
+                    {editingQuizId && (
+                      <button onClick={() => { setEditingQuizId(null); setNewQuiz({ title: "", description: "", course_slug: "global", duration_minutes: 30, scheduled_for: "" }); }} className="py-4 px-6 bg-slate-100 text-slate-500 font-black rounded-2xl hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2">
+              {/* List of Quizzes */}
+              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                  <span className="font-black text-xs uppercase text-slate-500">Active Tests</span>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {quizzes.length === 0 ? <p className="p-10 text-center text-slate-400 italic">No tests created yet.</p> : quizzes.map(q => (
+                    <div key={q.id} className="p-6 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          <h4 className="font-black text-lg">{q.title}</h4>
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full">{q.course_slug}</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mb-2">{q.description}</p>
+                        <div className="flex gap-4 text-xs font-bold text-slate-400">
+                          <span className="flex items-center gap-1"><FaClock /> {q.duration_minutes} mins</span>
+                          <span>• {new Date(q.created_at).toLocaleDateString()}</span>
+                          {q.scheduled_for && <span className="text-primary">• Scheduled: {new Date(q.scheduled_for).toLocaleString()}</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 ml-4">
+                        <button onClick={() => handleDownloadQuizResults(q.id, q.title)} className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all" title="Download Results"><FaDownload /></button>
+                        <button onClick={() => {
+                          setNewQuiz({
+                            title: q.title,
+                            description: q.description || "",
+                            course_slug: q.course_slug,
+                            duration_minutes: q.duration_minutes,
+                            scheduled_for: q.scheduled_for ? new Date(q.scheduled_for).toISOString().slice(0, 16) : ""
+                          });
+                          setEditingQuizId(q.id);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }} className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all" title="Edit Test"><FaEdit /></button>
+                        <button onClick={() => { setSelectedQuiz(q); fetchQuizQuestions(q.id); }} className="px-4 py-2 bg-primary/10 text-primary text-sm font-black rounded-xl hover:bg-primary hover:text-white transition-all">Questions</button>
+                        <button onClick={() => handleDeleteQuiz(q.id)} className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all"><FaTrash /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {activeAdminTab === "EMAIL" && (
+          <motion.div key="em" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-4xl mx-auto">
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+              <h3 className="text-xl font-black mb-6 flex items-center gap-3"><FaEnvelope className="text-primary" /> Email Blaster</h3>
+              <p className="text-sm text-slate-500 mb-8">Send updates, test links, and announcements directly to enrolled students.</p>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Audience Target</label>
+                  <select value={emailBlast.audience} onChange={e => setEmailBlast({...emailBlast, audience: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none font-bold">
+                    <option value="ALL">All Enrolled Students (Paid & Non-Paid)</option>
+                    <option value="ALL_REGISTERED">All Registered Platform Users</option>
+                    {COURSE_LIST.map(c => <option key={c.slug} value={c.slug}>{c.title} Students</option>)}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Subject Line</label>
+                  <input type="text" placeholder="e.g. Important Update: New Quiz Available!" value={emailBlast.subject} onChange={e => setEmailBlast({...emailBlast, subject: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none" />
+                </div>
+                
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Message Body (Supports HTML)</label>
+                  <textarea placeholder="<h1>Hello Students!</h1><p>...</p>" value={emailBlast.message} onChange={e => setEmailBlast({...emailBlast, message: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none min-h-[250px] font-mono text-sm" />
+                </div>
+                
+                <button onClick={handleSendEmailBlast} disabled={isSendingEmail || !emailBlast.subject || !emailBlast.message} className="w-full py-4 bg-primary text-white font-black rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-primary/20 mt-4 disabled:opacity-50 disabled:cursor-not-allowed text-lg">
+                  <FaBroadcastTower /> {isSendingEmail ? "Broadcasting Emails..." : "Send Blast"}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       <AnimatePresence>
         {selectedEnrollment && <EnrollmentDetail enrollment={selectedEnrollment} onClose={() => setSelectedEnrollment(null)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedQuiz && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800">
+              
+              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <div>
+                  <h3 className="font-black text-xl">{selectedQuiz.title} - Questions</h3>
+                  <p className="text-xs text-slate-500 mt-1">Add or remove questions for this test.</p>
+                </div>
+                <button onClick={() => setSelectedQuiz(null)} className="p-2 bg-slate-200 dark:bg-slate-700 text-slate-500 rounded-xl hover:bg-red-100 hover:text-red-600 transition-colors"><FaTrash className="opacity-0" style={{display: 'none'}}/><span className="text-xl leading-none">&times;</span></button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/50 dark:bg-slate-900">
+                {/* Add Question Form */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm h-fit">
+                  <h4 className="font-black text-sm uppercase text-slate-500 mb-4 flex items-center gap-2"><FaPlus className="text-primary"/> New Question</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Question Text</label>
+                      <textarea placeholder="What is..." value={newQuestion.question_text} onChange={e => setNewQuestion({...newQuestion, question_text: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none" />
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Options & Correct Answer</label>
+                      <div className="space-y-2">
+                        {[0, 1, 2, 3].map(i => (
+                          <div key={i} className="flex items-center gap-3">
+                            <input type="radio" name="correct_option" checked={newQuestion.correct_index === i} onChange={() => setNewQuestion({...newQuestion, correct_index: i})} className="w-4 h-4 text-primary" />
+                            <input type="text" placeholder={`Option ${i + 1}`} value={newQuestion.options[i]} onChange={e => {
+                              const newOpts = [...newQuestion.options];
+                              newOpts[i] = e.target.value;
+                              setNewQuestion({...newQuestion, options: newOpts});
+                            }} className="flex-1 p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Points</label>
+                      <input type="number" min="1" value={newQuestion.points} onChange={e => setNewQuestion({...newQuestion, points: parseInt(e.target.value) || 1})} className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none" />
+                    </div>
+
+                    <div className="flex gap-3 mt-4">
+                      <button onClick={handleAddQuestion} disabled={!newQuestion.question_text || newQuestion.options.some(o => !o)} className="flex-1 py-3 bg-primary text-white font-black rounded-xl shadow-lg disabled:opacity-50">
+                        {editingQuestionId ? "Update Question" : "Add Question"}
+                      </button>
+                      {editingQuestionId && (
+                        <button onClick={() => { setEditingQuestionId(null); setNewQuestion({ question_text: "", options: ["", "", "", ""], correct_index: 0, points: 1 }); }} className="py-3 px-4 bg-slate-100 text-slate-500 font-black rounded-xl hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800">
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Question List */}
+                <div className="space-y-4">
+                  <h4 className="font-black text-sm uppercase text-slate-500 mb-4">Existing Questions ({quizQuestions.length})</h4>
+                  {quizQuestions.length === 0 ? (
+                    <div className="p-8 text-center bg-white dark:bg-slate-800 border border-dashed border-slate-300 dark:border-slate-600 rounded-2xl text-slate-400">
+                      No questions added yet.
+                    </div>
+                  ) : quizQuestions.map((q, idx) => (
+                    <div key={q.id} className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm relative group">
+                      <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => {
+                          setNewQuestion({
+                            question_text: q.question_text,
+                            options: [...q.options],
+                            correct_index: q.correct_index,
+                            points: q.points
+                          });
+                          setEditingQuestionId(q.id);
+                        }} className="p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"><FaEdit /></button>
+                        <button onClick={() => handleDeleteQuestion(q.id)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><FaTrash /></button>
+                      </div>
+                      <div className="flex gap-3 mb-3 pr-8">
+                        <span className="font-black text-primary">{idx + 1}.</span>
+                        <p className="font-bold text-sm">{q.question_text}</p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 pl-6">
+                        {q.options.map((opt, i) => (
+                          <div key={i} className={`text-xs p-2 rounded-lg border ${q.correct_index === i ? 'bg-green-50 border-green-200 text-green-700 font-bold' : 'bg-slate-50 border-slate-100 text-slate-600 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400'}`}>
+                            {opt} {q.correct_index === i && '✓'}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 pl-6 text-[10px] font-bold text-slate-400 uppercase">
+                        Points: {q.points}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
