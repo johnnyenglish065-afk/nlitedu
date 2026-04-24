@@ -10,6 +10,7 @@ interface AuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<{ error: any }>;
+  updatePassword: (password: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,8 +58,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const updatePassword = async (password: string) => {
+    if (!supabase) return { error: { message: "Supabase not initialized" } };
+    return await supabase.auth.updateUser({ password });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, resetPasswordForEmail }}>
+    <AuthContext.Provider value={{ user, session, loading, signOut, resetPasswordForEmail, updatePassword }}>
       {children}
     </AuthContext.Provider>
   );
