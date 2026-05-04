@@ -194,8 +194,8 @@ const EnrollmentPage = () => {
 
   const handle12FileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      if (e.target.files[0].size > 100 * 1024) {
-        alert("Maximum file size strictly limited to 100 KB.");
+      if (e.target.files[0].size > 500 * 1024 * 1024) {
+        alert("Maximum file size strictly limited to 500 MB.");
         return;
       }
       setMarksheet12File(e.target.files[0]);
@@ -204,8 +204,8 @@ const EnrollmentPage = () => {
 
   const handleSemFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      if (e.target.files[0].size > 100 * 1024) {
-        alert("Maximum file size strictly limited to 100 KB.");
+      if (e.target.files[0].size > 500 * 1024 * 1024) {
+        alert("Maximum file size strictly limited to 500 MB.");
         return;
       }
       setMarksheetSemFile(e.target.files[0]);
