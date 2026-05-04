@@ -194,8 +194,8 @@ const EnrollmentPage = () => {
 
   const handle12FileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      if (e.target.files[0].size > 500 * 1024 * 1024) {
-        alert("Maximum file size strictly limited to 500 MB.");
+      if (e.target.files[0].size > 500 * 1024) {
+        alert("Maximum file size strictly limited to 500 KB.");
         return;
       }
       setMarksheet12File(e.target.files[0]);
@@ -204,8 +204,8 @@ const EnrollmentPage = () => {
 
   const handleSemFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      if (e.target.files[0].size > 500 * 1024 * 1024) {
-        alert("Maximum file size strictly limited to 500 MB.");
+      if (e.target.files[0].size > 500 * 1024) {
+        alert("Maximum file size strictly limited to 500 KB.");
         return;
       }
       setMarksheetSemFile(e.target.files[0]);
@@ -884,7 +884,7 @@ const EnrollmentPage = () => {
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block text-sm font-medium">Upload 10th/12th Marksheet (Max 100KB)</span>
+                <span className="mb-2 block text-sm font-medium">Upload 10th/12th Marksheet (Max 500KB)</span>
                 <div className="flex items-center justify-center w-full">
                     <label htmlFor="dropzone-file-1" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
                         <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
@@ -892,7 +892,7 @@ const EnrollmentPage = () => {
                                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                             </svg>
                             <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{marksheet12File ? marksheet12File.name : "Click to upload"}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 100KB)</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 500KB)</p>
                         </div>
                         <input id="dropzone-file-1" type="file" className="hidden" accept=".pdf,image/*" onChange={handle12FileChange} />
                     </label>
@@ -900,7 +900,7 @@ const EnrollmentPage = () => {
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-medium">Upload Latest Sem Marksheet (Max 100KB)</span>
+                <span className="mb-2 block text-sm font-medium">Upload Latest Sem Marksheet (Max 500KB)</span>
                 <div className="flex items-center justify-center w-full">
                     <label htmlFor="dropzone-file-2" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
                         <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
@@ -908,7 +908,7 @@ const EnrollmentPage = () => {
                                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                             </svg>
                             <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{marksheetSemFile ? marksheetSemFile.name : "Click to upload"}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 100KB)</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 500KB)</p>
                         </div>
                         <input id="dropzone-file-2" type="file" className="hidden" accept=".pdf,image/*" onChange={handleSemFileChange} />
                     </label>
