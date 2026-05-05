@@ -8,6 +8,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { FiCheckCircle, FiCopy, FiDownload, FiExternalLink, FiLock, FiLogOut, FiMail, FiUser, FiX } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const courseList = [
   {
@@ -1012,6 +1014,64 @@ const EnrollmentPage = () => {
 };
 
 const SuccessModal = ({ onClose, courseTitle, orderId }: { onClose: () => void, courseTitle: string, orderId: string }) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleDownloadReceipt = async () => {
+    const element = document.getElementById("receipt-content");
+    if (!element) return;
+    
+    setIsGenerating(true);
+    try {
+      // Temporarily hide close button and action buttons for the screenshot
+      const actionsEl = document.getElementById("receipt-actions");
+      const closeBtnEl = document.getElementById("receipt-close-btn");
+      if (actionsEl) actionsEl.style.display = "none";
+      if (closeBtnEl) closeBtnEl.style.display = "none";
+
+      const canvas = await html2canvas(element, { scale: 2, backgroundColor: "#ffffff" });
+      
+      // Restore elements
+      if (actionsEl) actionsEl.style.display = "grid";
+      if (closeBtnEl) closeBtnEl.style.display = "block";
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      
+      // Calculate padding and dimensions
+      const padding = 10; // 10mm padding
+      const pdfWidth = pdf.internal.pageSize.getWidth() - (padding * 2);
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      // Add NLITedu Logo Text at the top
+      pdf.setFontSize(22);
+      pdf.setTextColor(37, 99, 235); // Blue-600
+      pdf.text("NLITedu", pdf.internal.pageSize.getWidth() / 2, 20, { align: "center" });
+      
+      pdf.setFontSize(12);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text("Nexgen Learning Institute of Technology", pdf.internal.pageSize.getWidth() / 2, 28, { align: "center" });
+      
+      // Add a line
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(padding, 35, pdf.internal.pageSize.getWidth() - padding, 35);
+      
+      // Add the receipt content image
+      pdf.addImage(imgData, "PNG", padding, 45, pdfWidth, pdfHeight);
+      
+      // Add footer
+      pdf.setFontSize(10);
+      pdf.setTextColor(148, 163, 184);
+      pdf.text("This is an electronically generated receipt.", pdf.internal.pageSize.getWidth() / 2, 45 + pdfHeight + 15, { align: "center" });
+      
+      pdf.save(`NLITedu_Receipt_${orderId}.pdf`);
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       <motion.div
@@ -1027,10 +1087,12 @@ const SuccessModal = ({ onClose, courseTitle, orderId }: { onClose: () => void, 
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-slate-800"
+        id="receipt-content"
       >
         <div className="absolute top-0 left-0 h-2 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-emerald-600" />
         
         <button 
+          id="receipt-close-btn"
           onClick={onClose}
           className="absolute top-4 right-4 rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700"
         >
@@ -1068,10 +1130,14 @@ const SuccessModal = ({ onClose, courseTitle, orderId }: { onClose: () => void, 
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <button className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
+          <div id="receipt-actions" className="grid gap-4 sm:grid-cols-2">
+            <button 
+              onClick={handleDownloadReceipt}
+              disabled={isGenerating}
+              className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
               <FiDownload className="h-4 w-4" />
-              Receipt
+              {isGenerating ? "Generating..." : "Receipt"}
             </button>
             <Link 
               href="/profile"
