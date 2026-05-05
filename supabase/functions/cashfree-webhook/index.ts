@@ -69,7 +69,7 @@ serve(async (req) => {
       );
 
       // 3. Update DB with "Each and Every Detail"
-      const { error } = await supabase
+      const { data: updatedEnrollment, error } = await supabase
         .from("enrollments")
         .update({ 
           status: "PAID",
@@ -80,7 +80,9 @@ serve(async (req) => {
           payment_time: payment.payment_time,
         })
         .eq("cf_payment_id", orderId)
-        .eq("status", "PENDING");
+        .eq("status", "PENDING")
+        .select()
+        .single();
 
       if (error) {
         console.error("Database update error:", error);
@@ -88,6 +90,28 @@ serve(async (req) => {
       }
       
       console.log(`Enrollment successfully completed for ${orderId}`);
+
+      // 4. Trigger Email Notification via NextJS API
+      if (updatedEnrollment) {
+        try {
+          console.log(`Triggering confirmation email for ${updatedEnrollment.email}`);
+          const emailRes = await fetch("https://nlitedu.com/api/email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              studentName: updatedEnrollment.full_name,
+              studentEmail: updatedEnrollment.email,
+              courseTitle: updatedEnrollment.course_title,
+              orderId: orderId,
+            }),
+          });
+          if (!emailRes.ok) {
+            console.error("Failed to trigger email API:", await emailRes.text());
+          }
+        } catch (emailErr) {
+          console.error("Error triggering email:", emailErr);
+        }
+      }
     }
 
     return new Response(JSON.stringify({ status: "success" }), {

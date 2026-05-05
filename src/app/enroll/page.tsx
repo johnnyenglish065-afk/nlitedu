@@ -251,62 +251,50 @@ const EnrollmentPage = () => {
 
   // Post-payment verification effect
   useEffect(() => {
-    const status = searchParams.get("payment_status");
+    // Check if we returned from Cashfree checkout with an order_id
     const orderId = searchParams.get("order_id");
 
-    if (status === "SUCCESS" && orderId) {
-      handleSuccessfulPayment(orderId);
-    } else if (status === "FAILED") {
-      setError("Payment failed. Please try again.");
-      const savedForm = loadFormFromLocal();
-      if (savedForm) setForm(savedForm);
+    if (orderId) {
+      verifyPaymentStatus(orderId);
     }
   }, [searchParams]);
 
-  const handleSuccessfulPayment = async (orderId: string) => {
+  const verifyPaymentStatus = async (orderId: string) => {
     setSubmitting(true);
     try {
-      const savedForm = loadFormFromLocal();
-      const currentForm = savedForm || form;
-
-      if (!supabase) throw new Error("Database connection lost.");
-
-      const { error: dbError } = await supabase.from("enrollments")
-        .update({ status: "PAID" })
-        .eq("cf_payment_id", orderId);
-
-      if (dbError) throw dbError;
-
-      setSuccess("Enrollment Successful!");
-      setPaymentVerified(true);
-      clearFormFromLocal();
-
-      // Trigger Email Notification (Non-blocking)
-      fetch("/api/email", {
+      // 1. Verify with our backend API (which calls Cashfree directly)
+      const res = await fetch("/api/verify-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentName: currentForm.fullName,
-          studentEmail: currentForm.email,
-          courseTitle: currentForm.course,
-          orderId: orderId,
-        }),
-      }).catch(err => console.error("Failed to send confirmation email:", err));
-
-      // Trigger Confetti Celebration
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ["#2563eb", "#9333ea", "#10b981"],
+        body: JSON.stringify({ orderId }),
       });
+      const data = await res.json();
+
+      if (data.status === "PAID") {
+        setSuccess("Enrollment Successful!");
+        setPaymentVerified(true);
+        clearFormFromLocal();
+
+        // Trigger Confetti Celebration
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#2563eb", "#9333ea", "#10b981"],
+        });
+      } else {
+        setError("Payment could not be verified or was unsuccessful. Please try again or contact support.");
+        const savedForm = loadFormFromLocal();
+        if (savedForm) setForm(savedForm);
+      }
     } catch (err: any) {
       console.error("Post-payment error:", err);
-      setError("Payment received, but we couldn't save your enrollment. Please contact support.");
+      setError("Payment received, but we couldn't verify your enrollment. Please contact support.");
     } finally {
       setSubmitting(false);
     }
   };
+
 
   // Determine fee based on college type and state
   const enrollmentFee = useMemo(() => {
