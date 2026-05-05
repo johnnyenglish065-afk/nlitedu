@@ -266,7 +266,10 @@ const EnrollmentPage = () => {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const res = await fetch(`${supabaseUrl}/functions/v1/verify-cashfree-payment`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
+        },
         body: JSON.stringify({ orderId }),
       });
       const data = await res.json();
@@ -458,7 +461,8 @@ const EnrollmentPage = () => {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
-            "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+            "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
           },
           body: JSON.stringify({
             amount: enrollmentFee,
