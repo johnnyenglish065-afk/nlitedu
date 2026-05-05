@@ -33,13 +33,13 @@ interface ProfileData {
 
 interface Enrollment {
   id: string;
-  course: string;
+  course_title: string;
   status: string;
   created_at: string;
-  collegeName?: string;
+  college_name?: string;
   branch?: string;
   semester?: string;
-  collegeType?: string;
+  college_type?: string;
 }
 
 const ProfilePage = () => {
@@ -100,10 +100,10 @@ const ProfilePage = () => {
             const latest = enrollData[0];
             setAcademicForm(prev => ({
               ...prev,
-              college_name: latest.collegeName,
+              college_name: latest.college_name,
               branch: latest.branch,
               semester: latest.semester,
-              college_type: latest.collegeType,
+              college_type: latest.college_type,
             }));
           }
         }
@@ -311,7 +311,7 @@ const ProfilePage = () => {
                                 {enroll.status === 'PAID' ? <FaCheckCircle /> : <FaClock />}
                               </div>
                               <div className="flex-1">
-                                <h5 className="font-bold text-slate-900 dark:text-white line-clamp-1">{enroll.course} Enrollment</h5>
+                                <h5 className="font-bold text-slate-900 dark:text-white line-clamp-1">{enroll.course_title} Enrollment</h5>
                                 <p className="text-xs text-slate-500">{new Date(enroll.created_at).toLocaleDateString()}</p>
                               </div>
                               <div className={`rounded-lg px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${enroll.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>
@@ -363,7 +363,7 @@ const ProfilePage = () => {
                                      <FaCheckCircle className="inline" /> Lifetime Access
                                    </span>
                                  </div>
-                                 <h4 className="mb-3 text-2xl font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{course.course}</h4>
+                                 <h4 className="mb-3 text-2xl font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{course.course_title}</h4>
                                  <div className="mt-auto flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
                                     <div className="space-y-1">
                                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Enrolled On</p>
@@ -436,10 +436,10 @@ const ProfilePage = () => {
                            <>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {[
-                                  { label: "Primary Institution", value: profile?.college_name || academicDetails.collegeName || "Not Provided", icon: FaUniversity, color: "blue" },
+                                  { label: "Primary Institution", value: profile?.college_name || academicDetails.college_name || "Not Provided", icon: FaUniversity, color: "blue" },
                                   { label: "Branch / Stream", value: profile?.branch || academicDetails.branch || "Not Provided", icon: FaGraduationCap, color: "purple" },
                                   { label: "Current Semester", value: profile?.semester || academicDetails.semester || "Not Provided", icon: FaChartLine, color: "emerald" },
-                                  { label: "Institution Type", value: profile?.college_type || academicDetails.collegeType || "Not Provided", icon: FaRegIdBadge, color: "amber" },
+                                  { label: "Institution Type", value: profile?.college_type || academicDetails.college_type || "Not Provided", icon: FaRegIdBadge, color: "amber" },
                                   { label: "Registration No", value: profile?.university_reg_no || "Not Provided", icon: FaRegIdBadge, color: "orange" },
                                   { label: "Father's Name", value: profile?.father_name || "Not Provided", icon: FaUser, color: "pink" },
                                 ].map((item, i) => (
