@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { FiCheckCircle, FiCopy, FiDownload, FiExternalLink, FiLock, FiLogOut, FiMail, FiUser, FiX } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
 const courseList = [
