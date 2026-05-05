@@ -71,6 +71,10 @@ const ProfilePage = () => {
           .eq("id", user.id)
           .single();
 
+        if (profileError) {
+          console.warn("Profile fetch error:", profileError.message);
+        }
+
         if (profileData) {
           setProfile(profileData);
           setAcademicForm({
@@ -84,14 +88,57 @@ const ProfilePage = () => {
             resident_state: profileData.resident_state,
             qualification: profileData.qualification,
           });
+        } else {
+          // Create a minimal profile from auth metadata
+          setProfile({
+            id: user.id,
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || "",
+            email: user.email || "",
+            updated_at: new Date().toISOString(),
+          });
         }
 
-        // Fetch Enrollments
-        const { data: enrollData, error: enrollError } = await supabase
+        // Fetch Enrollments - first try by user_id
+        let { data: enrollData, error: enrollError } = await supabase
           .from("enrollments")
           .select("id, course_title, status, created_at, college_name, branch, semester, college_type")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
+
+        if (enrollError) {
+          console.warn("Enrollment fetch by user_id error:", enrollError.message);
+        }
+
+        // Fallback: if no results by user_id, try by email
+        if ((!enrollData || enrollData.length === 0) && user.email) {
+          console.log("No enrollments found by user_id, trying email fallback...");
+          const { data: emailEnrollData, error: emailEnrollError } = await supabase
+            .from("enrollments")
+            .select("id, course_title, status, created_at, college_name, branch, semester, college_type, user_id")
+            .eq("email", user.email)
+            .order("created_at", { ascending: false });
+
+          if (emailEnrollError) {
+            console.warn("Enrollment fetch by email error:", emailEnrollError.message);
+          }
+
+          if (emailEnrollData && emailEnrollData.length > 0) {
+            enrollData = emailEnrollData;
+            
+            // Fix: update orphaned enrollments to link them to the current user
+            const orphanedIds = emailEnrollData
+              .filter(e => !e.user_id || e.user_id !== user.id)
+              .map(e => e.id);
+            
+            if (orphanedIds.length > 0) {
+              console.log(`Linking ${orphanedIds.length} enrollment(s) to user ${user.id}`);
+              await supabase
+                .from("enrollments")
+                .update({ user_id: user.id })
+                .in("id", orphanedIds);
+            }
+          }
+        }
 
         if (enrollData) {
           setEnrollments(enrollData);
