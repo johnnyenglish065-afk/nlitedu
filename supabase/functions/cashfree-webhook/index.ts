@@ -91,13 +91,20 @@ serve(async (req) => {
       
       console.log(`Enrollment successfully completed for ${orderId}`);
 
-      // 4. Trigger Email Notification via NextJS API
+      // 4. Trigger Email Notification via Supabase Edge Function
       if (updatedEnrollment) {
         try {
           console.log(`Triggering confirmation email for ${updatedEnrollment.email}`);
-          const emailRes = await fetch("https://nlitedu.com/api/email", {
+          // Using Edge Function invocation instead of Next.js API
+          const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+          const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+          
+          const emailRes = await fetch(`${supabaseUrl}/functions/v1/email-service`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${supabaseKey}`
+            },
             body: JSON.stringify({
               studentName: updatedEnrollment.full_name,
               studentEmail: updatedEnrollment.email,
@@ -107,6 +114,8 @@ serve(async (req) => {
           });
           if (!emailRes.ok) {
             console.error("Failed to trigger email API:", await emailRes.text());
+          } else {
+            console.log("Email triggered successfully");
           }
         } catch (emailErr) {
           console.error("Error triggering email:", emailErr);

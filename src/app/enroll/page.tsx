@@ -263,7 +263,8 @@ const EnrollmentPage = () => {
     setSubmitting(true);
     try {
       // 1. Verify with our backend API (which calls Cashfree directly)
-      const res = await fetch("/api/verify-payment", {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const res = await fetch(`${supabaseUrl}/functions/v1/verify-cashfree-payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId }),
