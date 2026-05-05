@@ -956,6 +956,7 @@ const EnrollmentPage = () => {
               onClose={() => setSuccess(null)} 
               courseTitle={course.title} 
               orderId={searchParams.get("order_id") || "N/A"}
+              customerEmail={user.email || ""}
             />
           )}
         </AnimatePresence>
@@ -1013,7 +1014,7 @@ const EnrollmentPage = () => {
   );
 };
 
-const SuccessModal = ({ onClose, courseTitle, orderId }: { onClose: () => void, courseTitle: string, orderId: string }) => {
+const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClose: () => void, courseTitle: string, orderId: string, customerEmail: string }) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleDownloadReceipt = async () => {
@@ -1022,51 +1023,72 @@ const SuccessModal = ({ onClose, courseTitle, orderId }: { onClose: () => void, 
     
     setIsGenerating(true);
     try {
-      // Temporarily hide close button and action buttons for the screenshot
-      const actionsEl = document.getElementById("receipt-actions");
-      const closeBtnEl = document.getElementById("receipt-close-btn");
-      if (actionsEl) actionsEl.style.display = "none";
-      if (closeBtnEl) closeBtnEl.style.display = "none";
-
-      const canvas = await html2canvas(element, { scale: 2, backgroundColor: "#ffffff" });
+      const canvas = await html2canvas(element, { 
+        scale: 2, 
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        logging: false,
+        onclone: (clonedDoc) => {
+          // Hide elements that shouldn't be in the PDF
+          const actionsEl = clonedDoc.getElementById("receipt-actions");
+          const closeBtnEl = clonedDoc.getElementById("receipt-close-btn");
+          if (actionsEl) actionsEl.style.display = "none";
+          if (closeBtnEl) closeBtnEl.style.display = "none";
+          
+          // Ensure cloned modal is visible and correctly styled
+          const modalEl = clonedDoc.getElementById("receipt-content");
+          if (modalEl) {
+            modalEl.style.transform = "none";
+            modalEl.style.boxShadow = "none";
+            modalEl.style.borderRadius = "0";
+          }
+        }
+      });
       
-      // Restore elements
-      if (actionsEl) actionsEl.style.display = "grid";
-      if (closeBtnEl) closeBtnEl.style.display = "block";
-
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
       
-      // Calculate padding and dimensions
-      const padding = 10; // 10mm padding
-      const pdfWidth = pdf.internal.pageSize.getWidth() - (padding * 2);
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentWidth = pdfWidth - (margin * 2);
+      const imgHeight = (canvas.height * contentWidth) / canvas.width;
       
-      // Add NLITedu Logo Text at the top
-      pdf.setFontSize(22);
-      pdf.setTextColor(37, 99, 235); // Blue-600
-      pdf.text("NLITedu", pdf.internal.pageSize.getWidth() / 2, 20, { align: "center" });
+      // Header Section
+      pdf.setFillColor(37, 99, 235); // Blue-600
+      pdf.rect(0, 0, pdfWidth, 40, "F");
       
-      pdf.setFontSize(12);
-      pdf.setTextColor(100, 116, 139);
-      pdf.text("Nexgen Learning Institute of Technology", pdf.internal.pageSize.getWidth() / 2, 28, { align: "center" });
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(24);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("NLITedu", margin, 25);
       
-      // Add a line
-      pdf.setDrawColor(226, 232, 240);
-      pdf.line(padding, 35, pdf.internal.pageSize.getWidth() - padding, 35);
-      
-      // Add the receipt content image
-      pdf.addImage(imgData, "PNG", padding, 45, pdfWidth, pdfHeight);
-      
-      // Add footer
       pdf.setFontSize(10);
-      pdf.setTextColor(148, 163, 184);
-      pdf.text("This is an electronically generated receipt.", pdf.internal.pageSize.getWidth() / 2, 45 + pdfHeight + 15, { align: "center" });
+      pdf.setFont("helvetica", "normal");
+      pdf.text("OFFICIAL ENROLLMENT RECEIPT", pdfWidth - margin, 25, { align: "right" });
       
-      pdf.save(`NLITedu_Receipt_${orderId}.pdf`);
+      // Receipt Details
+      pdf.setTextColor(30, 41, 59); // Slate-800
+      pdf.setFontSize(10);
+      pdf.text(`Date: ${new Date().toLocaleDateString()}`, margin, 50);
+      pdf.text(`Receipt No: ${orderId.substring(0, 10).toUpperCase()}`, pdfWidth - margin, 50, { align: "right" });
+      
+      // Add the content screenshot
+      pdf.addImage(imgData, "PNG", margin, 60, contentWidth, imgHeight);
+      
+      // Bottom Bar
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(margin, pdfHeight - 25, pdfWidth - margin, pdfHeight - 25);
+      
+      pdf.setFontSize(8);
+      pdf.setTextColor(148, 163, 184);
+      pdf.text("Nexgen Learning Institute of Technology - nliteedu.com", pdfWidth / 2, pdfHeight - 15, { align: "center" });
+      pdf.text("This is an electronically generated receipt and does not require a physical signature.", pdfWidth / 2, pdfHeight - 10, { align: "center" });
+      
+      pdf.save(`NLITedu_Receipt_${orderId.substring(0, 8)}.pdf`);
     } catch (err) {
       console.error("Failed to generate PDF", err);
-      alert("Failed to generate PDF. Please try again.");
+      alert("Something went wrong while generating the PDF. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -1117,9 +1139,12 @@ const SuccessModal = ({ onClose, courseTitle, orderId }: { onClose: () => void, 
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-600 dark:text-slate-400">Transaction ID</span>
                 <span className="flex items-center gap-2 font-mono text-sm font-medium">
-                  {orderId.substring(0, 12)}...
-                  <FiCopy className="cursor-pointer text-slate-400 hover:text-blue-600" />
+                  {orderId.substring(0, 15)}...
                 </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Email</span>
+                <span className="text-sm font-medium">{customerEmail}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-600 dark:text-slate-400">Status</span>
@@ -1137,13 +1162,13 @@ const SuccessModal = ({ onClose, courseTitle, orderId }: { onClose: () => void, 
               className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               <FiDownload className="h-4 w-4" />
-              {isGenerating ? "Generating..." : "Receipt"}
+              {isGenerating ? "Generating..." : "Download Receipt"}
             </button>
             <Link 
               href="/profile"
               className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
-              Go to Dashboard
+              Dashboard
               <FiExternalLink className="h-4 w-4" />
             </Link>
           </div>
