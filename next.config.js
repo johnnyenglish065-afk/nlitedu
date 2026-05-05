@@ -17,8 +17,7 @@ const nextConfig = {
   assetPrefix: "",
 
   // Use output export for static generation
-
-  output: "export",
+  // Removed output: "export" to enable Next.js API Routes on Vercel
   images: {
     unoptimized: true, // ✅ This is the key fix
   },
