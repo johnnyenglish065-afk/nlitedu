@@ -12,128 +12,57 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
 const courseList = [
-  {
-    slug: "autocad-2d-3d-design",
-    title: "AutoCAD 2D & 3D Design",
-    description:
-      "Master industry-standard AutoCAD tools for precise 2D drafting and 3D modeling essential for architects, engineers, and designers.",
-    highlights: [
-      "2D Drafting and 3D Modeling",
-      "Industry-standard AutoCAD workflow",
-      "Project-based learning for real-world design",
-    ],
-  },
-  {
-    slug: "revit-bim",
-    title: "Revit Building Information Modeling (BIM)",
-    description:
-      "Learn BIM workflows and Revit software to create collaborative building designs with real-world applications.",
-    highlights: [
-      "BIM modeling and collaboration",
-      "Architecture, structure, and MEP support",
-      "Live project-based Revit exercises",
-    ],
-  },
-  {
-    slug: "java-programming",
-    title: "Java Programming",
-    description:
-      "Develop robust enterprise-level applications by mastering Java fundamentals and advanced programming concepts.",
-    highlights: [
-      "Core Java fundamentals",
-      "Object-oriented design and data structures",
-      "Build real applications with practical examples",
-    ],
-  },
-  {
-    slug: "python-data-science-ai",
-    title: "Python for Data Science & AI",
-    description:
-      "Dive into Python programming with a focus on data analysis, AI, and machine learning applications.",
-    highlights: [
-      "Python programming for analytics",
-      "Data visualization and machine learning",
-      "Hands-on AI use cases with Python",
-    ],
-  },
-  {
-    slug: "python-programming",
-    title: "Python Programming",
-    description:
-      "Master Python for data science, scripting, and automation with hands-on programming practice.",
-    highlights: [
-      "Python fundamentals and scripting",
-      "Data processing and automation",
-      "Build practical Python projects",
-    ],
-  },
-  {
-    slug: "matlab-scientific-computing",
-    title: "MATLAB for Scientific Computing",
-    description:
-      "Gain critical skills in MATLAB for data analysis, control systems, and engineering computations.",
-    highlights: [
-      "MATLAB for engineering workflows",
-      "Simulation and numerical computing",
-      "Data analysis with MATLAB toolboxes",
-    ],
-  },
-  {
-    slug: "staadpro",
-    title: "STAAD Pro",
-    description:
-      "Learn advanced structural analysis and design using STAAD Pro for civil and structural engineering.",
-    highlights: [
-      "Structural modeling and analysis",
-      "Load case simulation",
-      "Design optimization for real-world structures",
-    ],
-  },
-  {
-    slug: "solidworks",
-    title: "SolidWorks",
-    description:
-      "Master mechanical design, simulation, and product development using SolidWorks CAD.",
-    highlights: [
-      "3D mechanical design",
-      "Assembly modeling and simulation",
-      "Manufacturing-ready product design",
-    ],
-  },
-  {
-    slug: "catia",
-    title: "CATIA",
-    description:
-      "Explore advanced CAD/CAM workflows with CATIA for automotive, aerospace, and industrial design.",
-    highlights: [
-      "Advanced surface modeling",
-      "CAD/CAM integration",
-      "Industry-standard product design techniques",
-    ],
-  },
-  {
-    slug: "android-ios-mobile-development",
-    title: "Android & iOS Mobile Development",
-    description:
-      "Build modern mobile applications for Android and iOS platforms with hands-on project experience.",
-    highlights: [
-      "Cross-platform mobile app development",
-      "Hands-on app design and deployment",
-      "Build real mobile projects for your portfolio",
-    ],
-  },
-  {
-    slug: "general",
-    title: "NLIT Course Enrollment",
-    description:
-      "Select your course and fill out the enrollment form so we can reserve your seat and help you begin your learning journey.",
-    highlights: [
-      "Choose from courses across design, development, AI, and engineering",
-      "Secure admission with a simple online form",
-      "Receive course guidance from the NLIT team",
-    ],
-  },
+  { slug: "autocad-2d-3d-design", title: "AutoCAD 2D & 3D Design (Civil)", description: "Master industry-standard AutoCAD tools for precise 2D drafting and 3D modeling. Duration: 3 Months.", highlights: ["2D Drafting and 3D Modeling", "Industry-standard AutoCAD workflow", "Project-based learning for real-world design"] },
+  { slug: "revit-bim", title: "Revit Building Information Modeling (BIM)", description: "Learn BIM workflows and Revit software to create collaborative building designs. Duration: 3 Months.", highlights: ["BIM modeling and collaboration", "Architecture, structure, and MEP support", "Live project-based Revit exercises"] },
+  { slug: "staadpro", title: "STAAD Pro", description: "Learn advanced structural analysis and design using STAAD Pro for civil and structural engineering. Duration: 3 Months.", highlights: ["Structural modeling and analysis", "Load case simulation", "Design optimization for real-world structures"] },
+  { slug: "solidworks", title: "SolidWorks", description: "Master mechanical design, simulation, and product development using SolidWorks CAD. Duration: 3 Months.", highlights: ["3D mechanical design", "Assembly modeling and simulation", "Manufacturing-ready product design"] },
+  { slug: "3dsmax-vray", title: "3DS Max + VRay", description: "Create photorealistic 3D visualizations, architectural walkthroughs, and cinematic renders. Duration: 4 Months.", highlights: ["3D modeling and scene composition", "VRay lighting, materials, and rendering", "Architectural visualization projects"] },
+  { slug: "catia", title: "CATIA", description: "Explore advanced CAD/CAM workflows with CATIA for automotive, aerospace, and industrial design. Duration: 2 Months.", highlights: ["Advanced surface modeling", "CAD/CAM integration", "Industry-standard product design techniques"] },
+  { slug: "sketchup", title: "SketchUp", description: "Learn intuitive 3D modeling for architecture, interior design, and landscape projects. Duration: 3 Months.", highlights: ["3D modeling for architecture and interiors", "Layout and presentation tools", "Plugin workflows for advanced design"] },
+  { slug: "etabs", title: "ETABS", description: "Master structural analysis and design of multi-story buildings and complex structures. Duration: 3 Months.", highlights: ["Multi-story structural modeling", "Seismic and wind load analysis", "Design optimization for real-world buildings"] },
+  { slug: "java-programming", title: "Java Programming", description: "Develop robust enterprise-level applications by mastering Java fundamentals and advanced concepts. Duration: 3 Months.", highlights: ["Core Java fundamentals", "Object-oriented design and data structures", "Build real applications with practical examples"] },
+  { slug: "python-programming", title: "Python Programming", description: "Master Python for data science, scripting, and automation with hands-on practice. Duration: 3 Months.", highlights: ["Python fundamentals and scripting", "Data processing and automation", "Build practical Python projects"] },
+  { slug: "python-data-science-ai", title: "Python for Data Science & AI", description: "Dive into Python programming with a focus on data analysis, AI, and machine learning. Duration: 3 Months.", highlights: ["Python programming for analytics", "Data visualization and machine learning", "Hands-on AI use cases with Python"] },
+  { slug: "data-science", title: "Data Science", description: "Analyze data, build predictive models, and drive business decisions using modern tools. Duration: 3 Months.", highlights: ["Data wrangling and visualization", "Machine learning model building", "Real-world analytics projects"] },
+  { slug: "android-ios-mobile-development", title: "Android & iOS Mobile Development", description: "Build modern mobile applications for Android and iOS platforms. Duration: 6 Months.", highlights: ["Cross-platform mobile app development", "Hands-on app design and deployment", "Build real mobile projects for your portfolio"] },
+  { slug: "artificial-intelligence", title: "Artificial Intelligence", description: "Master AI concepts including neural networks, deep learning, NLP, and computer vision. Duration: 3 Months.", highlights: ["Neural networks and deep learning", "Natural language processing", "AI-powered real-world applications"] },
+  { slug: "matlab-scientific-computing", title: "MATLAB for Scientific Computing", description: "Gain critical skills in MATLAB for data analysis, control systems, and engineering computations. Duration: 3 Months.", highlights: ["MATLAB for engineering workflows", "Simulation and numerical computing", "Data analysis with MATLAB toolboxes"] },
+  { slug: "cpp-programming", title: "C++ Programming", description: "Learn system-level programming, data structures & algorithms, and competitive coding with C++. Duration: 3 Months.", highlights: ["Core C++ and OOP concepts", "Data structures and algorithms", "Competitive programming practice"] },
+  { slug: "ansys", title: "ANSYS", description: "Perform finite element analysis and engineering simulation for mechanical and structural problems. Duration: 3 Months.", highlights: ["FEA modeling and meshing", "Structural and thermal analysis", "Simulation-driven design optimization"] },
+  { slug: "primavera-p6", title: "Primavera P6", description: "Learn project planning, scheduling, resource allocation, and management for construction projects. Duration: 2 Months.", highlights: ["Project scheduling and WBS", "Resource and cost management", "Critical path and earned value analysis"] },
+  { slug: "coreldraw", title: "CorelDRAW", description: "Master vector graphic design, illustration, and page layout for print and digital media. Duration: 3 Months.", highlights: ["Vector illustration and logo design", "Page layout for print media", "Photo editing and digital art"] },
+  { slug: "autocad-advance", title: "AutoCAD 2.0 Advance", description: "Take your AutoCAD skills to the next level with advanced 3D modeling and parametric design. Duration: 3 Months.", highlights: ["Advanced 3D modeling techniques", "Parametric and dynamic blocks", "Complex drawing management"] },
+  { slug: "autocad-electrical", title: "AutoCAD (Electrical)", description: "Design electrical schematics, panel layouts, and circuit diagrams using AutoCAD Electrical. Duration: 3 Months.", highlights: ["Electrical schematic design", "Panel layout and wiring diagrams", "Component libraries and reporting"] },
+  { slug: "autocad-mechanical", title: "AutoCAD (Mechanical)", description: "Create mechanical part designs, assembly drawings, and manufacturing documentation. Duration: 3 Months.", highlights: ["Mechanical part and assembly design", "GD&T and tolerance annotation", "Manufacturing drawing standards"] },
+  { slug: "general", title: "NLIT Course Enrollment", description: "Select your course and fill out the enrollment form so we can reserve your seat and begin your learning journey.", highlights: ["Choose from courses across design, development, AI, and engineering", "Secure admission with a simple online form", "Receive course guidance from the NLIT team"] },
 ];
+
+// Course-specific pricing: { displayPrice, govtPrice, pvtPrice, jobPrice }
+const coursePricing: Record<string, { displayPrice: number; govtPrice: number; pvtPrice: number; jobPrice: number; duration: string }> = {
+  "autocad-2d-3d-design": { displayPrice: 5999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
+  "revit-bim": { displayPrice: 6999, govtPrice: 2499, pvtPrice: 3999, jobPrice: 4999, duration: "3 Months" },
+  "staadpro": { displayPrice: 6999, govtPrice: 2499, pvtPrice: 3999, jobPrice: 4999, duration: "3 Months" },
+  "solidworks": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 4999, jobPrice: 5999, duration: "3 Months" },
+  "3dsmax-vray": { displayPrice: 12999, govtPrice: 3999, pvtPrice: 5999, jobPrice: 7999, duration: "4 Months" },
+  "catia": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 4999, duration: "2 Months" },
+  "sketchup": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 4999, duration: "3 Months" },
+  "etabs": { displayPrice: 14999, govtPrice: 3999, pvtPrice: 5999, jobPrice: 7999, duration: "3 Months" },
+  "java-programming": { displayPrice: 6999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
+  "python-programming": { displayPrice: 6999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
+  "python-data-science-ai": { displayPrice: 6999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
+  "data-science": { displayPrice: 6999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
+  "android-ios-mobile-development": { displayPrice: 14999, govtPrice: 3999, pvtPrice: 5999, jobPrice: 7999, duration: "6 Months" },
+  "artificial-intelligence": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 5999, duration: "3 Months" },
+  "matlab-scientific-computing": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 5999, duration: "3 Months" },
+  "cpp-programming": { displayPrice: 8999, govtPrice: 2499, pvtPrice: 3499, jobPrice: 4499, duration: "3 Months" },
+  "ansys": { displayPrice: 14999, govtPrice: 3999, pvtPrice: 4999, jobPrice: 7999, duration: "3 Months" },
+  "primavera-p6": { displayPrice: 14999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 4999, duration: "2 Months" },
+  "coreldraw": { displayPrice: 7999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
+  "autocad-advance": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 5999, duration: "3 Months" },
+  "autocad-electrical": { displayPrice: 5999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
+  "autocad-mechanical": { displayPrice: 5999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
+  "general": { displayPrice: 6999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
+};
 
 const semesters = [
   "1st",
@@ -193,6 +122,7 @@ const EnrollmentPage = () => {
   });
   const [marksheet12File, setMarksheet12File] = useState<File | null>(null);
   const [marksheetSemFile, setMarksheetSemFile] = useState<File | null>(null);
+  const [collegeIdFile, setCollegeIdFile] = useState<File | null>(null);
 
   const handle12FileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -211,6 +141,22 @@ const EnrollmentPage = () => {
         return;
       }
       setMarksheetSemFile(e.target.files[0]);
+    }
+  };
+
+  const handleCollegeIdFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 200 * 1024) {
+        alert("College ID file size must be under 200 KB.");
+        return;
+      }
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+      if (!allowedTypes.includes(file.type)) {
+        alert("Only JPG, JPEG, or PNG files are allowed for College ID.");
+        return;
+      }
+      setCollegeIdFile(file);
     }
   };
 
@@ -302,17 +248,25 @@ const EnrollmentPage = () => {
   };
 
 
-  // Determine fee based on college type and state
+  // Get pricing for the selected course
+  const pricing = coursePricing[courseSlug] || coursePricing["general"];
+
+  // Determine fee based on college type and course
   const enrollmentFee = useMemo(() => {
-    if (form.collegeType === "govt") {
-      return form.state === "Bihar" ? 999 : 1499;
-    }
-    return form.collegeType === "private" ? 1999 : 0;
-  }, [form.collegeType, form.state]);
+    if (!pricing) return 0;
+    if (form.collegeType === "govt") return pricing.govtPrice;
+    if (form.collegeType === "private") return pricing.pvtPrice;
+    if (form.collegeType === "job") return pricing.jobPrice;
+    return 0;
+  }, [form.collegeType, pricing]);
+
+  const displayPrice = pricing?.displayPrice || 0;
+
+  const isCollegeStudent = form.collegeType === "govt" || form.collegeType === "private";
 
   // Check if form is fully filled
   const isFormComplete = useMemo(() => {
-    return (
+    const baseComplete =
       form.fullName.trim() !== "" &&
       form.fatherName.trim() !== "" &&
       form.gender !== "" &&
@@ -327,11 +281,15 @@ const EnrollmentPage = () => {
       form.state !== "" &&
       form.qualification !== "" &&
       form.marks10.trim() !== "" &&
-      // marks12 is now optional
       form.marksSem.trim() !== "" &&
-      (marksheet12File !== null || marksheetSemFile !== null)
-    );
-  }, [form, marksheet12File, marksheetSemFile]);
+      (marksheet12File !== null || marksheetSemFile !== null);
+
+    // College ID is mandatory for college students (govt/private), not for job professionals
+    if (isCollegeStudent) {
+      return baseComplete && collegeIdFile !== null;
+    }
+    return baseComplete;
+  }, [form, marksheet12File, marksheetSemFile, collegeIdFile, isCollegeStudent]);
 
   useEffect(() => {
     setForm((current) => ({
@@ -794,13 +752,13 @@ const EnrollmentPage = () => {
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-medium">College/University Reg. No.</span>
+                <span className="mb-2 block text-sm font-medium">{form.collegeType === "job" ? "Job / Employee ID" : "College/University Reg. No."}</span>
                 <input
                   name="brn"
                   value={form.brn}
                   onChange={handleChange}
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Enter Registration No."
+                  placeholder={form.collegeType === "job" ? "Enter Employee / Job ID" : "Enter Registration No."}
                   required
                 />
               </label>
@@ -817,9 +775,31 @@ const EnrollmentPage = () => {
                   <option value="">Select College Type</option>
                   <option value="govt">Govt College</option>
                   <option value="private">Private College</option>
+                  <option value="job">Job Professional</option>
                 </select>
               </label>
 
+              {/* College ID Upload — only for Govt/Private students */}
+              {isCollegeStudent && (
+                <label className="block sm:col-span-2">
+                  <span className="mb-2 block text-sm font-medium">Upload College ID Card <span className="text-red-500">*</span> <span className="text-xs text-slate-400">(Max 200KB — JPG/PNG only)</span></span>
+                  <div className="flex items-center justify-center w-full">
+                    <label htmlFor="dropzone-college-id" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                        <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                        </svg>
+                        <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{collegeIdFile ? collegeIdFile.name : "Click to upload College ID"}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">JPG, JPEG, PNG (MAX. 200KB)</p>
+                      </div>
+                      <input id="dropzone-college-id" type="file" className="hidden" accept="image/jpeg,image/jpg,image/png" onChange={handleCollegeIdFileChange} />
+                    </label>
+                  </div>
+                  {collegeIdFile && (
+                    <p className="mt-2 text-xs text-green-600 dark:text-green-400 font-medium">✓ {collegeIdFile.name} ({(collegeIdFile.size / 1024).toFixed(1)} KB)</p>
+                  )}
+                </label>
+              )}
               <label className="block">
                 <span className="mb-2 block text-sm font-medium">State</span>
                 <select
@@ -933,8 +913,8 @@ const EnrollmentPage = () => {
                   <>⏳ Initiating Payment...</>
                 ) : submitting ? (
                   <>⏳ Processing...</>
-                ) : isFormComplete ? (
-                  <>💳 Pay ₹{enrollmentFee} & Enroll</>
+                ) : isFormComplete && enrollmentFee > 0 ? (
+                  <><span className="line-through text-white/60 mr-1">₹{displayPrice.toLocaleString("en-IN")}</span> 💳 Pay ₹{enrollmentFee.toLocaleString("en-IN")} & Enroll</>
                 ) : (
                   <>✓ Fill Form to Enroll</>
                 )}
@@ -993,19 +973,40 @@ const EnrollmentPage = () => {
                 <dd>{course.title}</dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="font-medium">College Type</dt>
-                <dd>{form.collegeType || "Not selected"}</dd>
+                <dt className="font-medium">Duration</dt>
+                <dd>{pricing?.duration || "—"}</dd>
               </div>
-               <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
+                <dt className="font-medium">College Type</dt>
+                <dd className="capitalize">{form.collegeType === "job" ? "Job Professional" : form.collegeType ? `${form.collegeType} College` : "Not selected"}</dd>
+              </div>
+              <div className="flex items-center justify-between">
                 <dt className="font-medium">State</dt>
                 <dd>{form.state || "Not selected"}</dd>
               </div>
-              {isFormComplete && enrollmentFee > 0 && (
-                <div className="flex items-center justify-between pt-3 border-t border-green-200 dark:border-green-700">
-                  <dt className="font-bold text-green-700 dark:text-green-400">Total Fee</dt>
-                  <dd className="font-bold text-green-700 dark:text-green-400">₹{enrollmentFee}</dd>
-                </div>
-              )}
+              <div className="pt-3 border-t border-green-200 dark:border-green-700">
+                {isFormComplete && enrollmentFee > 0 ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <dt className="font-medium text-slate-500 dark:text-slate-400">MRP</dt>
+                      <dd className="font-medium text-slate-400 line-through">₹{displayPrice.toLocaleString("en-IN")}</dd>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <dt className="font-bold text-green-700 dark:text-green-400 text-base">Offer Price</dt>
+                      <dd className="font-extrabold text-green-700 dark:text-green-400 text-lg">₹{enrollmentFee.toLocaleString("en-IN")}</dd>
+                    </div>
+                    <div className="rounded-lg bg-green-100 dark:bg-green-900/30 px-3 py-2 text-center mt-2">
+                      <span className="text-xs font-bold text-green-700 dark:text-green-400">💰 You save ₹{(displayPrice - enrollmentFee).toLocaleString("en-IN")} ({Math.round(((displayPrice - enrollmentFee) / displayPrice) * 100)}% OFF)</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 py-3 text-center">
+                    <span className="text-2xl">🔒</span>
+                    <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Complete the form to unlock your special offer price</p>
+                    <p className="text-xs text-slate-400">Fill all required fields to reveal the discounted price</p>
+                  </div>
+                )}
+              </div>
             </dl>
           </div>
         </aside>
