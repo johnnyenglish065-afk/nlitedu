@@ -80,4 +80,112 @@ export const COURSE_LIST = [
     color: "text-pink-600",
     bgColor: "bg-pink-100",
   },
+  {
+    title: "3DS Max + VRay",
+    slug: "3dsmax-vray",
+    description:
+      "Create photorealistic 3D visualizations and architectural renders.",
+    icon: "3d_rotation",
+    color: "text-amber-600",
+    bgColor: "bg-amber-100",
+  },
+  {
+    title: "SketchUp",
+    slug: "sketchup",
+    description:
+      "Intuitive 3D modeling for architecture, interior, and landscape design.",
+    icon: "view_in_ar",
+    color: "text-lime-600",
+    bgColor: "bg-lime-100",
+  },
+  {
+    title: "ETABS",
+    slug: "etabs",
+    description:
+      "Structural analysis and design of buildings and multi-story structures.",
+    icon: "apartment",
+    color: "text-slate-600",
+    bgColor: "bg-slate-100",
+  },
+  {
+    title: "Data Science",
+    slug: "data-science",
+    description:
+      "Analyze data, build predictive models, and drive business decisions.",
+    icon: "analytics",
+    color: "text-teal-600",
+    bgColor: "bg-teal-100",
+  },
+  {
+    title: "Artificial Intelligence",
+    slug: "artificial-intelligence",
+    description:
+      "Master AI concepts, neural networks, and deep learning frameworks.",
+    icon: "psychology",
+    color: "text-violet-600",
+    bgColor: "bg-violet-100",
+  },
+  {
+    title: "C++ Programming",
+    slug: "cpp-programming",
+    description:
+      "System-level programming, DSA, and competitive coding with C++.",
+    icon: "terminal",
+    color: "text-sky-600",
+    bgColor: "bg-sky-100",
+  },
+  {
+    title: "ANSYS Simulation",
+    slug: "ansys",
+    description:
+      "Finite element analysis and simulation for engineering problems.",
+    icon: "science",
+    color: "text-yellow-600",
+    bgColor: "bg-yellow-100",
+  },
+  {
+    title: "Primavera P6",
+    slug: "primavera-p6",
+    description:
+      "Project planning, scheduling, and management for construction & engineering.",
+    icon: "schedule",
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-100",
+  },
+  {
+    title: "CorelDRAW",
+    slug: "coreldraw",
+    description:
+      "Vector graphic design, illustration, and layout for print & digital media.",
+    icon: "palette",
+    color: "text-rose-600",
+    bgColor: "bg-rose-100",
+  },
+  {
+    title: "AutoCAD 2.0 Advance",
+    slug: "autocad-advance",
+    description:
+      "Advanced AutoCAD techniques for complex 3D modeling and parametric design.",
+    icon: "architecture",
+    color: "text-orange-700",
+    bgColor: "bg-orange-100",
+  },
+  {
+    title: "AutoCAD (Electrical)",
+    slug: "autocad-electrical",
+    description:
+      "Electrical schematic design, panel layouts, and circuit diagrams.",
+    icon: "electrical_services",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-100",
+  },
+  {
+    title: "AutoCAD (Mechanical)",
+    slug: "autocad-mechanical",
+    description:
+      "Mechanical part design, assembly drawings, and manufacturing documentation.",
+    icon: "build",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+  },
 ];
