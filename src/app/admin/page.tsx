@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import EnrollmentDetail from "../../components/Admin/EnrollmentDetail";
-import { COURSE_LIST } from "@/data/courses";
+import { fetchCourses } from "@/data/courses";
 
 interface LiveSession {
   id: string;
@@ -82,8 +82,11 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
   
+  // Courses
+  const [courses, setCourses] = useState<any[]>([]);
+
   // Live Class State
-  const [activeAdminTab, setActiveAdminTab] = useState<"STUDENTS" | "LIVE" | "QUIZZES" | "EMAIL">("STUDENTS");
+  const [activeAdminTab, setActiveAdminTab] = useState<"STUDENTS" | "LIVE" | "QUIZZES" | "EMAIL" | "COURSES">("STUDENTS");
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
   const [liveAttendance, setLiveAttendance] = useState<LiveAttendance[]>([]);
   const [isStartingSession, setIsStartingSession] = useState(false);
@@ -99,6 +102,97 @@ export default function AdminDashboard() {
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
 
+  // Course Management State
+  const [isCreatingCourse, setIsCreatingCourse] = useState(false);
+  const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
+  const [newCourse, setNewCourse] = useState({
+    title: "",
+    slug: "",
+    description: "",
+    category: "DESIGN",
+    govt_price: 1999,
+    pvt_price: 2999,
+    job_price: 3999,
+    duration: "12 Weeks",
+    level: "Intermediate",
+    is_bestseller: false,
+    instructor_name: "NLITedu Official",
+    highlights: ["", "", ""],
+    syllabus: ["", "", ""]
+  });
+
+  const handleSaveCourse = async () => {
+    if (!newCourse.title || !newCourse.slug || !supabase) {
+      alert("Please fill title and slug.");
+      return;
+    }
+    setIsCreatingCourse(true);
+    try {
+      const payload = {
+        ...newCourse,
+        price: "₹999*", // Default label
+        rating: 4.8,
+        total_reviews: 1200,
+        image_url: `https://www.nlitedu.com/fontimage/${newCourse.slug}.png`,
+        instructor_image: `https://ui-avatars.com/api/?name=${newCourse.instructor_name.replace(" ", "+")}&background=random`,
+        is_legacy_pricing: false
+      };
+
+      if (editingCourseId) {
+        const { error } = await supabase.from("courses").update(payload).eq("id", editingCourseId);
+        if (error) throw error;
+        alert("Course updated!");
+      } else {
+        const { error } = await supabase.from("courses").insert([payload]);
+        if (error) throw error;
+        alert("Course created!");
+      }
+      setEditingCourseId(null);
+      setIsCreatingCourse(false);
+      setNewCourse({
+        title: "", slug: "", description: "", category: "DESIGN",
+        govt_price: 1999, pvt_price: 2999, job_price: 3999,
+        duration: "12 Weeks", level: "Intermediate", is_bestseller: false,
+        instructor_name: "NLITedu Official", highlights: ["", "", ""], syllabus: ["", "", ""]
+      });
+      const updated = await fetchCourses();
+      setCourses(updated);
+    } catch (err: any) {
+      alert("Error: " + err.message);
+    }
+    setIsCreatingCourse(false);
+  };
+
+  const handleEditCourse = (course: any) => {
+    setEditingCourseId(course.id);
+    setNewCourse({
+      title: course.title,
+      slug: course.slug,
+      description: course.description,
+      category: course.category,
+      govt_price: course.govt_price,
+      pvt_price: course.pvt_price,
+      job_price: course.job_price,
+      duration: course.duration,
+      level: course.level,
+      is_bestseller: course.is_bestseller,
+      instructor_name: course.instructor_name,
+      highlights: course.highlights || ["", "", ""],
+      syllabus: course.syllabus || ["", "", ""]
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDeleteCourse = async (id: string) => {
+    if (!confirm("Are you sure?")) return;
+    if (!supabase) return;
+    const { error } = await supabase.from("courses").delete().eq("id", id);
+    if (!error) {
+      const updated = await fetchCourses();
+      setCourses(updated);
+    }
+  };
+
   // Email Blaster State
   const [emailBlast, setEmailBlast] = useState({ audience: "ALL", subject: "", message: "" });
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -108,6 +202,7 @@ export default function AdminDashboard() {
     fetchLiveSessions();
     fetchAttendance();
     fetchQuizzes();
+    fetchCourses().then(setCourses);
 
     const currentSupabase = supabase;
     if (!currentSupabase) return;
@@ -379,6 +474,9 @@ export default function AdminDashboard() {
           <button onClick={() => setActiveAdminTab("EMAIL")} className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 ${activeAdminTab === "EMAIL" ? "bg-white dark:bg-slate-700 text-primary shadow" : "text-slate-500"}`}>
             <FaEnvelope /> Email Blaster
           </button>
+          <button onClick={() => setActiveAdminTab("COURSES")} className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 ${activeAdminTab === "COURSES" ? "bg-white dark:bg-slate-700 text-primary shadow" : "text-slate-500"}`}>
+            <FaUniversity /> Courses
+          </button>
         </div>
       </div>
 
@@ -474,7 +572,7 @@ export default function AdminDashboard() {
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Select Course</label>
                     <select value={newSession.course} onChange={e => setNewSession({...newSession, course: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none">
                       <option value="">Choose Course...</option>
-                      {Array.from(new Set(enrollments.map(e => e.course_title))).map(t => <option key={t} value={t}>{t}</option>)}
+                      {courses.map(c => <option key={c.id} value={c.title}>{c.title}</option>)}
                     </select>
                   </div>
                   <div>
@@ -546,7 +644,7 @@ export default function AdminDashboard() {
                       <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Course Target</label>
                       <select value={newQuiz.course_slug} onChange={e => setNewQuiz({...newQuiz, course_slug: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none">
                         <option value="global">Global (All Users)</option>
-                        {COURSE_LIST.map(c => <option key={c.slug} value={c.slug}>{c.title}</option>)}
+                        {courses.map(c => <option key={c.slug} value={c.slug}>{c.title}</option>)}
                       </select>
                     </div>
                   </div>
@@ -625,7 +723,7 @@ export default function AdminDashboard() {
                   <select value={emailBlast.audience} onChange={e => setEmailBlast({...emailBlast, audience: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none font-bold">
                     <option value="ALL">All Enrolled Students (Paid & Non-Paid)</option>
                     <option value="ALL_REGISTERED">All Registered Platform Users</option>
-                    {COURSE_LIST.map(c => <option key={c.slug} value={c.slug}>{c.title} Students</option>)}
+                    {courses.map(c => <option key={c.slug} value={c.slug}>{c.title} Students</option>)}
                   </select>
                 </div>
                 
@@ -644,6 +742,116 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </div>
+          </motion.div>
+        )}
+        {activeAdminTab === "COURSES" && (
+          <motion.div key="co" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+             {/* Course Management UI */}
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+               {/* Left: Course List */}
+               <div className="lg:col-span-2 space-y-4">
+                 <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+                   <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                     <h3 className="font-black text-xl flex items-center gap-2"><FaUniversity className="text-primary" /> All Courses</h3>
+                     <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold">{courses.length} Active</span>
+                   </div>
+                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                     {courses.length === 0 && (
+                       <div className="p-12 text-center text-slate-400 font-bold">No courses found in database.</div>
+                     )}
+                     {courses.map(course => (
+                       <div key={course.id} className="p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                         <div className="flex items-center gap-4">
+                           <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-black text-primary border border-slate-200 dark:border-slate-700">
+                             {course.category ? course.category[0] : 'C'}
+                           </div>
+                           <div>
+                             <h4 className="font-bold">{course.title}</h4>
+                             <div className="flex gap-4 mt-1">
+                               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">₹{course.govt_price} Govt</span>
+                               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{course.duration || 'Flexible'}</span>
+                               {course.is_bestseller && <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Bestseller</span>}
+                             </div>
+                           </div>
+                         </div>
+                         <div className="flex gap-2">
+                           <button onClick={() => handleEditCourse(course)} className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm" title="Edit Course"><FaEdit /></button>
+                           <button onClick={() => handleDeleteCourse(course.id)} className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm" title="Delete Course"><FaTrash /></button>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               </div>
+
+               {/* Right: Add/Edit Form */}
+               <div className="lg:col-span-1">
+                 <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl sticky top-24">
+                   <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+                     {editingCourseId ? <><FaEdit className="text-blue-500" /> Edit Course</> : <><FaPlus className="text-green-500" /> Add New Course</>}
+                   </h3>
+                   
+                   <div className="space-y-4">
+                     <div>
+                       <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Course Title</label>
+                       <input type="text" value={newCourse.title} onChange={e => setNewCourse({...newCourse, title: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:border-primary transition-all font-semibold" placeholder="e.g. AutoCAD Mastery" />
+                     </div>
+                     <div>
+                       <label className="text-xs font-bold text-slate-500 uppercase block mb-1">URL Slug</label>
+                       <input type="text" value={newCourse.slug} onChange={e => setNewCourse({...newCourse, slug: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:border-primary transition-all" placeholder="e.g. autocad-mastery" />
+                     </div>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Govt Price (₹)</label>
+                          <input type="number" value={newCourse.govt_price} onChange={e => setNewCourse({...newCourse, govt_price: parseInt(e.target.value)})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Private Price (₹)</label>
+                          <input type="number" value={newCourse.pvt_price} onChange={e => setNewCourse({...newCourse, pvt_price: parseInt(e.target.value)})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none" />
+                        </div>
+                     </div>
+                     <div>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Job/Training Price (₹)</label>
+                        <input type="number" value={newCourse.job_price} onChange={e => setNewCourse({...newCourse, job_price: parseInt(e.target.value)})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none" />
+                     </div>
+                     <div>
+                       <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Category</label>
+                       <select value={newCourse.category} onChange={e => setNewCourse({...newCourse, category: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none font-bold">
+                         <option value="DESIGN">Design</option>
+                         <option value="PROGRAMMING">Programming</option>
+                         <option value="ENGINEERING">Engineering</option>
+                         <option value="DATA SCIENCE">Data Science</option>
+                         <option value="AI">AI & Machine Learning</option>
+                       </select>
+                     </div>
+                     <div>
+                       <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Description</label>
+                       <textarea value={newCourse.description} onChange={e => setNewCourse({...newCourse, description: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none min-h-[120px] text-sm" placeholder="Short course summary..." />
+                     </div>
+
+                     <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                       <input type="checkbox" id="bestseller" checked={newCourse.is_bestseller} onChange={e => setNewCourse({...newCourse, is_bestseller: e.target.checked})} className="w-5 h-5 accent-primary" />
+                       <label htmlFor="bestseller" className="text-sm font-bold cursor-pointer">Mark as Bestseller</label>
+                     </div>
+
+                     <button onClick={handleSaveCourse} disabled={isCreatingCourse} className="w-full py-4 bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/20 mt-4 disabled:opacity-50 flex items-center justify-center gap-2">
+                       {isCreatingCourse ? "Saving..." : <><FaPlus /> {editingCourseId ? "Update Course" : "Create Course"}</>}
+                     </button>
+                     {editingCourseId && (
+                        <button onClick={() => {
+                          setEditingCourseId(null);
+                          setNewCourse({
+                            title: "", slug: "", description: "", category: "DESIGN",
+                            govt_price: 1999, pvt_price: 2999, job_price: 3999,
+                            duration: "12 Weeks", level: "Intermediate", is_bestseller: false,
+                            instructor_name: "NLITedu Official", highlights: ["", "", ""], syllabus: ["", "", ""]
+                          });
+                        }} className="w-full py-2 text-slate-500 font-bold hover:text-red-500 transition-colors">Cancel Editing</button>
+                     )}
+                   </div>
+                 </div>
+               </div>
+             </div>
           </motion.div>
         )}
       </AnimatePresence>

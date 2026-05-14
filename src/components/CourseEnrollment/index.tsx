@@ -83,10 +83,11 @@ const EnrollDropdown: React.FC<{ onSelectionChange: (sel: Selection) => void }> 
   );
 };
 
-import { COURSE_LIST as courses } from "@/data/courses";
+import { COURSE_UI_DATA, fetchCourses } from "@/data/courses";
 
 const CourseEnrollment = () => {
   const router = useRouter();
+  const [courses, setCourses] = useState<any[]>([]);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [selectedCourseSlug, setSelectedCourseSlug] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ type: "govt" | "private"; state: string } | null>(null);
@@ -105,6 +106,10 @@ const CourseEnrollment = () => {
       if (scrollTimer) clearTimeout(scrollTimer);
     };
   }, [showEnrollModal]);
+
+  useEffect(() => {
+    fetchCourses().then(setCourses);
+  }, []);
 
   return (
     <section
@@ -146,36 +151,42 @@ const CourseEnrollment = () => {
 
         {/* Course Cards Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {courses.map(({ title, description, icon, slug, color, bgColor }, index) => (
-            <div
-              key={index}
-              className="bg-white dark:bg-gray-800 p-8 rounded-3xl group hover:shadow-xl transition-all duration-300"
-            >
-              {/* Icon Container */}
+          {courses.map((course, index) => {
+            const ui = COURSE_UI_DATA[course.slug] || {
+              icon: "code",
+              color: "text-blue-600",
+              bgColor: "bg-blue-100",
+            };
+            return (
               <div
-                className={`w-16 h-16 rounded-2xl ${bgColor} ${color} flex items-center justify-center mb-8 group-hover:scale-110 transition-transform`}
+                key={index}
+                className="bg-white dark:bg-gray-800 p-8 rounded-3xl group hover:shadow-xl transition-all duration-300"
               >
-                <span className="material-symbols-outlined text-4xl font-bold">
-                  {icon}
-                </span>
-              </div>
+                {/* Icon Container */}
+                <div
+                  className={`w-16 h-16 rounded-2xl ${ui.bgColor} ${ui.color} flex items-center justify-center mb-8 group-hover:scale-110 transition-transform`}
+                >
+                  <span className="material-symbols-outlined text-4xl font-bold">
+                    {ui.icon}
+                  </span>
+                </div>
 
-              {/* Title */}
-              <h3 className="font-headline text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-                {title}
-              </h3>
+                {/* Title */}
+                <h3 className="font-headline text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+                  {course.title}
+                </h3>
 
-              {/* Description */}
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-8 leading-relaxed">
-                {description}
-              </p>
+                {/* Description */}
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-8 leading-relaxed line-clamp-3">
+                  {course.description}
+                </p>
 
-              {/* CTA Button */}
-              <button
-                onClick={() => {
-                  setSelectedCourseSlug(slug);
-                  setShowEnrollModal(true);
-                }}
+                {/* CTA Button */}
+                <button
+                  onClick={() => {
+                    setSelectedCourseSlug(course.slug);
+                    setShowEnrollModal(true);
+                  }}
                 className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold group-hover:translate-x-2 transition-transform cursor-pointer"
               >
                 Enroll Now
@@ -184,7 +195,8 @@ const CourseEnrollment = () => {
                 </span>
               </button>
             </div>
-          ))}
+          );
+        })}
         </div>
       </div>
 

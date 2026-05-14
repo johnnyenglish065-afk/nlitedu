@@ -1,191 +1,124 @@
-export const COURSE_LIST = [
-  {
-    title: "AutoCAD & BIM",
-    slug: "autocad-2d-3d-design",
-    description:
-      "Master industrial drafting and 3D modeling for modern construction and engineering projects.",
+import { supabase } from "@/lib/supabaseClient";
+
+export const COURSE_UI_DATA: Record<string, { icon: string, color: string, bgColor: string }> = {
+  "autocad-2d-3d-design": {
     icon: "architecture",
     color: "text-orange-600",
     bgColor: "bg-orange-100",
   },
-  {
-    title: "Java Full Stack",
-    slug: "java-programming",
-    description:
-      "Build robust enterprise-grade applications using the world's most versatile programming language.",
+  "java-programming": {
     icon: "code",
     color: "text-red-600",
     bgColor: "bg-red-100",
   },
-  {
-    title: "Python for AI",
-    slug: "python-data-science-ai",
-    description:
-      "Dive into Data Science and Artificial Intelligence with Python scripting and automation.",
+  "python-data-science-ai": {
     icon: "data_object",
     color: "text-blue-600",
     bgColor: "bg-blue-100",
   },
-  {
-    title: "MATLAB Simulation",
-    slug: "matlab-scientific-computing",
-    description:
-      "Advanced mathematical computation and algorithm development for engineering research.",
+  "matlab-scientific-computing": {
     icon: "functions",
     color: "text-blue-700",
     bgColor: "bg-blue-100",
   },
-  {
-    title: "Mobile App Dev",
-    slug: "android-ios-mobile-development",
-    description:
-      "Create high-performance mobile applications from UI design to backend integration.",
+  "android-ios-mobile-development": {
     icon: "smartphone",
     color: "text-green-600",
     bgColor: "bg-green-100",
   },
-  {
-    title: "IoT & Embedded",
-    slug: "iot-embedded",
-    description:
-      "Connect the physical world to the digital with hardware programming and network sensors.",
+  "iot-embedded": {
     icon: "settings_input_antenna",
     color: "text-purple-600",
     bgColor: "bg-purple-100",
   },
-  {
-    title: "Revit & Architecture",
-    slug: "revit-bim",
-    description:
-      "Learn building information modeling (BIM) for modern architecture and construction.",
+  "revit-bim": {
     icon: "domain",
     color: "text-indigo-600",
     bgColor: "bg-indigo-100",
   },
-  {
-    title: "SolidWorks CAD",
-    slug: "solidworks",
-    description:
-      "Mechanical design and simulation using SolidWorks for product development.",
+  "solidworks": {
     icon: "precision_manufacturing",
     color: "text-cyan-600",
     bgColor: "bg-cyan-100",
   },
-  {
-    title: "CATIA Design",
-    slug: "catia",
-    description:
-      "Advanced CAD/CAM for aerospace, automotive, and complex engineering.",
+  "catia": {
     icon: "engineering",
     color: "text-pink-600",
     bgColor: "bg-pink-100",
   },
-  {
-    title: "3DS Max + VRay",
-    slug: "3dsmax-vray",
-    description:
-      "Create photorealistic 3D visualizations and architectural renders.",
+  "3dsmax-vray": {
     icon: "3d_rotation",
     color: "text-amber-600",
     bgColor: "bg-amber-100",
   },
-  {
-    title: "SketchUp",
-    slug: "sketchup",
-    description:
-      "Intuitive 3D modeling for architecture, interior, and landscape design.",
+  "sketchup": {
     icon: "view_in_ar",
     color: "text-lime-600",
     bgColor: "bg-lime-100",
   },
-  {
-    title: "ETABS",
-    slug: "etabs",
-    description:
-      "Structural analysis and design of buildings and multi-story structures.",
+  "etabs": {
     icon: "apartment",
     color: "text-slate-600",
     bgColor: "bg-slate-100",
   },
-  {
-    title: "Data Science",
-    slug: "data-science",
-    description:
-      "Analyze data, build predictive models, and drive business decisions.",
+  "data-science": {
     icon: "analytics",
     color: "text-teal-600",
     bgColor: "bg-teal-100",
   },
-  {
-    title: "Artificial Intelligence",
-    slug: "artificial-intelligence",
-    description:
-      "Master AI concepts, neural networks, and deep learning frameworks.",
+  "artificial-intelligence": {
     icon: "psychology",
     color: "text-violet-600",
     bgColor: "bg-violet-100",
   },
-  {
-    title: "C++ Programming",
-    slug: "cpp-programming",
-    description:
-      "System-level programming, DSA, and competitive coding with C++.",
+  "cpp-programming": {
     icon: "terminal",
     color: "text-sky-600",
     bgColor: "bg-sky-100",
   },
-  {
-    title: "ANSYS Simulation",
-    slug: "ansys",
-    description:
-      "Finite element analysis and simulation for engineering problems.",
+  "ansys": {
     icon: "science",
     color: "text-yellow-600",
     bgColor: "bg-yellow-100",
   },
-  {
-    title: "Primavera P6",
-    slug: "primavera-p6",
-    description:
-      "Project planning, scheduling, and management for construction & engineering.",
+  "primavera-p6": {
     icon: "schedule",
     color: "text-emerald-600",
     bgColor: "bg-emerald-100",
   },
-  {
-    title: "CorelDRAW",
-    slug: "coreldraw",
-    description:
-      "Vector graphic design, illustration, and layout for print & digital media.",
+  "coreldraw": {
     icon: "palette",
     color: "text-rose-600",
     bgColor: "bg-rose-100",
   },
-  {
-    title: "AutoCAD 2.0 Advance",
-    slug: "autocad-advance",
-    description:
-      "Advanced AutoCAD techniques for complex 3D modeling and parametric design.",
+  "autocad-advance": {
     icon: "architecture",
     color: "text-orange-700",
     bgColor: "bg-orange-100",
   },
-  {
-    title: "AutoCAD (Electrical)",
-    slug: "autocad-electrical",
-    description:
-      "Electrical schematic design, panel layouts, and circuit diagrams.",
+  "autocad-electrical": {
     icon: "electrical_services",
     color: "text-yellow-700",
     bgColor: "bg-yellow-100",
   },
-  {
-    title: "AutoCAD (Mechanical)",
-    slug: "autocad-mechanical",
-    description:
-      "Mechanical part design, assembly drawings, and manufacturing documentation.",
+  "autocad-mechanical": {
     icon: "build",
     color: "text-blue-700",
     bgColor: "bg-blue-100",
   },
-];
+};
+
+export async function fetchCourses() {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("is_legacy_pricing", false)
+    .order("created_at", { ascending: true });
+  
+  if (error) {
+    console.error("Error fetching courses from Supabase:", error);
+    return [];
+  }
+  return data || [];
+}
