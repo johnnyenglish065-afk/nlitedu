@@ -1015,7 +1015,10 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
 
   const handleDownloadReceipt = async () => {
     const element = document.getElementById("receipt-content");
-    if (!element) return;
+    if (!element) {
+      alert("Receipt content not found!");
+      return;
+    }
 
     setIsGenerating(true);
     try {
@@ -1023,26 +1026,30 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
         scale: 2,
         backgroundColor: "#ffffff",
         useCORS: true,
-        logging: false,
+        logging: true, // Enable logging for debugging
         onclone: (clonedDoc) => {
-          // Hide elements that shouldn't be in the PDF
           const actionsEl = clonedDoc.getElementById("receipt-actions");
           const closeBtnEl = clonedDoc.getElementById("receipt-close-btn");
           if (actionsEl) actionsEl.style.display = "none";
           if (closeBtnEl) closeBtnEl.style.display = "none";
 
-          // Ensure cloned modal is visible and correctly styled
           const modalEl = clonedDoc.getElementById("receipt-content");
           if (modalEl) {
             modalEl.style.transform = "none";
             modalEl.style.boxShadow = "none";
             modalEl.style.borderRadius = "0";
+            modalEl.style.margin = "0";
+            modalEl.style.position = "relative";
           }
         }
       });
 
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4"
+      });
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -1082,9 +1089,9 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
       pdf.text("This is an electronically generated receipt and does not require a physical signature.", pdfWidth / 2, pdfHeight - 10, { align: "center" });
 
       pdf.save(`NLITedu_Receipt_${orderId.substring(0, 8)}.pdf`);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to generate PDF", err);
-      alert("Something went wrong while generating the PDF. Please try again.");
+      alert("PDF Generation Error: " + (err.message || "Unknown error"));
     } finally {
       setIsGenerating(false);
     }
