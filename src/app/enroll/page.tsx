@@ -212,10 +212,14 @@ const EnrollmentPage = () => {
     }
   };
 
+  // Determine if it is an internship course
+  const isInternship = useMemo(() => {
+    return programParam === "internship" || courseSlug === "general" || !course?.govt_price;
+  }, [programParam, courseSlug, course]);
+
   // Determine fee based on college type and course
   const enrollmentFee = useMemo(() => {
     if (loadingCourses) return 0;
-    const isInternship = programParam === "internship" || courseSlug === "general" || !course?.govt_price;
 
     // Apply legacy pricing rules (Bihar/Other State) for internship/general courses
     if (isInternship) {
@@ -232,7 +236,7 @@ const EnrollmentPage = () => {
     if (form.collegeType === "private") return course?.pvt_price || 0;
     if (form.collegeType === "job") return course?.job_price || 0;
     return 0;
-  }, [form.collegeType, form.state, course, courseSlug, programParam, loadingCourses]);
+  }, [form.collegeType, form.state, course, isInternship, loadingCourses]);
 
   const displayPrice = course?.price ? parseInt(course.price.replace(/\D/g, '')) : ((course?.pvt_price || 2999) + 4000);
 
@@ -247,7 +251,7 @@ const EnrollmentPage = () => {
       form.email.trim() !== "" &&
       form.whatsapp.trim() !== "" &&
       form.dob !== "" &&
-      form.brn.trim() !== "" &&
+      (isInternship || form.brn.trim() !== "") &&
       form.branch.trim() !== "" &&
       form.semester !== "" &&
       form.collegeName.trim() !== "" &&
@@ -259,11 +263,12 @@ const EnrollmentPage = () => {
       (marksheet12File !== null || marksheetSemFile !== null);
 
     // College ID is mandatory for college students (govt/private), not for job professionals
-    if (isCollegeStudent) {
+    // Internship students are exempt from ID card upload
+    if (isCollegeStudent && !isInternship) {
       return baseComplete && collegeIdFile !== null;
     }
     return baseComplete;
-  }, [form, marksheet12File, marksheetSemFile, collegeIdFile, isCollegeStudent]);
+  }, [form, marksheet12File, marksheetSemFile, collegeIdFile, isCollegeStudent, isInternship]);
 
   useEffect(() => {
     setForm((current) => ({
@@ -290,7 +295,7 @@ const EnrollmentPage = () => {
     if (!/\S+@\S+\.\S+/.test(form.email)) return "Please enter a valid email.";
     if (!form.whatsapp.trim()) return "Please enter your WhatsApp number.";
     if (!form.dob) return "Please select your date of birth.";
-    if (!form.brn.trim()) return "Please enter your College/University Reg. No.";
+    if (!isInternship && !form.brn.trim()) return "Please enter your College/University Reg. No.";
     if (!form.branch.trim()) return "Please enter your branch.";
     if (!form.semester) return "Please select your semester.";
     if (!form.collegeName.trim()) return "Please enter your college name.";
@@ -733,7 +738,7 @@ const EnrollmentPage = () => {
                   onChange={handleChange}
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                   placeholder={form.collegeType === "job" ? "Enter Employee / Job ID" : "Enter Registration No."}
-                  required
+                  required={!isInternship}
                 />
               </label>
 
@@ -753,8 +758,8 @@ const EnrollmentPage = () => {
                 </select>
               </label>
 
-              {/* College ID Upload — only for Govt/Private students */}
-              {isCollegeStudent && (
+              {/* College ID Upload — only for Govt/Private students, not for internships */}
+              {(isCollegeStudent && !isInternship) && (
                 <label className="block sm:col-span-2">
                   <span className="mb-2 block text-sm font-medium">Upload College ID Card <span className="text-red-500">*</span> <span className="text-xs text-slate-400">(Max 200KB — JPG/PNG only)</span></span>
                   <div className="flex items-center justify-center w-full">
@@ -930,7 +935,7 @@ const EnrollmentPage = () => {
           <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 p-6 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700">
             <p className="text-xs uppercase tracking-widest font-bold text-purple-600 dark:text-purple-400">✨ Highlights</p>
             <ul className="mt-4 space-y-2.5 text-slate-700 dark:text-slate-300">
-              {course.highlights.map((item) => (
+              {course.highlights.map((item: string) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-blue-600"></span>
                   <span>{item}</span>
