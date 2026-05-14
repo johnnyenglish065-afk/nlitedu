@@ -362,12 +362,38 @@ export default function AdminDashboard() {
       alert("Please fill subject and message.");
       return;
     }
+
     setIsSendingEmail(true);
     try {
+      // Calculate target emails from pre-loaded enrollments
+      let targetEmails: string[] = [];
+      
+      if (emailBlast.audience === "ALL") {
+        targetEmails = enrollments.map(e => e.email);
+      } else if (emailBlast.audience === "ALL_REGISTERED") {
+        // For All Registered, we don't have the list in memory (it's 'profiles' table)
+        // We'll let the server handle this one, but we'll still pass targetEmails: []
+        targetEmails = [];
+      } else {
+        // It's a specific course slug. We need to match by course_title since enrollments doesn't have slug.
+        // We find the course title for this slug first.
+        const course = courses.find(c => c.slug === emailBlast.audience);
+        if (course) {
+          targetEmails = enrollments
+            .filter(e => e.course_title === course.title)
+            .map(e => e.email);
+        }
+      }
+
+      const payload = {
+        ...emailBlast,
+        targetEmails: targetEmails.filter(Boolean)
+      };
+
       const response = await fetch("/api/email/blast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(emailBlast)
+        body: JSON.stringify(payload)
       });
       const data = await response.json();
       if (response.ok) {
