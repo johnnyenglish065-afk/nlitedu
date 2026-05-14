@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   try {
@@ -10,11 +10,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Initialize Supabase with Service Role Key to bypass RLS for administrative email blast
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
     // Determine target emails based on audience
     let emails: string[] = [];
 
     if (audience === 'ALL_REGISTERED') {
-      const { data, error: dbError } = await supabase.from('profiles').select('email');
+      const { data, error: dbError } = await supabaseAdmin.from('profiles').select('email');
       if (dbError) {
         console.error('Supabase Error:', dbError);
         return NextResponse.json({ error: 'Database error fetching profiles' }, { status: 500 });
@@ -24,7 +30,7 @@ export async function POST(request: Request) {
       }
       emails = Array.from(new Set(data.map(p => p.email)));
     } else {
-      let query = supabase.from('enrollments').select('email');
+      let query = supabaseAdmin.from('enrollments').select('email');
       
       if (audience !== 'ALL') {
         query = query.eq('course_slug', audience);
@@ -38,6 +44,8 @@ export async function POST(request: Request) {
       }
 
       if (!students || students.length === 0) {
+        // Log more info for debugging
+        console.warn(`No students found for audience: ${audience}`);
         return NextResponse.json({ error: 'No enrolled students found for this audience' }, { status: 404 });
       }
 
