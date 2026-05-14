@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     // Initialize Supabase with Service Role Key to bypass RLS for administrative email blast
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
     // Determine target emails based on audience
@@ -67,8 +67,6 @@ export async function POST(request: Request) {
     // Send emails
     const mailOptions = {
       from: `"NLITedu Admin" <${process.env.SMTP_USER}>`,
-      to: emails, // Sending as BCC technically if we use BCC, but passing an array to `to` sends to all
-      // Actually, better to BCC so students don't see each other's emails
       bcc: emails,
       subject: subject,
       html: `
@@ -86,9 +84,6 @@ export async function POST(request: Request) {
         </div>
       `,
     };
-
-    // Remove `to` to prevent exposing all emails if provider doesn't handle array well in BCC
-    delete mailOptions.to;
 
     await transporter.sendMail(mailOptions);
 
