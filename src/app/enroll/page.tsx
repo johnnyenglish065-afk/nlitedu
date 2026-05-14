@@ -469,6 +469,7 @@ const EnrollmentPage = () => {
 
 
   // Maintenance Mode Check - Only applies to Foundation courses
+  // Maintenance mode manually disabled via update
   const isMaintenanceMode = (process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true") && !isInternship;
 
   if (authLoading) {
