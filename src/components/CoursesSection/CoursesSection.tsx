@@ -1,18 +1,34 @@
+"use client";
+
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 
-const CoursesSection = async () => {
-  // Fetch courses from Supabase
-  if (!supabase) return null;
-  const { data: coursesData, error } = await supabase
-    .from("courses")
-    .select("*")
-    .eq("is_legacy_pricing", false)
-    .order("created_at", { ascending: true });
+const CoursesSection = () => {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const courses = coursesData || [];
+  useEffect(() => {
+    const fetchCourses = async () => {
+      if (!supabase) return;
+      
+      const { data, error } = await supabase
+        .from("courses")
+        .select("*")
+        .eq("is_legacy_pricing", false)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching courses:", error);
+      } else {
+        setCourses(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchCourses();
+  }, []);
 
   const discount = (course: any) => {
     const displayPrice = parseInt(course.price?.replace(/\D/g, '') || "0") || ((course.pvt_price || 2999) + 4000);
@@ -20,6 +36,14 @@ const CoursesSection = async () => {
     if (displayPrice === 0 || startingPrice === 0) return 0;
     return Math.round(((displayPrice - startingPrice) / displayPrice) * 100);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <section
