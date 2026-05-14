@@ -52,6 +52,7 @@ interface Enrollment {
   marksheet12Url?: string;
   marksheetSemUrl?: string;
   message?: string;
+  interested_internships?: string;
 }
 
 interface Quiz {
@@ -236,7 +237,7 @@ export default function AdminDashboard() {
       if (enrollments.length === 0) setLoading(true);
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, full_name, email, course_title, status, cf_payment_id, created_at, user_id, college_name, college_type, branch, semester, whatsapp, father_name, gender, dob, brn, state, qualification, marksheet12Url, marksheetSemUrl, message")
+        .select("id, full_name, email, course_title, status, cf_payment_id, created_at, user_id, college_name, college_type, branch, semester, whatsapp, father_name, gender, dob, brn, state, qualification, marksheet12Url, marksheetSemUrl, message, interested_internships")
         .order("created_at", { ascending: false });
       if (error) throw error;
       setEnrollments(data || []);

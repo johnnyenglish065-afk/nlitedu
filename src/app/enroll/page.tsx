@@ -84,6 +84,7 @@ const EnrollmentPage = () => {
     qualification: "",
     marksheet12Url: "",
     marksheetSemUrl: "",
+    interestedInternships: [] as string[],
   });
   const [marksheet12File, setMarksheet12File] = useState<File | null>(null);
   const [marksheetSemFile, setMarksheetSemFile] = useState<File | null>(null);
@@ -287,6 +288,16 @@ const EnrollmentPage = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleCheckboxChange = (courseTitle: string) => {
+    setForm((prev) => {
+      const current = prev.interestedInternships;
+      const updated = current.includes(courseTitle)
+        ? current.filter((c) => c !== courseTitle)
+        : [...current, courseTitle];
+      return { ...prev, interestedInternships: updated };
+    });
+  };
+
   const validate = () => {
     if (!form.fullName.trim()) return "Please enter your full name.";
     if (!form.fatherName.trim()) return "Please enter your father's name.";
@@ -346,10 +357,15 @@ const EnrollmentPage = () => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", uploadPreset!);
-        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+
+        // Determine resource type: 'raw' for PDFs to bypass image-specific restrictions, 'auto' for others
+        const resourceType = file.type === "application/pdf" ? "raw" : "auto";
+
+        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
           method: "POST",
           body: formData,
         });
+        
         if (!uploadRes.ok) throw new Error("Failed to upload marksheet to Cloudinary. Please try again.");
         const cloudData = await uploadRes.json();
         return cloudData.secure_url;
@@ -380,6 +396,7 @@ const EnrollmentPage = () => {
         marksSem: form.marksSem,
         marksheet12Url: uploaded12Url,
         marksheetSemUrl: uploadedSemUrl,
+        interested_internships: form.interestedInternships.join(", "),
         user_id: user?.id,
         cf_payment_id: orderId,
         status: "PENDING",
@@ -881,6 +898,36 @@ const EnrollmentPage = () => {
                 placeholder="Any additional details for the enrollment team"
               />
             </label>
+
+            {/* Interested Internship Courses */}
+            <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 dark:border-slate-800 dark:bg-slate-900/50">
+              <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                ⭐ Interested Internship Courses
+              </h3>
+              <p className="mb-6 text-xs text-slate-500 dark:text-slate-400">
+                Select other internship programs you are interested in exploring:
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {courses
+                  .filter(c => [
+                    "autocad-2d-3d-design", "java-programming", "python-programming", 
+                    "data-science", "artificial-intelligence", "matlab-scientific-computing",
+                    "android-ios-mobile-development", "iot-embedded", "revit-bim",
+                    "solidworks", "catia", "sketchup", "etabs"
+                  ].includes(c.slug))
+                  .map((c) => (
+                    <label key={c.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={form.interestedInternships.includes(c.title)}
+                        onChange={() => handleCheckboxChange(c.title)}
+                        className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800"
+                      />
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{c.title}</span>
+                    </label>
+                  ))}
+              </div>
+            </div>
 
             <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between border-t border-slate-200 dark:border-slate-800">
               <button
