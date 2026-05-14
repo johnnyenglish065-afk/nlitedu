@@ -396,7 +396,7 @@ const EnrollmentPage = () => {
         marksSem: form.marksSem,
         marksheet12Url: uploaded12Url,
         marksheetSemUrl: uploadedSemUrl,
-        interested_internships: form.interestedInternships.join(", "),
+        interested_internships: courseSlug === "general" ? form.interestedInternships.join(", ") : null,
         user_id: user?.id,
         cf_payment_id: orderId,
         status: "PENDING",
@@ -899,35 +899,37 @@ const EnrollmentPage = () => {
               />
             </label>
 
-            {/* Interested Internship Courses */}
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 dark:border-slate-800 dark:bg-slate-900/50">
-              <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                ⭐ Interested Internship Courses
-              </h3>
-              <p className="mb-6 text-xs text-slate-500 dark:text-slate-400">
-                Select other internship programs you are interested in exploring:
-              </p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {courses
-                  .filter(c => [
-                    "autocad-2d-3d-design", "java-programming", "python-programming", 
-                    "data-science", "artificial-intelligence", "matlab-scientific-computing",
-                    "android-ios-mobile-development", "iot-embedded", "revit-bim",
-                    "solidworks", "catia", "sketchup", "etabs"
-                  ].includes(c.slug))
-                  .map((c) => (
-                    <label key={c.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={form.interestedInternships.includes(c.title)}
-                        onChange={() => handleCheckboxChange(c.title)}
-                        className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800"
-                      />
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{c.title}</span>
-                    </label>
-                  ))}
+            {/* Interested Internship Courses - Only show for general enrollment */}
+            {courseSlug === "general" && (
+              <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 dark:border-slate-800 dark:bg-slate-900/50">
+                <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                  ⭐ Interested Internship Courses
+                </h3>
+                <p className="mb-6 text-xs text-slate-500 dark:text-slate-400">
+                  Select other internship programs you are interested in exploring:
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {courses
+                    .filter(c => [
+                      "autocad-2d-3d-design", "java-programming", "python-programming", 
+                      "data-science", "artificial-intelligence", "matlab-scientific-computing",
+                      "android-ios-mobile-development", "iot-embedded", "revit-bim",
+                      "solidworks", "catia", "sketchup", "etabs"
+                    ].includes(c.slug))
+                    .map((c) => (
+                      <label key={c.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={form.interestedInternships.includes(c.title)}
+                          onChange={() => handleCheckboxChange(c.title)}
+                          className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800"
+                        />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{c.title}</span>
+                      </label>
+                    ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between border-t border-slate-200 dark:border-slate-800">
               <button
