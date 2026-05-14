@@ -207,10 +207,11 @@ const Footer = () => {
               </p>
               <div className="flex justify-center space-x-4">
                 <a
-                  href="#"
+                  href="https://github.com/saveragraphics/NLITedu-Mobile/releases/download/v1.0.1-2/app-release.apk"
                   className="inline-flex items-center px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors duration-300"
                   target="_blank"
                   rel="noopener noreferrer"
+                  download
                 >
                   <svg
                     className="w-5 h-5 mr-2"
