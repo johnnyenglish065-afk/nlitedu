@@ -253,12 +253,22 @@ const EnrollmentPage = () => {
 
   // Determine fee based on college type and course
   const enrollmentFee = useMemo(() => {
-    if (!pricing) return 0;
+    // Apply legacy pricing rules (Bihar/Other State) for internship/general courses
+    if (!pricing || courseSlug === "general") {
+      if (form.collegeType === "govt") {
+        return form.state === "Bihar" ? 999 : 1499;
+      }
+      if (form.collegeType === "private") return 1999;
+      if (form.collegeType === "job") return 2999;
+      return 0;
+    }
+
+    // Apply strict tiered pricing for Foundation courses
     if (form.collegeType === "govt") return pricing.govtPrice;
     if (form.collegeType === "private") return pricing.pvtPrice;
     if (form.collegeType === "job") return pricing.jobPrice;
     return 0;
-  }, [form.collegeType, pricing]);
+  }, [form.collegeType, form.state, pricing, courseSlug]);
 
   const displayPrice = pricing?.displayPrice || 0;
 
