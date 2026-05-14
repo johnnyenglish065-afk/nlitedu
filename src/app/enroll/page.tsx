@@ -11,59 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
-const courseList = [
-  { slug: "autocad-2d-3d-design", title: "AutoCAD 2D & 3D Design (Civil)", description: "Master industry-standard AutoCAD tools for precise 2D drafting and 3D modeling. Duration: 3 Months.", highlights: ["2D Drafting and 3D Modeling", "Industry-standard AutoCAD workflow", "Project-based learning for real-world design"] },
-  { slug: "revit-bim", title: "Revit Building Information Modeling (BIM)", description: "Learn BIM workflows and Revit software to create collaborative building designs. Duration: 3 Months.", highlights: ["BIM modeling and collaboration", "Architecture, structure, and MEP support", "Live project-based Revit exercises"] },
-  { slug: "staadpro", title: "STAAD Pro", description: "Learn advanced structural analysis and design using STAAD Pro for civil and structural engineering. Duration: 3 Months.", highlights: ["Structural modeling and analysis", "Load case simulation", "Design optimization for real-world structures"] },
-  { slug: "solidworks", title: "SolidWorks", description: "Master mechanical design, simulation, and product development using SolidWorks CAD. Duration: 3 Months.", highlights: ["3D mechanical design", "Assembly modeling and simulation", "Manufacturing-ready product design"] },
-  { slug: "3dsmax-vray", title: "3DS Max + VRay", description: "Create photorealistic 3D visualizations, architectural walkthroughs, and cinematic renders. Duration: 4 Months.", highlights: ["3D modeling and scene composition", "VRay lighting, materials, and rendering", "Architectural visualization projects"] },
-  { slug: "catia", title: "CATIA", description: "Explore advanced CAD/CAM workflows with CATIA for automotive, aerospace, and industrial design. Duration: 2 Months.", highlights: ["Advanced surface modeling", "CAD/CAM integration", "Industry-standard product design techniques"] },
-  { slug: "sketchup", title: "SketchUp", description: "Learn intuitive 3D modeling for architecture, interior design, and landscape projects. Duration: 3 Months.", highlights: ["3D modeling for architecture and interiors", "Layout and presentation tools", "Plugin workflows for advanced design"] },
-  { slug: "etabs", title: "ETABS", description: "Master structural analysis and design of multi-story buildings and complex structures. Duration: 3 Months.", highlights: ["Multi-story structural modeling", "Seismic and wind load analysis", "Design optimization for real-world buildings"] },
-  { slug: "java-programming", title: "Java Programming", description: "Develop robust enterprise-level applications by mastering Java fundamentals and advanced concepts. Duration: 3 Months.", highlights: ["Core Java fundamentals", "Object-oriented design and data structures", "Build real applications with practical examples"] },
-  { slug: "python-programming", title: "Python Programming", description: "Master Python for data science, scripting, and automation with hands-on practice. Duration: 3 Months.", highlights: ["Python fundamentals and scripting", "Data processing and automation", "Build practical Python projects"] },
-  { slug: "python-data-science-ai", title: "Python for Data Science & AI", description: "Dive into Python programming with a focus on data analysis, AI, and machine learning. Duration: 3 Months.", highlights: ["Python programming for analytics", "Data visualization and machine learning", "Hands-on AI use cases with Python"] },
-  { slug: "data-science", title: "Data Science", description: "Analyze data, build predictive models, and drive business decisions using modern tools. Duration: 3 Months.", highlights: ["Data wrangling and visualization", "Machine learning model building", "Real-world analytics projects"] },
-  { slug: "android-ios-mobile-development", title: "Android & iOS Mobile Development", description: "Build modern mobile applications for Android and iOS platforms. Duration: 6 Months.", highlights: ["Cross-platform mobile app development", "Hands-on app design and deployment", "Build real mobile projects for your portfolio"] },
-  { slug: "artificial-intelligence", title: "Artificial Intelligence", description: "Master AI concepts including neural networks, deep learning, NLP, and computer vision. Duration: 3 Months.", highlights: ["Neural networks and deep learning", "Natural language processing", "AI-powered real-world applications"] },
-  { slug: "matlab-scientific-computing", title: "MATLAB for Scientific Computing", description: "Gain critical skills in MATLAB for data analysis, control systems, and engineering computations. Duration: 3 Months.", highlights: ["MATLAB for engineering workflows", "Simulation and numerical computing", "Data analysis with MATLAB toolboxes"] },
-  { slug: "cpp-programming", title: "C++ Programming", description: "Learn system-level programming, data structures & algorithms, and competitive coding with C++. Duration: 3 Months.", highlights: ["Core C++ and OOP concepts", "Data structures and algorithms", "Competitive programming practice"] },
-  { slug: "ansys", title: "ANSYS", description: "Perform finite element analysis and engineering simulation for mechanical and structural problems. Duration: 3 Months.", highlights: ["FEA modeling and meshing", "Structural and thermal analysis", "Simulation-driven design optimization"] },
-  { slug: "primavera-p6", title: "Primavera P6", description: "Learn project planning, scheduling, resource allocation, and management for construction projects. Duration: 2 Months.", highlights: ["Project scheduling and WBS", "Resource and cost management", "Critical path and earned value analysis"] },
-  { slug: "coreldraw", title: "CorelDRAW", description: "Master vector graphic design, illustration, and page layout for print and digital media. Duration: 3 Months.", highlights: ["Vector illustration and logo design", "Page layout for print media", "Photo editing and digital art"] },
-  { slug: "autocad-advance", title: "AutoCAD 2.0 Advance", description: "Take your AutoCAD skills to the next level with advanced 3D modeling and parametric design. Duration: 3 Months.", highlights: ["Advanced 3D modeling techniques", "Parametric and dynamic blocks", "Complex drawing management"] },
-  { slug: "autocad-electrical", title: "AutoCAD (Electrical)", description: "Design electrical schematics, panel layouts, and circuit diagrams using AutoCAD Electrical. Duration: 3 Months.", highlights: ["Electrical schematic design", "Panel layout and wiring diagrams", "Component libraries and reporting"] },
-  { slug: "autocad-mechanical", title: "AutoCAD (Mechanical)", description: "Create mechanical part designs, assembly drawings, and manufacturing documentation. Duration: 3 Months.", highlights: ["Mechanical part and assembly design", "GD&T and tolerance annotation", "Manufacturing drawing standards"] },
-  { slug: "general", title: "NLIT Course Enrollment", description: "Select your course and fill out the enrollment form so we can reserve your seat and begin your learning journey.", highlights: ["Choose from courses across design, development, AI, and engineering", "Secure admission with a simple online form", "Receive course guidance from the NLIT team"] },
-];
-
-// Course-specific pricing: { displayPrice, govtPrice, pvtPrice, jobPrice }
-const coursePricing: Record<string, { displayPrice: number; govtPrice: number; pvtPrice: number; jobPrice: number; duration: string }> = {
-  "autocad-2d-3d-design": { displayPrice: 5999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
-  "revit-bim": { displayPrice: 6999, govtPrice: 2499, pvtPrice: 3999, jobPrice: 4999, duration: "3 Months" },
-  "staadpro": { displayPrice: 6999, govtPrice: 2499, pvtPrice: 3999, jobPrice: 4999, duration: "3 Months" },
-  "solidworks": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 4999, jobPrice: 5999, duration: "3 Months" },
-  "3dsmax-vray": { displayPrice: 12999, govtPrice: 3999, pvtPrice: 5999, jobPrice: 7999, duration: "4 Months" },
-  "catia": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 4999, duration: "2 Months" },
-  "sketchup": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 4999, duration: "3 Months" },
-  "etabs": { displayPrice: 14999, govtPrice: 3999, pvtPrice: 5999, jobPrice: 7999, duration: "3 Months" },
-  "java-programming": { displayPrice: 6999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
-  "python-programming": { displayPrice: 6999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
-  "python-data-science-ai": { displayPrice: 6999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
-  "data-science": { displayPrice: 6999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
-  "android-ios-mobile-development": { displayPrice: 14999, govtPrice: 3999, pvtPrice: 5999, jobPrice: 7999, duration: "6 Months" },
-  "artificial-intelligence": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 5999, duration: "3 Months" },
-  "matlab-scientific-computing": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 5999, duration: "3 Months" },
-  "cpp-programming": { displayPrice: 8999, govtPrice: 2499, pvtPrice: 3499, jobPrice: 4499, duration: "3 Months" },
-  "ansys": { displayPrice: 14999, govtPrice: 3999, pvtPrice: 4999, jobPrice: 7999, duration: "3 Months" },
-  "primavera-p6": { displayPrice: 14999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 4999, duration: "2 Months" },
-  "coreldraw": { displayPrice: 7999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
-  "autocad-advance": { displayPrice: 9999, govtPrice: 2999, pvtPrice: 3999, jobPrice: 5999, duration: "3 Months" },
-  "autocad-electrical": { displayPrice: 5999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
-  "autocad-mechanical": { displayPrice: 5999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
-  "general": { displayPrice: 6999, govtPrice: 1999, pvtPrice: 2999, jobPrice: 3999, duration: "3 Months" },
-};
-
+import { fetchCourses } from "@/data/courses";
 const semesters = [
   "1st",
   "2nd",
@@ -79,12 +27,12 @@ const semesters = [
 const genders = ["Male", "Female", "Prefer not to say"];
 
 const indianStates = [
-  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", 
-  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", 
-  "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", 
-  "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+  "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
+  "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
   "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
-  "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", 
+  "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
   "Lakshadweep", "Delhi", "Puducherry", "Ladakh", "Jammu and Kashmir"
 ].sort();
 
@@ -94,10 +42,26 @@ const EnrollmentPage = () => {
   const { user, loading: authLoading } = useAuth();
   const courseSlug = searchParams.get("course") || "general";
   const programParam = searchParams.get("program");
-  const course = useMemo(
-    () => courseList.find((item) => item.slug === courseSlug) ?? courseList.find((item) => item.slug === "general")!,
-    [courseSlug],
-  );
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+
+  useEffect(() => {
+    fetchCourses().then((data) => {
+      setCourses(data);
+      setLoadingCourses(false);
+    });
+  }, []);
+
+  const course = useMemo(() => {
+    if (loadingCourses) return { title: "Loading...", description: "Loading course details...", highlights: [] };
+    const found = courses.find((item) => item.slug === courseSlug);
+    return found || {
+      slug: "general",
+      title: "NLIT Course Enrollment",
+      description: "Select your course and fill out the enrollment form so we can reserve your seat and begin your learning journey.",
+      highlights: ["Choose from courses across design, development, AI, and engineering", "Secure admission with a simple online form", "Receive course guidance from the NLIT team"],
+    };
+  }, [courseSlug, courses, loadingCourses]);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -112,7 +76,7 @@ const EnrollmentPage = () => {
     collegeName: "",
     collegeType: searchParams.get("type") || "",
     state: searchParams.get("state") || "",
-    course: course.title,
+    course: course?.title || "",
     message: "",
     marks10: "",
     marks12: "",
@@ -215,7 +179,7 @@ const EnrollmentPage = () => {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const res = await fetch(`${supabaseUrl}/functions/v1/verify-cashfree-payment`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
         },
@@ -248,13 +212,10 @@ const EnrollmentPage = () => {
     }
   };
 
-
-  // Get pricing for the selected course
-  const pricing = coursePricing[courseSlug] || coursePricing["general"];
-
   // Determine fee based on college type and course
   const enrollmentFee = useMemo(() => {
-    const isInternship = programParam === "internship" || courseSlug === "general" || !pricing;
+    if (loadingCourses) return 0;
+    const isInternship = programParam === "internship" || courseSlug === "general" || !course?.govt_price;
 
     // Apply legacy pricing rules (Bihar/Other State) for internship/general courses
     if (isInternship) {
@@ -267,13 +228,13 @@ const EnrollmentPage = () => {
     }
 
     // Apply strict tiered pricing for Foundation courses
-    if (form.collegeType === "govt") return pricing.govtPrice;
-    if (form.collegeType === "private") return pricing.pvtPrice;
-    if (form.collegeType === "job") return pricing.jobPrice;
+    if (form.collegeType === "govt") return course?.govt_price || 0;
+    if (form.collegeType === "private") return course?.pvt_price || 0;
+    if (form.collegeType === "job") return course?.job_price || 0;
     return 0;
-  }, [form.collegeType, form.state, pricing, courseSlug, programParam]);
+  }, [form.collegeType, form.state, course, courseSlug, programParam, loadingCourses]);
 
-  const displayPrice = pricing?.displayPrice || 0;
+  const displayPrice = course?.price ? parseInt(course.price.replace(/\D/g, '')) : ((course?.pvt_price || 2999) + 4000);
 
   const isCollegeStudent = form.collegeType === "govt" || form.collegeType === "private";
 
@@ -368,10 +329,10 @@ const EnrollmentPage = () => {
 
       let uploaded12Url = "";
       let uploadedSemUrl = "";
-      
+
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-      
+
       if ((marksheet12File || marksheetSemFile) && (!cloudName || !uploadPreset)) {
         throw new Error("Cloudinary configuration is missing. Please set Environment Variables.");
       }
@@ -432,7 +393,7 @@ const EnrollmentPage = () => {
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-cashfree-order`,
         {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
             "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
@@ -448,7 +409,7 @@ const EnrollmentPage = () => {
       );
 
       const orderData = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(orderData.message || orderData.error || "Payment system unavailable");
       }
@@ -500,7 +461,7 @@ const EnrollmentPage = () => {
     return (
       <main className="min-h-screen bg-slate-50 pt-[160px] pb-14 px-4 dark:bg-slate-950">
         <div className="mx-auto max-w-lg">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900"
@@ -514,7 +475,7 @@ const EnrollmentPage = () => {
               <p className="mb-8 text-slate-600 dark:text-slate-400">
                 Please sign in to your NLITedu account to enroll in <span className="font-semibold text-blue-600">{course.title}</span> and track your certificates.
               </p>
-              
+
               <div className="grid gap-4">
                 <Link
                   href="/signin"
@@ -529,7 +490,7 @@ const EnrollmentPage = () => {
                   New Student? Register Now
                 </Link>
               </div>
-              
+
               <Link href="/" className="mt-8 inline-block text-sm font-medium text-slate-500 hover:text-blue-600 dark:text-slate-400">
                 ← Back to Courses
               </Link>
@@ -544,12 +505,12 @@ const EnrollmentPage = () => {
     <main className="min-h-screen bg-gray-50 pt-[160px] pb-14 px-4 text-slate-900 dark:bg-slate-950 dark:text-white sm:px-6 lg:px-8 relative">
       <div className="mx-auto max-w-6xl mb-8">
         <div className="flex items-center gap-3 py-3 px-4 rounded-2xl bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
-           <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
-             <FiUser className="text-blue-600 h-4 w-4" />
-           </div>
-           <p className="text-sm text-slate-600 dark:text-slate-400">
-             Logged in as <span className="font-bold text-slate-900 dark:text-white">{user.email}</span>
-           </p>
+          <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+            <FiUser className="text-blue-600 h-4 w-4" />
+          </div>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            Logged in as <span className="font-bold text-slate-900 dark:text-white">{user.email}</span>
+          </p>
         </div>
       </div>
 
@@ -800,7 +761,7 @@ const EnrollmentPage = () => {
                     <label htmlFor="dropzone-college-id" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
                       <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
                         <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
                         </svg>
                         <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{collegeIdFile ? collegeIdFile.name : "Click to upload College ID"}</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400">JPG, JPEG, PNG (MAX. 200KB)</p>
@@ -874,32 +835,32 @@ const EnrollmentPage = () => {
               <label className="block">
                 <span className="mb-2 block text-sm font-medium">Upload 10th/12th Marksheet (Max 500KB)</span>
                 <div className="flex items-center justify-center w-full">
-                    <label htmlFor="dropzone-file-1" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                            <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                            </svg>
-                            <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{marksheet12File ? marksheet12File.name : "Click to upload"}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 500KB)</p>
-                        </div>
-                        <input id="dropzone-file-1" type="file" className="hidden" accept=".pdf,image/*" onChange={handle12FileChange} />
-                    </label>
+                  <label htmlFor="dropzone-file-1" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                      <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                      </svg>
+                      <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{marksheet12File ? marksheet12File.name : "Click to upload"}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 500KB)</p>
+                    </div>
+                    <input id="dropzone-file-1" type="file" className="hidden" accept=".pdf,image/*" onChange={handle12FileChange} />
+                  </label>
                 </div>
               </label>
 
               <label className="block">
                 <span className="mb-2 block text-sm font-medium">Upload Latest Sem Marksheet (Max 500KB)</span>
                 <div className="flex items-center justify-center w-full">
-                    <label htmlFor="dropzone-file-2" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                            <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                            </svg>
-                            <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{marksheetSemFile ? marksheetSemFile.name : "Click to upload"}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 500KB)</p>
-                        </div>
-                        <input id="dropzone-file-2" type="file" className="hidden" accept=".pdf,image/*" onChange={handleSemFileChange} />
-                    </label>
+                  <label htmlFor="dropzone-file-2" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                      <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                      </svg>
+                      <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{marksheetSemFile ? marksheetSemFile.name : "Click to upload"}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 500KB)</p>
+                    </div>
+                    <input id="dropzone-file-2" type="file" className="hidden" accept=".pdf,image/*" onChange={handleSemFileChange} />
+                  </label>
                 </div>
               </label>
             </div>
@@ -945,9 +906,9 @@ const EnrollmentPage = () => {
 
         <AnimatePresence>
           {success && (
-            <SuccessModal 
-              onClose={() => setSuccess(null)} 
-              courseTitle={course.title} 
+            <SuccessModal
+              onClose={() => setSuccess(null)}
+              courseTitle={course.title}
               orderId={searchParams.get("order_id") || "N/A"}
               customerEmail={user.email || ""}
             />
@@ -987,7 +948,7 @@ const EnrollmentPage = () => {
               </div>
               <div className="flex items-center justify-between">
                 <dt className="font-medium">Duration</dt>
-                <dd>{pricing?.duration || "—"}</dd>
+                <dd>{course.duration || "—"}</dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="font-medium">College Type</dt>
@@ -1034,11 +995,11 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
   const handleDownloadReceipt = async () => {
     const element = document.getElementById("receipt-content");
     if (!element) return;
-    
+
     setIsGenerating(true);
     try {
-      const canvas = await html2canvas(element, { 
-        scale: 2, 
+      const canvas = await html2canvas(element, {
+        scale: 2,
         backgroundColor: "#ffffff",
         useCORS: true,
         logging: false,
@@ -1048,7 +1009,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
           const closeBtnEl = clonedDoc.getElementById("receipt-close-btn");
           if (actionsEl) actionsEl.style.display = "none";
           if (closeBtnEl) closeBtnEl.style.display = "none";
-          
+
           // Ensure cloned modal is visible and correctly styled
           const modalEl = clonedDoc.getElementById("receipt-content");
           if (modalEl) {
@@ -1058,47 +1019,47 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
           }
         }
       });
-      
+
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
-      
+
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const margin = 15;
       const contentWidth = pdfWidth - (margin * 2);
       const imgHeight = (canvas.height * contentWidth) / canvas.width;
-      
+
       // Header Section
       pdf.setFillColor(37, 99, 235); // Blue-600
       pdf.rect(0, 0, pdfWidth, 40, "F");
-      
+
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(24);
       pdf.setFont("helvetica", "bold");
       pdf.text("NLITedu", margin, 25);
-      
+
       pdf.setFontSize(10);
       pdf.setFont("helvetica", "normal");
       pdf.text("OFFICIAL ENROLLMENT RECEIPT", pdfWidth - margin, 25, { align: "right" });
-      
+
       // Receipt Details
       pdf.setTextColor(30, 41, 59); // Slate-800
       pdf.setFontSize(10);
       pdf.text(`Date: ${new Date().toLocaleDateString()}`, margin, 50);
       pdf.text(`Receipt No: ${orderId.substring(0, 10).toUpperCase()}`, pdfWidth - margin, 50, { align: "right" });
-      
+
       // Add the content screenshot
       pdf.addImage(imgData, "PNG", margin, 60, contentWidth, imgHeight);
-      
+
       // Bottom Bar
       pdf.setDrawColor(226, 232, 240);
       pdf.line(margin, pdfHeight - 25, pdfWidth - margin, pdfHeight - 25);
-      
+
       pdf.setFontSize(8);
       pdf.setTextColor(148, 163, 184);
       pdf.text("Nexgen Learning Institute of Technology - nliteedu.com", pdfWidth / 2, pdfHeight - 15, { align: "center" });
       pdf.text("This is an electronically generated receipt and does not require a physical signature.", pdfWidth / 2, pdfHeight - 10, { align: "center" });
-      
+
       pdf.save(`NLITedu_Receipt_${orderId.substring(0, 8)}.pdf`);
     } catch (err) {
       console.error("Failed to generate PDF", err);
@@ -1117,7 +1078,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
         onClick={onClose}
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
       />
-      
+
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -1126,8 +1087,8 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
         id="receipt-content"
       >
         <div className="absolute top-0 left-0 h-2 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-emerald-600" />
-        
-        <button 
+
+        <button
           id="receipt-close-btn"
           onClick={onClose}
           className="absolute top-4 right-4 rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700"
@@ -1170,7 +1131,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
           </div>
 
           <div id="receipt-actions" className="grid gap-4 sm:grid-cols-2">
-            <button 
+            <button
               onClick={handleDownloadReceipt}
               disabled={isGenerating}
               className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 disabled:opacity-70 disabled:cursor-not-allowed"
@@ -1178,7 +1139,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
               <FiDownload className="h-4 w-4" />
               {isGenerating ? "Generating..." : "Download Receipt"}
             </button>
-            <Link 
+            <Link
               href="/profile"
               className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
