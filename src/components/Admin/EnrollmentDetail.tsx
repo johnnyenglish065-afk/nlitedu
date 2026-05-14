@@ -134,6 +134,18 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
                 <p className="text-sm italic text-slate-600 dark:text-slate-400">{enrollment.message}</p>
               </div>
             )}
+            {enrollment.interested_internships && (
+              <div className="w-full bg-blue-50 dark:bg-blue-900/20 px-4 py-3 rounded-2xl border border-blue-100 dark:border-blue-800">
+                <p className="text-[10px] uppercase font-black text-blue-400 tracking-wider mb-1">Interested Internship Courses</p>
+                <div className="flex flex-wrap gap-2">
+                  {enrollment.interested_internships.split(", ").map((item: string, i: number) => (
+                    <span key={i} className="text-xs font-bold px-2 py-1 bg-white dark:bg-slate-800 rounded-lg text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900 shadow-sm">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
