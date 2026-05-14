@@ -93,6 +93,7 @@ const EnrollmentPage = () => {
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const courseSlug = searchParams.get("course") || "general";
+  const programParam = searchParams.get("program");
   const course = useMemo(
     () => courseList.find((item) => item.slug === courseSlug) ?? courseList.find((item) => item.slug === "general")!,
     [courseSlug],
@@ -253,8 +254,10 @@ const EnrollmentPage = () => {
 
   // Determine fee based on college type and course
   const enrollmentFee = useMemo(() => {
+    const isInternship = programParam === "internship" || courseSlug === "general" || !pricing;
+
     // Apply legacy pricing rules (Bihar/Other State) for internship/general courses
-    if (!pricing || courseSlug === "general") {
+    if (isInternship) {
       if (form.collegeType === "govt") {
         return form.state === "Bihar" ? 999 : 1499;
       }
@@ -268,7 +271,7 @@ const EnrollmentPage = () => {
     if (form.collegeType === "private") return pricing.pvtPrice;
     if (form.collegeType === "job") return pricing.jobPrice;
     return 0;
-  }, [form.collegeType, form.state, pricing, courseSlug]);
+  }, [form.collegeType, form.state, pricing, courseSlug, programParam]);
 
   const displayPrice = pricing?.displayPrice || 0;
 

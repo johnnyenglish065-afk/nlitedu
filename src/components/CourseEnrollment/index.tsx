@@ -223,7 +223,7 @@ const CourseEnrollment = () => {
                   router.push(
                     `/enroll?course=${encodeURIComponent(selectedCourseSlug)}&type=${selection.type}&state=${encodeURIComponent(
                       selection.state,
-                    )}`,
+                    )}&program=internship`,
                   );
                 }}
                 className={`rounded-md px-4 py-2 text-sm font-medium text-white transition ${
