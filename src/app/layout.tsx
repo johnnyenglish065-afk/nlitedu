@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import ScrollToTop from "@/components/ScrollToTop";
 import WelcomeAnimation from "@/components/Common/WelcomeAnimation";
+import AppDownloadPopup from "@/components/AppDownloadPopup";
 import { Inter } from "next/font/google";
 // @ts-ignore: allow side-effect import of global CSS (global stylesheet)
 import "../styles/index.css";
@@ -59,6 +60,7 @@ export default function RootLayout({
               {children}
               {!pathname?.startsWith("/admin") && <Footer />}
               <ScrollToTop />
+              <AppDownloadPopup />
             </>
           )}
         </Providers>
