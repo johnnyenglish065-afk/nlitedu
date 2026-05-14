@@ -6,7 +6,7 @@ import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
-import { FiCheckCircle, FiCopy, FiDownload, FiExternalLink, FiLock, FiLogOut, FiMail, FiUser, FiX } from "react-icons/fi";
+import { FiCheckCircle, FiCopy, FiDownload, FiExternalLink, FiLock, FiLogOut, FiMail, FiSmartphone, FiUser, FiX } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -1151,22 +1151,32 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
             </div>
           </div>
 
-          <div id="receipt-actions" className="grid gap-4 sm:grid-cols-2">
-            <button
-              onClick={handleDownloadReceipt}
-              disabled={isGenerating}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 disabled:opacity-70 disabled:cursor-not-allowed"
+          <div id="receipt-actions" className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <button
+                onClick={handleDownloadReceipt}
+                disabled={isGenerating}
+                className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                <FiDownload className="h-4 w-4" />
+                {isGenerating ? "Generating..." : "Download Receipt"}
+              </button>
+              <Link
+                href="/profile"
+                className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                Dashboard
+                <FiExternalLink className="h-4 w-4" />
+              </Link>
+            </div>
+            <a
+              href="https://github.com/saveragraphics/NLITedu-Mobile/releases/download/v1.0.1-2/app-release.apk"
+              download
+              className="flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-4 font-bold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-700 hover:shadow-blue-500/40"
             >
-              <FiDownload className="h-4 w-4" />
-              {isGenerating ? "Generating..." : "Download Receipt"}
-            </button>
-            <Link
-              href="/profile"
-              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-            >
-              Dashboard
-              <FiExternalLink className="h-4 w-4" />
-            </Link>
+              <FiSmartphone className="h-5 w-5" />
+              Download NLITedu Mobile App
+            </a>
           </div>
         </div>
 
