@@ -10,6 +10,7 @@ import { FiCheckCircle, FiCopy, FiDownload, FiExternalLink, FiLock, FiLogOut, Fi
 import { useAuth } from "@/context/AuthContext";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import { Suspense } from "react";
 
 import { fetchCourses } from "@/data/courses";
 const semesters = [
@@ -36,7 +37,7 @@ const indianStates = [
   "Lakshadweep", "Delhi", "Puducherry", "Ladakh", "Jammu and Kashmir"
 ].sort();
 
-const EnrollmentPage = () => {
+const EnrollmentPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
@@ -55,11 +56,18 @@ const EnrollmentPage = () => {
   const course = useMemo(() => {
     if (loadingCourses) return { title: "Loading...", description: "Loading course details...", highlights: [] };
     const found = courses.find((item) => item.slug === courseSlug);
-    return found || {
+    const defaultCourse = {
       slug: "general",
       title: "NLIT Course Enrollment",
       description: "Select your course and fill out the enrollment form so we can reserve your seat and begin your learning journey.",
       highlights: ["Choose from courses across design, development, AI, and engineering", "Secure admission with a simple online form", "Receive course guidance from the NLIT team"],
+    };
+
+    if (!found) return defaultCourse;
+
+    return {
+      ...found,
+      highlights: Array.isArray(found.highlights) ? found.highlights : [],
     };
   }, [courseSlug, courses, loadingCourses]);
 
@@ -84,7 +92,6 @@ const EnrollmentPage = () => {
     qualification: "",
     marksheet12Url: "",
     marksheetSemUrl: "",
-    interestedInternships: [] as string[],
   });
   const [marksheet12File, setMarksheet12File] = useState<File | null>(null);
   const [marksheetSemFile, setMarksheetSemFile] = useState<File | null>(null);
@@ -239,7 +246,7 @@ const EnrollmentPage = () => {
     return 0;
   }, [form.collegeType, form.state, course, isInternship, loadingCourses]);
 
-  const displayPrice = course?.price ? parseInt(course.price.replace(/\D/g, '')) : ((course?.pvt_price || 2999) + 4000);
+  const displayPrice = course?.price ? (parseInt(course.price.replace(/\D/g, '')) || 0) : ((course?.pvt_price || 2999) + 4000);
 
   const isCollegeStudent = form.collegeType === "govt" || form.collegeType === "private";
 
@@ -286,16 +293,6 @@ const EnrollmentPage = () => {
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckboxChange = (courseTitle: string) => {
-    setForm((prev) => {
-      const current = prev.interestedInternships;
-      const updated = current.includes(courseTitle)
-        ? current.filter((c) => c !== courseTitle)
-        : [...current, courseTitle];
-      return { ...prev, interestedInternships: updated };
-    });
   };
 
   const validate = () => {
@@ -396,7 +393,6 @@ const EnrollmentPage = () => {
         marksSem: form.marksSem,
         marksheet12Url: uploaded12Url,
         marksheetSemUrl: uploadedSemUrl,
-        interested_internships: courseSlug === "general" ? form.interestedInternships.join(", ") : null,
         user_id: user?.id,
         cf_payment_id: orderId,
         status: "PENDING",
@@ -900,37 +896,7 @@ const EnrollmentPage = () => {
               />
             </label>
 
-            {/* Interested Internship Courses - Only show for general enrollment */}
-            {courseSlug === "general" && (
-              <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 dark:border-slate-800 dark:bg-slate-900/50">
-                <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                  ⭐ Interested Internship Courses
-                </h3>
-                <p className="mb-6 text-xs text-slate-500 dark:text-slate-400">
-                  Select other internship programs you are interested in exploring:
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {courses
-                    .filter(c => [
-                      "autocad-2d-3d-design", "java-programming", "python-programming", 
-                      "data-science", "artificial-intelligence", "matlab-scientific-computing",
-                      "android-ios-mobile-development", "iot-embedded", "revit-bim",
-                      "solidworks", "catia", "sketchup", "etabs"
-                    ].includes(c.slug))
-                    .map((c) => (
-                      <label key={c.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={form.interestedInternships.includes(c.title)}
-                          onChange={() => handleCheckboxChange(c.title)}
-                          className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800"
-                        />
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{c.title}</span>
-                      </label>
-                    ))}
-                </div>
-              </div>
-            )}
+            {/* Interested Internship Courses removed */}
 
             <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between border-t border-slate-200 dark:border-slate-800">
               <button
@@ -985,7 +951,7 @@ const EnrollmentPage = () => {
           <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 p-6 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700">
             <p className="text-xs uppercase tracking-widest font-bold text-purple-600 dark:text-purple-400">✨ Highlights</p>
             <ul className="mt-4 space-y-2.5 text-slate-700 dark:text-slate-300">
-              {course.highlights.map((item: string) => (
+              {course.highlights?.map((item: string) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-blue-600"></span>
                   <span>{item}</span>
@@ -1211,6 +1177,18 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
         </div>
       </motion.div>
     </div>
+  );
+};
+
+const EnrollmentPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+      </div>
+    }>
+      <EnrollmentPageContent />
+    </Suspense>
   );
 };
 
