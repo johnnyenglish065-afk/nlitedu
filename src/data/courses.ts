@@ -108,13 +108,19 @@ export const COURSE_UI_DATA: Record<string, { icon: string, color: string, bgCol
   },
 };
 
-export async function fetchCourses() {
+export async function fetchCourses(legacyFilter?: boolean, tillDate?: string) {
   if (!supabase) return [];
-  const { data, error } = await supabase
-    .from("courses")
-    .select("*")
-    .eq("is_legacy_pricing", false)
-    .order("created_at", { ascending: true });
+  let query = supabase.from("courses").select("*");
+  
+  if (legacyFilter !== undefined) {
+    query = query.eq("is_legacy_pricing", legacyFilter);
+  }
+
+  if (tillDate) {
+    query = query.lte("created_at", tillDate);
+  }
+  
+  const { data, error } = await query.order("created_at", { ascending: true });
   
   if (error) {
     console.error("Error fetching courses from Supabase:", error);
