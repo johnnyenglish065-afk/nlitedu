@@ -49,7 +49,7 @@ const AppDownloadPopup = () => {
             </p>
             <div className="flex space-x-3">
               <a
-                href="https://github.com/saveragraphics/NLITedu-Mobile/releases/download/v1.0.2-4/app-release.apk"
+                href="https://github.com/saveragraphics/NLITedu-Mobile/releases/download/v1.0.3-5/app-release.apk"
                 className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
                 download
                 onClick={handleDismiss}
