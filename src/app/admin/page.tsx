@@ -891,39 +891,69 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Recordings List */}
+                {/* Grouped Recordings List */}
                 <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-sm border border-slate-100">
-                  <h3 className="text-2xl font-black mb-6">Course Recordings</h3>
-                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-2xl font-black">Course Recordings</h3>
+                    <div className="px-4 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full text-[10px] font-black tracking-widest uppercase">
+                      {recordedSessions.length} TOTAL CLASSES
+                    </div>
+                  </div>
+
+                  <div className="space-y-10 max-h-[700px] overflow-y-auto pr-4 custom-scrollbar">
                     {recordedSessions.length === 0 ? (
                       <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/50 rounded-[24px] border-2 border-dashed border-slate-200 dark:border-slate-700">
                         <FaPlayCircle size={48} className="mx-auto text-slate-300 mb-4" />
                         <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">No recordings uploaded yet.</p>
                       </div>
-                    ) : recordedSessions.map(r => (
-                      <div key={r.id} className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 group hover:border-indigo-200 transition-all">
-                        <div className="flex items-center gap-5">
-                          <div className="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
-                            <FaPlay size={22} className="ml-1" />
+                    ) : (
+                      Object.entries(
+                        recordedSessions.reduce((acc: any, session) => {
+                          const course = session.course_title;
+                          if (!acc[course]) acc[course] = [];
+                          acc[course].push(session);
+                          return acc;
+                        }, {})
+                      ).map(([course, sessions]: [string, any]) => (
+                        <div key={course} className="space-y-5">
+                          <div className="flex items-center gap-4 sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur py-3 z-10">
+                            <div className="w-2 h-2 bg-indigo-600 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
+                            <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{course}</h4>
+                            <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>
+                            <span className="text-[10px] font-black px-3 py-1 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-400">
+                              {sessions.length} CLASSES
+                            </span>
                           </div>
-                          <div>
-                            <h4 className="font-black text-sm uppercase tracking-tight">{r.topic}</h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[9px] font-black rounded-md uppercase">{r.course_title}</span>
-                              <span className="text-[10px] text-slate-400 font-bold uppercase">{new Date(r.recorded_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                            </div>
+                          
+                          <div className="grid gap-3">
+                            {sessions.map((r: any) => (
+                              <div key={r.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900/30 hover:bg-white dark:hover:bg-slate-800 transition-all group">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <FaPlay size={16} className="ml-0.5" />
+                                  </div>
+                                  <div>
+                                    <h5 className="font-bold text-sm tracking-tight">{r.topic}</h5>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">
+                                      {new Date(r.recorded_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
+                                  <a href={r.video_url} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white dark:bg-slate-700 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                    <FaExternalLinkAlt size={12} />
+                                  </a>
+                                  <button onClick={() => handleDeleteRecording(r.id)} className="p-2.5 bg-white dark:bg-slate-700 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                    <FaTrash size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <a href={r.video_url} target="_blank" rel="noopener noreferrer" className="p-3 bg-white dark:bg-slate-700 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-slate-100 dark:border-slate-600">
-                            <FaExternalLinkAlt size={14} />
-                          </a>
-                          <button onClick={() => handleDeleteRecording(r.id)} className="p-3 bg-white dark:bg-slate-700 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm border border-slate-100 dark:border-slate-600">
-                            <FaTrash size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
