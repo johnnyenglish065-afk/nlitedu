@@ -11,16 +11,29 @@ export default function AuthCallbackPage() {
     const handleCallback = async () => {
       if (!supabase) return;
 
-      // The Supabase client automatically handles the token in the URL fragment
-      // We just need to check if we have a session now
-      const { data: { session }, error } = await supabase.auth.getSession();
+      // Extract PKCE auth code from the URL search parameters
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
 
-      if (session || !error) {
+      let exchangeError = null;
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          exchangeError = error;
+          console.error("Error exchanging code for session:", error.message);
+        }
+      }
+
+      // Retrieve and verify if we now have a valid active session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (session && !exchangeError && !sessionError) {
         // Redirect to homepage after successful handshake
         router.push("/");
         router.refresh();
       } else {
-        // If there's an error, redirect to signin with error message
+        // If there's an error or no session, redirect to signin with error message
+        console.error("Auth callback failed. Session:", session, "Error:", exchangeError || sessionError);
         router.push("/signin?error=callback_error");
       }
     };
