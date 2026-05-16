@@ -132,7 +132,7 @@ export default function AdminDashboard() {
     govt_price: 1999,
     pvt_price: 2999,
     job_price: 3999,
-    duration: "12 Weeks",
+    duration: "4 Weeks",
     level: "Intermediate",
     is_bestseller: false,
     instructor_name: "NLITedu Official",
@@ -171,7 +171,7 @@ export default function AdminDashboard() {
       setNewCourse({
         title: "", slug: "", description: "", category: "DESIGN",
         govt_price: 1999, pvt_price: 2999, job_price: 3999,
-        duration: "12 Weeks", level: "Intermediate", is_bestseller: false,
+        duration: "4 Weeks", level: "Intermediate", is_bestseller: false,
         instructor_name: "NLITedu Official", highlights: ["", "", ""], syllabus: ["", "", ""]
       });
       const updated = await fetchCourses();
@@ -1183,7 +1183,7 @@ export default function AdminDashboard() {
                           setNewCourse({
                             title: "", slug: "", description: "", category: "DESIGN",
                             govt_price: 1999, pvt_price: 2999, job_price: 3999,
-                            duration: "12 Weeks", level: "Intermediate", is_bestseller: false,
+                            duration: "4 Weeks", level: "Intermediate", is_bestseller: false,
                             instructor_name: "NLITedu Official", highlights: ["", "", ""], syllabus: ["", "", ""]
                           });
                         }} className="w-full py-2 text-slate-500 font-bold hover:text-red-500 transition-colors">Cancel Editing</button>
