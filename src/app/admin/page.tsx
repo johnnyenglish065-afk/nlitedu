@@ -20,6 +20,7 @@ interface LiveSession {
   is_live: boolean;
   started_at: string;
   scheduled_at?: string;
+  created_at?: string;
 }
 
 interface LiveAttendance {
@@ -92,7 +93,7 @@ export default function AdminDashboard() {
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
   const [liveAttendance, setLiveAttendance] = useState<LiveAttendance[]>([]);
   const [isStartingSession, setIsStartingSession] = useState(false);
-  const [newSession, setNewSession] = useState({ course: "", url: "", scheduled_at: "" });
+  const [newSession, setNewSession] = useState({ course: "", url: "", scheduled_at: "", course_title: "" });
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
 
   // Quiz State
@@ -248,12 +249,19 @@ export default function AdminDashboard() {
 
   const fetchLiveSessions = async () => {
     if (!supabase) return;
-    // Fetch ALL sessions (past, live, and scheduled) for attendance records
-    const { data } = await supabase
-      .from("live_sessions")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (data) setLiveSessions(data);
+    try {
+      const { data, error } = await supabase
+        .from("live_sessions")
+        .select("*")
+        .order("id", { ascending: false });
+      if (error) {
+        console.error("Error fetching live sessions:", error);
+        return;
+      }
+      setLiveSessions(data || []);
+    } catch (e) {
+      console.error("Exception fetching sessions:", e);
+    }
   };
 
   const fetchAttendance = async () => {
@@ -295,7 +303,7 @@ export default function AdminDashboard() {
     if (editingSessionId) {
       const { error } = await supabase.from("live_sessions").update(payload).eq("id", editingSessionId);
       if (!error) {
-        setNewSession({ course: "", url: "", scheduled_at: "" });
+        setNewSession({ course: "", url: "", scheduled_at: "", course_title: "" });
         setEditingSessionId(null);
         alert("Session Updated!");
         fetchLiveSessions();
@@ -305,7 +313,7 @@ export default function AdminDashboard() {
     } else {
       const { error } = await supabase.from("live_sessions").insert([payload]);
       if (!error) { 
-        setNewSession({ course: "", url: "", scheduled_at: "" }); 
+        setNewSession({ course: "", url: "", scheduled_at: "", course_title: "" }); 
         alert(isScheduled ? "Class Scheduled!" : "Class Started!"); 
         fetchLiveSessions();
       } else {
