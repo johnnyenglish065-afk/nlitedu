@@ -718,7 +718,7 @@ export default function AdminDashboard() {
                     <FaClock /> {editingSessionId ? "UPDATE SCHEDULE" : "SCHEDULE"}
                   </button>
                   {editingSessionId && (
-                    <button onClick={() => { setEditingSessionId(null); setNewSession({ course: "", url: "", scheduled_at: "" }); }} className="px-6 py-4 bg-red-50 text-red-500 font-black rounded-2xl">
+                    <button onClick={() => { setEditingSessionId(null); setNewSession({ course: "", url: "", scheduled_at: "", course_title: "" }); }} className="px-6 py-4 bg-red-50 text-red-500 font-black rounded-2xl">
                       CANCEL
                     </button>
                   )}
@@ -763,7 +763,8 @@ export default function AdminDashboard() {
                             setNewSession({
                               course: s.course_title,
                               url: s.session_url,
-                              scheduled_at: s.scheduled_at ? new Date(s.scheduled_at).toISOString().slice(0, 16) : ""
+                              scheduled_at: s.scheduled_at ? new Date(s.scheduled_at).toISOString().slice(0, 16) : "",
+                              course_title: s.course_title
                             });
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
