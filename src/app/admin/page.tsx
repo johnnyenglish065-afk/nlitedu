@@ -6,7 +6,8 @@ import {
   FaSearch, FaDownload, FaUserGraduate, FaCreditCard, 
   FaClock, FaEye, FaUniversity, FaFilter, FaFileCsv,
   FaVideo, FaStop, FaPlay, FaUsers, FaLink, FaBroadcastTower,
-  FaClipboardList, FaPlus, FaTrash, FaEnvelope, FaEdit
+  FaClipboardList, FaPlus, FaTrash, FaEnvelope, FaEdit,
+  FaPlayCircle, FaExternalLinkAlt
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import EnrollmentDetail from "../../components/Admin/EnrollmentDetail";
@@ -98,7 +99,7 @@ export default function AdminDashboard() {
   const [courses, setCourses] = useState<any[]>([]);
 
   // Live Class State
-  const [activeAdminTab, setActiveAdminTab] = useState<"STUDENTS" | "LIVE" | "QUIZZES" | "EMAIL" | "COURSES">("STUDENTS");
+  const [activeAdminTab, setActiveAdminTab] = useState<"STUDENTS" | "LIVE" | "RECORDINGS" | "QUIZZES" | "EMAIL" | "COURSES">("STUDENTS");
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
   const [liveAttendance, setLiveAttendance] = useState<LiveAttendance[]>([]);
   const [isStartingSession, setIsStartingSession] = useState(false);
