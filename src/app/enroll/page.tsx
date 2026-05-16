@@ -183,12 +183,21 @@ const EnrollmentPageContent = () => {
   const verifyPaymentStatus = async (orderId: string) => {
     setSubmitting(true);
     try {
-      // 1. Verify with our backend API using official Supabase invoke
-      const { data, error: functionError } = await supabase!.functions.invoke("verify-cashfree-payment", {
-        body: { orderId },
+      // 1. Verify with our backend API using official Supabase URL and session token
+      const { data: { session } } = await supabase!.auth.getSession();
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const res = await fetch(`${supabaseUrl}/functions/v1/verify-cashfree-payment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+          "Authorization": `Bearer ${session?.access_token || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
+        },
+        body: JSON.stringify({ orderId }),
       });
 
-      if (functionError) throw functionError;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || "Failed to verify payment");
 
       if (data.status === "PAID") {
         setSuccess("Enrollment Successful!");
@@ -401,19 +410,32 @@ const EnrollmentPageContent = () => {
         // We continue anyway, as the payment is the priority
       }
 
-      // 2. Create Cashfree Order using official Supabase invoke
-      const { data: orderData, error: orderError } = await supabase!.functions.invoke("create-cashfree-order", {
-        body: {
-          amount: enrollmentFee,
-          order_id: orderId,
-          customer_id: form.email.replace(/[^a-zA-Z0-9]/g, "_"),
-          customer_email: form.email,
-          customer_phone: form.whatsapp.replace(/\D/g, '').slice(-10),
-        },
-      });
+      // 2. Create Cashfree Order using official Supabase URL and session token
+      const { data: { session: submitSession } } = await supabase!.auth.getSession();
+      const submitSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const response = await fetch(
+        `${submitSupabaseUrl}/functions/v1/create-cashfree-order`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+            "Authorization": `Bearer ${submitSession?.access_token || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
+          },
+          body: JSON.stringify({
+            amount: enrollmentFee,
+            order_id: orderId,
+            customer_id: form.email.replace(/[^a-zA-Z0-9]/g, "_"),
+            customer_email: form.email,
+            customer_phone: form.whatsapp.replace(/\D/g, '').slice(-10),
+          }),
+        }
+      );
 
-      if (orderError) {
-        throw new Error(orderError.message || "Payment system unavailable");
+      const orderData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(orderData.error || orderData.message || "Payment system unavailable");
       }
 
 
