@@ -32,7 +32,7 @@ export default function Video() {
           <iframe
             ref={iframeRef}
             className="absolute top-0 left-0 h-full w-full"
-            src={`https://www.youtube.com/embed/rlwMsnro6Fo?autoplay=${isPlaying ? "1" : "0"}&rel=0&showinfo=0&enablejsapi=1`}
+            src={`https://www.youtube.com/embed/9JeAsD87eVU?autoplay=${isPlaying ? "1" : "0"}&rel=0&showinfo=0&enablejsapi=1`}
             title="NLIT Introduction Video"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
