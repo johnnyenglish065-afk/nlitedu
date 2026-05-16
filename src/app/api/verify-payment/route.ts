@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
     }
 
-    const env = process.env.NEXT_PUBLIC_CASHFREE_MODE || "sandbox";
+    const env = process.env.CASHFREE_MODE || process.env.NEXT_PUBLIC_CASHFREE_MODE || "production";
     const appId = process.env.NEXT_PUBLIC_CASHFREE_APP_ID || process.env.CASHFREE_APP_ID;
     const secretKey = process.env.CASHFREE_SECRET_KEY;
 
