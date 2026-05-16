@@ -93,6 +93,7 @@ export default function AdminDashboard() {
   const [liveAttendance, setLiveAttendance] = useState<LiveAttendance[]>([]);
   const [isStartingSession, setIsStartingSession] = useState(false);
   const [newSession, setNewSession] = useState({ course: "", url: "", scheduled_at: "" });
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
 
   // Quiz State
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -279,24 +280,73 @@ export default function AdminDashboard() {
       alert("Fill all fields"); return;
     }
     setIsStartingSession(true);
-    const { error } = await supabase.from("live_sessions").insert([
-      { 
-        course_id: newSession.course, 
-        course_title: newSession.course, 
-        session_url: newSession.url, 
-        is_live: !isScheduled,
-        scheduled_at: isScheduled ? new Date(newSession.scheduled_at).toISOString() : null,
-        started_at: isScheduled ? null : new Date().toISOString()
+
+    const payload: any = { 
+      course_id: newSession.course, 
+      course_title: newSession.course, 
+      session_url: newSession.url, 
+      is_live: editingSessionId ? liveSessions.find(s => s.id === editingSessionId)?.is_live : !isScheduled,
+      scheduled_at: isScheduled ? new Date(newSession.scheduled_at).toISOString() : null,
+    };
+
+    if (!editingSessionId && !isScheduled) {
+      payload.started_at = new Date().toISOString();
+    }
+
+    if (editingSessionId) {
+      const { error } = await supabase.from("live_sessions").update(payload).eq("id", editingSessionId);
+      if (!error) {
+        setNewSession({ course: "", url: "", scheduled_at: "" });
+        setEditingSessionId(null);
+        alert("Session Updated!");
+        fetchLiveSessions();
+      } else {
+        alert("Update Error: " + error.message);
       }
-    ]);
-    if (!error) { 
-      setNewSession({ course: "", url: "", scheduled_at: "" }); 
-      alert(isScheduled ? "Class Scheduled!" : "Class Started!"); 
-      fetchLiveSessions();
     } else {
-      alert("Error: " + error.message);
+      const { error } = await supabase.from("live_sessions").insert([payload]);
+      if (!error) { 
+        setNewSession({ course: "", url: "", scheduled_at: "" }); 
+        alert(isScheduled ? "Class Scheduled!" : "Class Started!"); 
+        fetchLiveSessions();
+      } else {
+        alert("Error: " + error.message);
+      }
     }
     setIsStartingSession(false);
+  };
+
+  const handleDownloadAttendance = async (sessionId: string, courseTitle: string, date: string) => {
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from("live_attendance")
+        .select("student_name, student_email, joined_at")
+        .eq("session_id", sessionId)
+        .order("joined_at", { ascending: true });
+        
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        alert("No attendance records for this session.");
+        return;
+      }
+
+      const headers = ["Student Name", "Email", "Joined At"].join(",");
+      const rows = data.map(r => [
+        `"${r.student_name}"`, 
+        r.student_email, 
+        new Date(r.joined_at).toLocaleString()
+      ].join(","));
+      
+      const blob = new Blob([[headers, ...rows].join("\n")], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Attendance_${courseTitle.replace(/\s+/g, '_')}_${date.split('T')[0]}.csv`;
+      a.click();
+    } catch (e: any) {
+      alert("Failed to download attendance: " + e.message);
+    }
   };
 
   const handleActivateScheduled = async (id: string) => {
@@ -628,31 +678,39 @@ export default function AdminDashboard() {
           <motion.div key="lv" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
               <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
-                <h3 className="text-xl font-black mb-6 flex items-center gap-3"><FaBroadcastTower className="text-primary" /> Live Session Control</h3>
+                <h3 className="text-xl font-black mb-6 flex items-center gap-3">
+                  <FaBroadcastTower className="text-primary" /> 
+                  {editingSessionId ? "Edit Session" : "Live Session Control"}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Select Course</label>
-                    <select value={newSession.course} onChange={e => setNewSession({...newSession, course: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none">
+                    <select value={newSession.course} onChange={e => setNewSession({...newSession, course: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-bold">
                       <option value="">Choose Course...</option>
                       {courses.map(c => <option key={c.id} value={c.title}>{c.title}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Meeting URL</label>
-                    <input type="url" placeholder="https://" value={newSession.url} onChange={e => setNewSession({...newSession, url: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none" />
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Meeting URL (YouTube/Zoom/Webex)</label>
+                    <input type="url" placeholder="https://" value={newSession.url} onChange={e => setNewSession({...newSession, url: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-semibold" />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Schedule For (Optional)</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Schedule For (Date & Time)</label>
                     <input type="datetime-local" value={newSession.scheduled_at} onChange={e => setNewSession({...newSession, scheduled_at: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none" />
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <button onClick={() => handleStartLive(false)} disabled={isStartingSession} className="flex-1 py-4 bg-primary text-white font-black rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-primary/20">
-                    <FaPlay /> {isStartingSession ? "Launching..." : "GO LIVE NOW"}
+                    <FaPlay /> {isStartingSession ? "Saving..." : editingSessionId ? "UPDATE SESSION" : "GO LIVE NOW"}
                   </button>
                   <button onClick={() => handleStartLive(true)} disabled={isStartingSession || !newSession.scheduled_at} className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-black rounded-2xl flex items-center justify-center gap-3 border border-slate-200 dark:border-slate-700 disabled:opacity-50">
-                    <FaClock /> SCHEDULE
+                    <FaClock /> {editingSessionId ? "UPDATE SCHEDULE" : "SCHEDULE"}
                   </button>
+                  {editingSessionId && (
+                    <button onClick={() => { setEditingSessionId(null); setNewSession({ course: "", url: "", scheduled_at: "" }); }} className="px-6 py-4 bg-red-50 text-red-500 font-black rounded-2xl">
+                      CANCEL
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -662,20 +720,45 @@ export default function AdminDashboard() {
                 </div>
                 <div className="divide-y divide-slate-100">
                   {liveSessions.length === 0 ? <p className="p-10 text-center text-slate-400 italic">No classes found.</p> : liveSessions.map(s => (
-                    <div key={s.id} className="p-6 flex justify-between items-center">
+                    <div key={s.id} className="p-6 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <h4 className="font-black uppercase text-sm">{s.course_title}</h4>
                           {s.is_live ? (
-                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="LIVE NOW" />
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                              <span className="text-[10px] font-black text-red-500 uppercase">Live</span>
+                            </span>
                           ) : (
                             <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[8px] font-black rounded-full uppercase">Scheduled</span>
                           )}
                         </div>
-                        <p className="text-[10px] text-slate-400 truncate max-w-[250px]">{s.session_url}</p>
-                        {s.scheduled_at && <p className="text-[10px] text-primary font-bold mt-1">Target: {new Date(s.scheduled_at).toLocaleString()}</p>}
+                        <p className="text-[10px] text-slate-400 truncate max-w-[250px] mt-0.5">{s.session_url}</p>
+                        {s.scheduled_at && <p className="text-[10px] text-primary font-bold mt-1">Date: {new Date(s.scheduled_at).toLocaleString()}</p>}
                       </div>
                       <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleDownloadAttendance(s.id, s.course_title, s.scheduled_at || s.started_at || new Date().toISOString())} 
+                          className="p-2.5 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all shadow-sm" 
+                          title="Download Attendance"
+                        >
+                          <FaDownload size={12} />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setEditingSessionId(s.id);
+                            setNewSession({
+                              course: s.course_title,
+                              url: s.session_url,
+                              scheduled_at: s.scheduled_at ? new Date(s.scheduled_at).toISOString().slice(0, 16) : ""
+                            });
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                          title="Edit Session"
+                        >
+                          <FaEdit size={12} />
+                        </button>
                         {!s.is_live && (
                           <button onClick={() => handleActivateScheduled(s.id)} className="px-4 py-2 bg-green-50 text-green-600 text-[10px] font-black rounded-xl hover:bg-green-600 hover:text-white transition-all">START</button>
                         )}
