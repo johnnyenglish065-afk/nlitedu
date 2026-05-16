@@ -18,14 +18,12 @@ serve(async (req) => {
   try {
     const { amount, customer_id, customer_email, customer_phone, order_id } = await req.json();
 
-    const rawEnv = Deno.env.get("CASHFREE_MODE") || Deno.env.get("NEXT_PUBLIC_CASHFREE_MODE") || "production";
-    const env = rawEnv.toLowerCase() === "sandbox" ? "sandbox" : "production";
-    const appId = Deno.env.get("CASHFREE_APP_ID") || Deno.env.get("NEXT_PUBLIC_CASHFREE_APP_ID") || "10931891df32e727a57259502de9813901";
+    const env = Deno.env.get("CASHFREE_MODE") || "production";
+    const appId = Deno.env.get("CASHFREE_APP_ID");
     const secretKey = Deno.env.get("CASHFREE_SECRET_KEY");
 
     if (!appId || !secretKey) {
-      console.error("Missing Cashfree credentials. Env:", env);
-      throw new Error("Cashfree credentials not configured. Please ensure CASHFREE_APP_ID and CASHFREE_SECRET_KEY are set in Supabase secrets.");
+      throw new Error("Cashfree credentials not configured in Supabase secrets");
     }
 
     const origin = req.headers.get("origin") || "https://www.nlitedu.com";
