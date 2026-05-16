@@ -165,7 +165,7 @@ const EnrollmentPageContent = () => {
   const [cashfree, setCashfree] = useState<any>(null);
   useEffect(() => {
     if (typeof window !== "undefined" && (window as any).Cashfree) {
-      const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "sandbox";
+      const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "production";
       setCashfree((window as any).Cashfree({ mode }));
     }
   }, []);
@@ -421,7 +421,7 @@ const EnrollmentPageContent = () => {
             order_id: orderId,
             customer_id: form.email.replace(/[^a-zA-Z0-9]/g, "_"),
             customer_email: form.email,
-            customer_phone: form.whatsapp,
+            customer_phone: form.whatsapp.replace(/\D/g, '').slice(-10),
           }),
         }
       );
@@ -441,7 +441,7 @@ const EnrollmentPageContent = () => {
       // Ensure SDK is initialized
       let cfInstance = cashfree;
       if (!cfInstance && typeof window !== "undefined" && (window as any).Cashfree) {
-        const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "sandbox";
+        const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "production";
         cfInstance = (window as any).Cashfree({ mode });
         setCashfree(cfInstance);
       }

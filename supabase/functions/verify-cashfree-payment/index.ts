@@ -23,7 +23,7 @@ serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: "Missing orderId" }), { status: 400, headers: corsHeaders });
     }
 
-    const env = Deno.env.get("NEXT_PUBLIC_CASHFREE_MODE") || "production";
+    const env = Deno.env.get("CASHFREE_MODE") || Deno.env.get("NEXT_PUBLIC_CASHFREE_MODE") || "production";
     const appId = Deno.env.get("CASHFREE_APP_ID") || Deno.env.get("NEXT_PUBLIC_CASHFREE_APP_ID");
     const secretKey = Deno.env.get("CASHFREE_SECRET_KEY");
 

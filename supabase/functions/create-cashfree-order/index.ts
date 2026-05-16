@@ -18,8 +18,8 @@ serve(async (req) => {
   try {
     const { amount, customer_id, customer_email, customer_phone, order_id } = await req.json();
 
-    const env = Deno.env.get("CASHFREE_MODE") || "production";
-    const appId = Deno.env.get("CASHFREE_APP_ID");
+    const env = Deno.env.get("CASHFREE_MODE") || Deno.env.get("NEXT_PUBLIC_CASHFREE_MODE") || "production";
+    const appId = Deno.env.get("CASHFREE_APP_ID") || Deno.env.get("NEXT_PUBLIC_CASHFREE_APP_ID");
     const secretKey = Deno.env.get("CASHFREE_SECRET_KEY");
 
     if (!appId || !secretKey) {
