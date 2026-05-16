@@ -25,11 +25,11 @@ serve(async (req: Request) => {
 
     const rawEnv = Deno.env.get("CASHFREE_MODE") || Deno.env.get("NEXT_PUBLIC_CASHFREE_MODE") || "production";
     const env = rawEnv.toLowerCase() === "sandbox" ? "sandbox" : "production";
-    const appId = Deno.env.get("CASHFREE_APP_ID") || Deno.env.get("NEXT_PUBLIC_CASHFREE_APP_ID");
+    const appId = Deno.env.get("CASHFREE_APP_ID") || Deno.env.get("NEXT_PUBLIC_CASHFREE_APP_ID") || "10931891df32e727a57259502de9813901";
     const secretKey = Deno.env.get("CASHFREE_SECRET_KEY");
 
     if (!appId || !secretKey) {
-      return new Response(JSON.stringify({ error: "Cashfree credentials missing" }), { status: 500, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: "Cashfree credentials missing. Please set CASHFREE_APP_ID and CASHFREE_SECRET_KEY in Supabase secrets." }), { status: 500, headers: corsHeaders });
     }
 
     // 1. Fetch order details from Cashfree
