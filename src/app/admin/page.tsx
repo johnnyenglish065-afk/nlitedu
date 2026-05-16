@@ -23,6 +23,15 @@ interface LiveSession {
   created_at?: string;
 }
 
+interface RecordedSession {
+  id: string;
+  course_id: string;
+  course_title: string;
+  topic: string;
+  video_url: string;
+  recorded_at: string;
+}
+
 interface LiveAttendance {
   id: string;
   session_id: string;
@@ -95,6 +104,11 @@ export default function AdminDashboard() {
   const [isStartingSession, setIsStartingSession] = useState(false);
   const [newSession, setNewSession] = useState({ course: "", url: "", scheduled_at: "", course_title: "" });
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+
+  // Recorded Sessions State
+  const [recordedSessions, setRecordedSessions] = useState<RecordedSession[]>([]);
+  const [newRecording, setNewRecording] = useState({ course: "", course_title: "", topic: "", url: "", date: new Date().toISOString().split('T')[0] });
+  const [isAddingRecording, setIsAddingRecording] = useState(false);
 
   // Quiz State
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -201,37 +215,70 @@ export default function AdminDashboard() {
   const [emailBlast, setEmailBlast] = useState({ audience: "ALL", subject: "", message: "" });
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
+  const fetchRecordedSessions = async () => {
+    if (!supabase) return;
+    const { data } = await supabase.from("recorded_sessions").select("*").order("recorded_at", { ascending: false });
+    if (data) setRecordedSessions(data);
+  };
+
+  const handleAddRecording = async () => {
+    if (!newRecording.course || !newRecording.topic || !newRecording.url || !supabase) {
+      alert("Fill all fields"); return;
+    }
+    setIsAddingRecording(true);
+    const { error } = await supabase.from("recorded_sessions").insert([{
+      course_id: newRecording.course,
+      course_title: newRecording.course,
+      topic: newRecording.topic,
+      video_url: newRecording.url,
+      recorded_at: newRecording.date
+    }]);
+    if (!error) {
+      setNewRecording({ course: "", course_title: "", topic: "", url: "", date: new Date().toISOString().split('T')[0] });
+      fetchRecordedSessions();
+    } else alert("Error: " + error.message);
+    setIsAddingRecording(false);
+  };
+
+  const handleDeleteRecording = async (id: string) => {
+    if (!supabase || !confirm("Delete recording?")) return;
+    await supabase.from("recorded_sessions").delete().eq("id", id);
+    fetchRecordedSessions();
+  };
+
   useEffect(() => {
-    fetchEnrollments();
-    fetchLiveSessions();
-    fetchAttendance();
-    fetchQuizzes();
-    fetchCourses().then(setCourses);
+    if (supabase) {
+      fetchEnrollments();
+      fetchLiveSessions();
+      fetchAttendance();
+      fetchQuizzes();
+      fetchRecordedSessions();
+      fetchCourses().then(setCourses);
 
-    const currentSupabase = supabase;
-    if (!currentSupabase) return;
-    
-    // Subscriptions
-    const subEnrollments = currentSupabase
-      .channel("admin_enrollments")
-      .on("postgres_changes", { event: "*", schema: "public", table: "enrollments" }, () => fetchEnrollments())
-      .subscribe();
+      const currentSupabase = supabase;
+      
+      // Subscriptions
+      const subEnrollments = currentSupabase
+        .channel("admin_enrollments")
+        .on("postgres_changes", { event: "*", schema: "public", table: "enrollments" }, () => fetchEnrollments())
+        .subscribe();
 
-    const subLive = currentSupabase
-      .channel("admin_live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "live_sessions" }, () => fetchLiveSessions())
-      .subscribe();
+      const subLive = currentSupabase
+        .channel("admin_live")
+        .on("postgres_changes", { event: "*", schema: "public", table: "live_sessions" }, () => fetchLiveSessions())
+        .subscribe();
 
-    const subAttendance = currentSupabase
-      .channel("admin_attendance")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "live_attendance" }, () => fetchAttendance())
-      .subscribe();
+      const subAttendance = currentSupabase
+        .channel("admin_attendance")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "live_attendance" }, () => fetchAttendance())
+        .subscribe();
 
-    return () => {
-      currentSupabase.removeChannel(subEnrollments);
-      currentSupabase.removeChannel(subLive);
-      currentSupabase.removeChannel(subAttendance);
-    };
+      return () => {
+        currentSupabase.removeChannel(subEnrollments);
+        currentSupabase.removeChannel(subLive);
+        currentSupabase.removeChannel(subAttendance);
+      };
+    }
   }, []);
 
   const fetchEnrollments = async () => {
@@ -457,18 +504,13 @@ export default function AdminDashboard() {
 
     setIsSendingEmail(true);
     try {
-      // Calculate target emails from pre-loaded enrollments
       let targetEmails: string[] = [];
       
       if (emailBlast.audience === "ALL") {
         targetEmails = enrollments.map(e => e.email);
       } else if (emailBlast.audience === "ALL_REGISTERED") {
-        // For All Registered, we don't have the list in memory (it's 'profiles' table)
-        // We'll let the server handle this one, but we'll still pass targetEmails: []
         targetEmails = [];
       } else {
-        // It's a specific course slug. We need to match by course_title since enrollments doesn't have slug.
-        // We find the course title for this slug first.
         const course = courses.find(c => c.slug === emailBlast.audience);
         if (course) {
           targetEmails = enrollments
@@ -536,7 +578,6 @@ export default function AdminDashboard() {
   const handleDeleteQuiz = async (id: string) => {
     if (!supabase || !confirm("Are you sure you want to delete this test?")) return;
     
-    // Explicitly delete attempts first to satisfy foreign keys lacking ON DELETE CASCADE
     await supabase.from("quiz_attempts").delete().eq("quiz_id", id);
     await supabase.from("quiz_questions").delete().eq("quiz_id", id);
     
@@ -586,6 +627,9 @@ export default function AdminDashboard() {
           <button onClick={() => setActiveAdminTab("LIVE")} className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 ${activeAdminTab === "LIVE" ? "bg-white dark:bg-slate-700 text-primary shadow" : "text-slate-500"}`}>
             <FaVideo /> Live Control
             {liveSessions.length > 0 && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
+          </button>
+          <button onClick={() => setActiveAdminTab("RECORDINGS")} className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 ${activeAdminTab === "RECORDINGS" ? "bg-white dark:bg-slate-700 text-primary shadow" : "text-slate-500"}`}>
+            <FaPlayCircle /> Recordings
           </button>
           <button onClick={() => setActiveAdminTab("QUIZZES")} className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 ${activeAdminTab === "QUIZZES" ? "bg-white dark:bg-slate-700 text-primary shadow" : "text-slate-500"}`}>
             <FaClipboardList /> Quizzes
@@ -803,6 +847,87 @@ export default function AdminDashboard() {
             </div>
           </motion.div>
         )}
+
+          {activeAdminTab === "RECORDINGS" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Add Recording Form */}
+                <div className="lg:col-span-1 bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-sm border border-slate-100">
+                  <h3 className="text-2xl font-black mb-6">Add Recording</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Select Course</label>
+                      <select 
+                        value={newRecording.course} 
+                        onChange={e => setNewRecording({...newRecording, course: e.target.value})}
+                        className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-bold text-sm"
+                      >
+                        <option value="">Choose Course...</option>
+                        {Array.from(new Set(enrollments.map(e => e.course_title))).map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Class Topic</label>
+                      <input type="text" placeholder="e.g. Java Basics - Day 1" value={newRecording.topic} onChange={e => setNewRecording({...newRecording, topic: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-semibold text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Video URL</label>
+                      <input type="url" placeholder="YouTube/Drive Link" value={newRecording.url} onChange={e => setNewRecording({...newRecording, url: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-semibold text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Class Date</label>
+                      <input type="date" value={newRecording.date} onChange={e => setNewRecording({...newRecording, date: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-semibold text-sm" />
+                    </div>
+                    <button 
+                      onClick={handleAddRecording}
+                      disabled={isAddingRecording}
+                      className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 uppercase text-xs tracking-widest"
+                    >
+                      {isAddingRecording ? "ADDING..." : "ADD RECORDING"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Recordings List */}
+                <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-sm border border-slate-100">
+                  <h3 className="text-2xl font-black mb-6">Course Recordings</h3>
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                    {recordedSessions.length === 0 ? (
+                      <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/50 rounded-[24px] border-2 border-dashed border-slate-200 dark:border-slate-700">
+                        <FaPlayCircle size={48} className="mx-auto text-slate-300 mb-4" />
+                        <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">No recordings uploaded yet.</p>
+                      </div>
+                    ) : recordedSessions.map(r => (
+                      <div key={r.id} className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 group hover:border-indigo-200 transition-all">
+                        <div className="flex items-center gap-5">
+                          <div className="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
+                            <FaPlay size={22} className="ml-1" />
+                          </div>
+                          <div>
+                            <h4 className="font-black text-sm uppercase tracking-tight">{r.topic}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[9px] font-black rounded-md uppercase">{r.course_title}</span>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">{new Date(r.recorded_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <a href={r.video_url} target="_blank" rel="noopener noreferrer" className="p-3 bg-white dark:bg-slate-700 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-slate-100 dark:border-slate-600">
+                            <FaExternalLinkAlt size={14} />
+                          </a>
+                          <button onClick={() => handleDeleteRecording(r.id)} className="p-3 bg-white dark:bg-slate-700 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm border border-slate-100 dark:border-slate-600">
+                            <FaTrash size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
         {activeAdminTab === "QUIZZES" && (
           <motion.div key="qz" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
