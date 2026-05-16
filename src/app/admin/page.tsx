@@ -248,12 +248,11 @@ export default function AdminDashboard() {
 
   const fetchLiveSessions = async () => {
     if (!supabase) return;
-    // Fetch sessions that are either currently live OR scheduled for the future/recently
+    // Fetch ALL sessions (past, live, and scheduled) for attendance records
     const { data } = await supabase
       .from("live_sessions")
-      .select("id, course_id, course_title, session_url, is_live, started_at, scheduled_at")
-      .or("is_live.eq.true,scheduled_at.neq.null")
-      .order("scheduled_at", { ascending: true });
+      .select("*")
+      .order("created_at", { ascending: false });
     if (data) setLiveSessions(data);
   };
 
@@ -695,6 +694,10 @@ export default function AdminDashboard() {
                     <input type="url" placeholder="https://" value={newSession.url} onChange={e => setNewSession({...newSession, url: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-semibold" />
                   </div>
                   <div className="md:col-span-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Class Topic / Session Name</label>
+                    <input type="text" placeholder="e.g. Introduction to 3D Modeling" value={newSession.course_title || ""} onChange={e => setNewSession({...newSession, course_title: e.target.value} as any)} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-semibold" />
+                  </div>
+                  <div className="md:col-span-2">
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Schedule For (Date & Time)</label>
                     <input type="datetime-local" value={newSession.scheduled_at} onChange={e => setNewSession({...newSession, scheduled_at: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none" />
                   </div>
@@ -729,6 +732,8 @@ export default function AdminDashboard() {
                               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                               <span className="text-[10px] font-black text-red-500 uppercase">Live</span>
                             </span>
+                          ) : s.started_at && !s.is_live ? (
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-black rounded-full uppercase">Ended</span>
                           ) : (
                             <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[8px] font-black rounded-full uppercase">Scheduled</span>
                           )}
