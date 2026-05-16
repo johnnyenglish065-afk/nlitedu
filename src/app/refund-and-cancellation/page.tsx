@@ -29,12 +29,7 @@ const RefundAndCancellationPage = () => {
                 <ul className="mb-12 list-disc space-y-6 pl-5 text-base font-medium leading-relaxed text-body-color dark:text-body-color-dark">
                   <li>
                     <p>
-                      <strong>Cancellation Window:</strong> Cancellations will only be considered if the request is made within 14 days of placing the order.
-                    </p>
-                  </li>
-                  <li>
-                    <p>
-                      <strong>Processed Orders:</strong> Cancellation requests may not be entertained if the orders have been communicated to sellers/merchants and they have initiated the shipping process. In such events, you may choose to reject the product at the doorstep.
+                      <strong>No Cancellation:</strong> Once an order is placed and payment is processed, cancellations are not available. Please ensure all details are correct before finalizing your purchase.
                     </p>
                   </li>
                   <li>
