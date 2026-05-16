@@ -67,7 +67,7 @@ const ProfilePage = () => {
         // Fetch Profile
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("college_name, college_type, branch, semester, university_reg_no, father_name, whatsapp_no, resident_state, qualification, full_name, avatar_url, id")
+          .select("college_name, college_type, branch, semester, university_reg_no, father_name, whatsapp_no, resident_state, qualification, full_name, avatar_url, id, email, updated_at")
           .eq("id", user.id)
           .single();
 

@@ -165,7 +165,7 @@ const EnrollmentPageContent = () => {
   const [cashfree, setCashfree] = useState<any>(null);
   useEffect(() => {
     if (typeof window !== "undefined" && (window as any).Cashfree) {
-      const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "production";
+      const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "sandbox";
       setCashfree((window as any).Cashfree({ mode }));
     }
   }, []);
@@ -183,21 +183,17 @@ const EnrollmentPageContent = () => {
   const verifyPaymentStatus = async (orderId: string) => {
     setSubmitting(true);
     try {
-      // 1. Verify with our backend API using official Supabase URL and session token
-      const { data: { session } } = await supabase!.auth.getSession();
+      // 1. Verify with our backend API (which calls Cashfree directly)
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const res = await fetch(`${supabaseUrl}/functions/v1/verify-cashfree-payment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-          "Authorization": `Bearer ${session?.access_token || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
+          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
         },
         body: JSON.stringify({ orderId }),
       });
-
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || data.message || "Failed to verify payment");
 
       if (data.status === "PAID") {
         setSuccess("Enrollment Successful!");
@@ -410,24 +406,22 @@ const EnrollmentPageContent = () => {
         // We continue anyway, as the payment is the priority
       }
 
-      // 2. Create Cashfree Order using official Supabase URL and session token
-      const { data: { session: submitSession } } = await supabase!.auth.getSession();
-      const submitSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      // 2. Create Cashfree Order
       const response = await fetch(
-        `${submitSupabaseUrl}/functions/v1/create-cashfree-order`,
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-cashfree-order`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-            "Authorization": `Bearer ${submitSession?.access_token || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
+            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
           },
           body: JSON.stringify({
             amount: enrollmentFee,
             order_id: orderId,
             customer_id: form.email.replace(/[^a-zA-Z0-9]/g, "_"),
             customer_email: form.email,
-            customer_phone: form.whatsapp.replace(/\D/g, '').slice(-10),
+            customer_phone: form.whatsapp,
           }),
         }
       );
@@ -435,7 +429,7 @@ const EnrollmentPageContent = () => {
       const orderData = await response.json();
 
       if (!response.ok) {
-        throw new Error(orderData.error || orderData.message || "Payment system unavailable");
+        throw new Error(orderData.message || orderData.error || "Payment system unavailable");
       }
 
 
@@ -447,7 +441,7 @@ const EnrollmentPageContent = () => {
       // Ensure SDK is initialized
       let cfInstance = cashfree;
       if (!cfInstance && typeof window !== "undefined" && (window as any).Cashfree) {
-        const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "production";
+        const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "sandbox";
         cfInstance = (window as any).Cashfree({ mode });
         setCashfree(cfInstance);
       }
