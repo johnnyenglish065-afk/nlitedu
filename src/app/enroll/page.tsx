@@ -183,17 +183,12 @@ const EnrollmentPageContent = () => {
   const verifyPaymentStatus = async (orderId: string) => {
     setSubmitting(true);
     try {
-      // 1. Verify with our backend API (which calls Cashfree directly)
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const res = await fetch(`${supabaseUrl}/functions/v1/verify-cashfree-payment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
-        },
-        body: JSON.stringify({ orderId }),
+      // 1. Verify with our backend API using official Supabase invoke
+      const { data, error: functionError } = await supabase!.functions.invoke("verify-cashfree-payment", {
+        body: { orderId },
       });
-      const data = await res.json();
+
+      if (functionError) throw functionError;
 
       if (data.status === "PAID") {
         setSuccess("Enrollment Successful!");
@@ -406,30 +401,19 @@ const EnrollmentPageContent = () => {
         // We continue anyway, as the payment is the priority
       }
 
-      // 2. Create Cashfree Order
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-cashfree-order`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`
-          },
-          body: JSON.stringify({
-            amount: enrollmentFee,
-            order_id: orderId,
-            customer_id: form.email.replace(/[^a-zA-Z0-9]/g, "_"),
-            customer_email: form.email,
-            customer_phone: form.whatsapp.replace(/\D/g, '').slice(-10),
-          }),
-        }
-      );
+      // 2. Create Cashfree Order using official Supabase invoke
+      const { data: orderData, error: orderError } = await supabase!.functions.invoke("create-cashfree-order", {
+        body: {
+          amount: enrollmentFee,
+          order_id: orderId,
+          customer_id: form.email.replace(/[^a-zA-Z0-9]/g, "_"),
+          customer_email: form.email,
+          customer_phone: form.whatsapp.replace(/\D/g, '').slice(-10),
+        },
+      });
 
-      const orderData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(orderData.message || orderData.error || "Payment system unavailable");
+      if (orderError) {
+        throw new Error(orderError.message || "Payment system unavailable");
       }
 
 
