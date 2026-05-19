@@ -215,7 +215,17 @@ const EnrollmentPageContent = () => {
         throw new Error(invokeError.message || "Failed to call verification service");
       }
 
-      if (data?.status === "PAID") {
+      // Safe parse in case return type is string (due to missing application/json header on Edge Function response)
+      let parsedData = data;
+      if (typeof data === "string") {
+        try {
+          parsedData = JSON.parse(data);
+        } catch (e) {
+          console.error("Failed to parse response data as JSON:", e);
+        }
+      }
+
+      if (parsedData?.status === "PAID") {
         handlePaymentSuccess();
       } else {
         setError("Payment could not be verified or is still processing. Please wait a moment and click 'Retry Verification' below.");
