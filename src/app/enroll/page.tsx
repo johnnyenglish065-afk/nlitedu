@@ -138,6 +138,7 @@ const EnrollmentPageContent = () => {
   const [error, setError] = useState<string | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentVerified, setPaymentVerified] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const supabaseConfigured = Boolean(supabase);
 
   // Persistence helpers
@@ -176,46 +177,56 @@ const EnrollmentPageContent = () => {
     const orderId = searchParams.get("order_id");
 
     if (orderId) {
+      setPendingOrderId(orderId);
       verifyPaymentStatus(orderId);
     }
   }, [searchParams]);
 
+  const handlePaymentSuccess = () => {
+    setSuccess("Enrollment Successful!");
+    setPaymentVerified(true);
+    setPendingOrderId(null);
+    setError(null);
+    clearFormFromLocal();
+
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ["#2563eb", "#9333ea", "#10b981"],
+    });
+  };
+
   const verifyPaymentStatus = async (orderId: string) => {
     setSubmitting(true);
+    setError(null);
+
     try {
-      // Verify with our Next.js API route (runs on Vercel, no JWT issues)
-      const response = await fetch("/api/verify-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Verification failed");
+      if (!supabase) {
+        throw new Error("Supabase client is not initialized");
       }
 
-      if (data && data.status === "PAID") {
-        setSuccess("Enrollment Successful!");
-        setPaymentVerified(true);
-        clearFormFromLocal();
+      // Directly invoke the verify-cashfree-payment Edge Function
+      const { data, error: invokeError } = await supabase.functions.invoke("verify-cashfree-payment", {
+        body: { orderId },
+      });
 
-        // Trigger Confetti Celebration
-        confetti({
-          particleCount: 150,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#2563eb", "#9333ea", "#10b981"],
-        });
+      if (invokeError) {
+        throw new Error(invokeError.message || "Failed to call verification service");
+      }
+
+      if (data?.status === "PAID") {
+        handlePaymentSuccess();
       } else {
-        setError("Payment could not be verified or was unsuccessful. Please try again or contact support.");
+        setError("Payment could not be verified or is still processing. Please wait a moment and click 'Retry Verification' below.");
         const savedForm = loadFormFromLocal();
         if (savedForm) setForm(savedForm);
       }
     } catch (err: any) {
       console.error("Post-payment error:", err);
-      setError("Payment received, but we couldn't verify your enrollment. Please contact support.");
+      setError("Payment received, but we couldn't verify your enrollment. Please click 'Retry Verification' below or contact support.");
+      const savedForm = loadFormFromLocal();
+      if (savedForm) setForm(savedForm);
     } finally {
       setSubmitting(false);
     }
@@ -582,7 +593,16 @@ const EnrollmentPageContent = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-200">
-                {error}
+                <p>{error}</p>
+                {pendingOrderId && !submitting && (
+                  <button
+                    type="button"
+                    onClick={() => verifyPaymentStatus(pendingOrderId)}
+                    className="mt-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    🔄 Retry Verification
+                  </button>
+                )}
               </div>
             )}
             {success && (
@@ -927,8 +947,8 @@ const EnrollmentPageContent = () => {
             <SuccessModal
               onClose={() => setSuccess(null)}
               courseTitle={course.title}
-              orderId={searchParams.get("order_id") || "N/A"}
-              customerEmail={user.email || ""}
+              orderId={searchParams.get("order_id") || pendingOrderId || "N/A"}
+              customerEmail={user?.email || form.email || ""}
             />
           )}
         </AnimatePresence>
