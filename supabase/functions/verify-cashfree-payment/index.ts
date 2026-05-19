@@ -24,6 +24,21 @@ serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: "Missing orderId" }), { status: 400, headers: corsHeaders });
     }
 
+    // 1. Check Database First (in case webhook already processed it)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: currentRecord, error: fetchError } = await supabase
+      .from("enrollments")
+      .select("status, full_name, email, course_title")
+      .eq("cf_payment_id", orderId)
+      .maybeSingle();
+
+    if (currentRecord?.status === "PAID") {
+      return new Response(JSON.stringify({ status: "PAID" }), { headers: corsHeaders });
+    }
+
     const env = Deno.env.get("CASHFREE_MODE") || Deno.env.get("NEXT_PUBLIC_CASHFREE_MODE") || "production";
     const appId = Deno.env.get("CASHFREE_APP_ID") || Deno.env.get("NEXT_PUBLIC_CASHFREE_APP_ID");
     const secretKey = Deno.env.get("CASHFREE_SECRET_KEY");
@@ -32,7 +47,7 @@ serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: "Cashfree credentials missing" }), { status: 500, headers: corsHeaders });
     }
 
-    // 1. Fetch order details from Cashfree
+    // 2. Fetch order details from Cashfree if not yet PAID in DB
     const cfUrl = `${CASHFREE_MODES[env as keyof typeof CASHFREE_MODES]}/${orderId}`;
     const response = await fetch(cfUrl, {
       method: "GET",
@@ -49,20 +64,9 @@ serve(async (req: Request) => {
 
     const orderData = await response.json();
 
-    // 2. Update Database if order is PAID
+    // 3. Update Database if Cashfree order is PAID
     if (orderData.order_status === "PAID") {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      // Check current status
-      const { data: currentRecord } = await supabase
-        .from("enrollments")
-        .select("status")
-        .eq("cf_payment_id", orderId)
-        .single();
-
-      if (currentRecord?.status === "PENDING") {
+      if (currentRecord && currentRecord.status === "PENDING") {
          // Update to PAID
          const { data: updatedRecord, error: dbError } = await supabase
            .from("enrollments")
