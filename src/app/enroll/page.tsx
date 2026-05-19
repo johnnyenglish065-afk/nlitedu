@@ -1041,79 +1041,153 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleDownloadReceipt = async () => {
-    const element = document.getElementById("receipt-content");
-    if (!element) {
-      alert("Receipt content not found!");
-      return;
-    }
-
     setIsGenerating(true);
     try {
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        useCORS: true,
-        logging: true, // Enable logging for debugging
-        onclone: (clonedDoc) => {
-          const actionsEl = clonedDoc.getElementById("receipt-actions");
-          const closeBtnEl = clonedDoc.getElementById("receipt-close-btn");
-          if (actionsEl) actionsEl.style.display = "none";
-          if (closeBtnEl) closeBtnEl.style.display = "none";
-
-          const modalEl = clonedDoc.getElementById("receipt-content");
-          if (modalEl) {
-            modalEl.style.transform = "none";
-            modalEl.style.boxShadow = "none";
-            modalEl.style.borderRadius = "0";
-            modalEl.style.margin = "0";
-            modalEl.style.position = "relative";
-          }
-        }
-      });
-
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({
         orientation: "p",
         unit: "mm",
         format: "a4"
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 15;
-      const contentWidth = pdfWidth - (margin * 2);
-      const imgHeight = (canvas.height * contentWidth) / canvas.width;
+      const pdfWidth = pdf.internal.pageSize.getWidth(); // 210
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297
+      const margin = 20;
 
-      // Header Section
+      // 1. Header Blue Band
       pdf.setFillColor(37, 99, 235); // Blue-600
-      pdf.rect(0, 0, pdfWidth, 40, "F");
+      pdf.rect(0, 0, pdfWidth, 45, "F");
 
+      // Header Text
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(24);
+      pdf.setFontSize(26);
       pdf.setFont("helvetica", "bold");
-      pdf.text("NLITedu", margin, 25);
+      pdf.text("NLITedu", margin, 20);
 
-      pdf.setFontSize(10);
+      pdf.setFontSize(9);
       pdf.setFont("helvetica", "normal");
-      pdf.text("OFFICIAL ENROLLMENT RECEIPT", pdfWidth - margin, 25, { align: "right" });
+      pdf.text("NEXGEN LEARNING INSTITUTE OF TECHNOLOGY", margin, 26);
 
-      // Receipt Details
-      pdf.setTextColor(30, 41, 59); // Slate-800
-      pdf.setFontSize(10);
-      pdf.text(`Date: ${new Date().toLocaleDateString()}`, margin, 50);
-      pdf.text(`Receipt No: ${orderId.substring(0, 10).toUpperCase()}`, pdfWidth - margin, 50, { align: "right" });
-
-      // Add the content screenshot
-      pdf.addImage(imgData, "PNG", margin, 60, contentWidth, imgHeight);
-
-      // Bottom Bar
-      pdf.setDrawColor(226, 232, 240);
-      pdf.line(margin, pdfHeight - 25, pdfWidth - margin, pdfHeight - 25);
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("OFFICIAL ENROLLMENT RECEIPT", pdfWidth - margin, 20, { align: "right" });
 
       pdf.setFontSize(8);
-      pdf.setTextColor(148, 163, 184);
-      pdf.text("Nexgen Learning Institute of Technology - nliteedu.com", pdfWidth / 2, pdfHeight - 15, { align: "center" });
-      pdf.text("This is an electronically generated receipt and does not require a physical signature.", pdfWidth / 2, pdfHeight - 10, { align: "center" });
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Transaction ID: ${orderId}`, pdfWidth - margin, 26, { align: "right" });
+
+      // 2. Receipt Details Header
+      let y = 65;
+      pdf.setTextColor(100, 116, 139); // Slate-500
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("RECEIPT TO:", margin, y);
+      pdf.text("RECEIPT DETAILS:", pdfWidth - margin, y, { align: "right" });
+
+      y += 6;
+      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text(customerEmail.split("@")[0].toUpperCase(), margin, y);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.text(`Date: ${new Date().toLocaleDateString()}`, pdfWidth - margin, y, { align: "right" });
+
+      y += 5;
+      pdf.setTextColor(51, 65, 85); // Slate-700
+      pdf.text(customerEmail, margin, y);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(16, 185, 129); // Emerald-500
+      pdf.text("Status: PAID & VERIFIED", pdfWidth - margin, y, { align: "right" });
+
+      y += 15;
+      // 3. Table Header
+      pdf.setFillColor(241, 245, 249); // Slate-100
+      pdf.rect(margin, y, pdfWidth - (margin * 2), 10, "F");
+      
+      pdf.setTextColor(71, 85, 105); // Slate-600
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.text("COURSE / ITEM DESCRIPTION", margin + 5, y + 6.5);
+      pdf.text("STATUS", pdfWidth - margin - 35, y + 6.5, { align: "right" });
+      pdf.text("AMOUNT", pdfWidth - margin - 5, y + 6.5, { align: "right" });
+
+      y += 10;
+      // 4. Table Row
+      pdf.setDrawColor(226, 232, 240); // Slate-200
+      pdf.line(margin, y, pdfWidth - margin, y);
+
+      y += 8;
+      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text(courseTitle, margin + 5, y);
+
+      pdf.setTextColor(16, 185, 129); // Emerald-500
+      pdf.text("PAID", pdfWidth - margin - 35, y, { align: "right" });
+
+      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
+
+      y += 4.5;
+      pdf.setTextColor(100, 116, 139); // Slate-500
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8.5);
+      pdf.text("Includes full internship curriculum, live mentorship sessions, and certificate of completion.", margin + 5, y);
+
+      y += 10;
+      pdf.line(margin, y, pdfWidth - margin, y);
+
+      // 5. Total Section
+      y += 10;
+      pdf.setTextColor(71, 85, 105); // Slate-600
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.text("Subtotal:", pdfWidth - margin - 40, y, { align: "right" });
+      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
+
+      y += 6;
+      pdf.setTextColor(71, 85, 105); // Slate-600
+      pdf.text("Tax (GST 0%):", pdfWidth - margin - 40, y, { align: "right" });
+      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.text("₹0.00", pdfWidth - margin - 5, y, { align: "right" });
+
+      y += 8;
+      pdf.setDrawColor(226, 232, 240); // Slate-200
+      pdf.line(pdfWidth - margin - 60, y - 4, pdfWidth - margin, y - 4);
+      pdf.setTextColor(37, 99, 235); // Blue-600
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text("Total Paid:", pdfWidth - margin - 40, y, { align: "right" });
+      pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
+
+      // 6. Support Details Card
+      y += 20;
+      pdf.setFillColor(248, 250, 252); // Slate-50
+      pdf.roundedRect(margin, y, pdfWidth - (margin * 2), 35, 3, 3, "F");
+      pdf.setDrawColor(241, 245, 249);
+      pdf.roundedRect(margin, y, pdfWidth - (margin * 2), 35, 3, 3, "D");
+
+      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(10);
+      pdf.text("Important Notice & Next Steps:", margin + 8, y + 8);
+
+      pdf.setTextColor(71, 85, 105); // Slate-600
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8.5);
+      pdf.text("1. A confirmation email has been sent to your registered email address.", margin + 8, y + 14);
+      pdf.text("2. Our onboarding team will contact you on your WhatsApp number within 24 hours.", margin + 8, y + 19);
+      pdf.text("3. If you have any questions, please feel free to reach out directly to info@nlitedu.com.", margin + 8, y + 24);
+
+      // 7. Footer
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(margin, pdfHeight - 30, pdfWidth - margin, pdfHeight - 30);
+
+      pdf.setFontSize(8);
+      pdf.setTextColor(148, 163, 184); // Slate-400
+      pdf.text("Nexgen Learning Institute of Technology - nliteedu.com", pdfWidth / 2, pdfHeight - 20, { align: "center" });
+      pdf.text("This is an electronically generated official receipt and does not require a physical signature.", pdfWidth / 2, pdfHeight - 15, { align: "center" });
 
       pdf.save(`NLITedu_Receipt_${orderId.substring(0, 8)}.pdf`);
     } catch (err: any) {
