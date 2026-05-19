@@ -2,7 +2,7 @@ project_id = "othxceezbpfiauaevibt"
 
 [functions.verify-cashfree-payment]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/verify-cashfree-payment/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
@@ -13,7 +13,7 @@ entrypoint = "./functions/verify-cashfree-payment/index.ts"
 
 [functions.email-service]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/email-service/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
