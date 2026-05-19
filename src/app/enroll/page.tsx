@@ -183,16 +183,17 @@ const EnrollmentPageContent = () => {
   const verifyPaymentStatus = async (orderId: string) => {
     setSubmitting(true);
     try {
-      // 1. Verify with our backend API using Supabase Client SDK
-      if (!supabase) {
-        throw new Error("Supabase client is not initialized");
-      }
-      const { data, error: invokeError } = await supabase.functions.invoke("verify-cashfree-payment", {
-        body: { orderId },
+      // Verify with our Next.js API route (runs on Vercel, no JWT issues)
+      const response = await fetch("/api/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
       });
 
-      if (invokeError) {
-        throw invokeError;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Verification failed");
       }
 
       if (data && data.status === "PAID") {
