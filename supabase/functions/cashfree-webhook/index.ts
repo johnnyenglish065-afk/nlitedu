@@ -74,7 +74,6 @@ serve(async (req) => {
         .from("enrollments")
         .update({ 
           status: "PAID",
-          cf_payment_id: payment.cf_payment_id,
           payment_method: payment.payment_group,
           payment_amount: payment.payment_amount,
           payment_currency: payment.payment_currency || "INR",
