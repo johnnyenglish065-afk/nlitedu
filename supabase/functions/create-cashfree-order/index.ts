@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const CASHFREE_MODES = {
@@ -18,7 +19,7 @@ serve(async (req) => {
   try {
     const { amount, customer_id, customer_email, customer_phone, order_id } = await req.json();
 
-    const env = Deno.env.get("CASHFREE_MODE") || "production";
+    const env = Deno.env.get("CASHFREE_MODE") || Deno.env.get("NEXT_PUBLIC_CASHFREE_MODE") || "production";
     const appId = Deno.env.get("CASHFREE_APP_ID");
     const secretKey = Deno.env.get("CASHFREE_SECRET_KEY");
 
