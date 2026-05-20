@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "motion/react";
 import { FaGoogle, FaGithub, FaEnvelope, FaLock, FaArrowRight } from "react-icons/fa";
+import { validateEmail } from "@/lib/validation";
 
 const SigninPage = () => {
   const [email, setEmail] = useState("");
@@ -39,6 +40,13 @@ const SigninPage = () => {
 
     if (!email || !password) {
       setError("Please fill in all fields.");
+      setLoading(false);
+      return;
+    }
+
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      setError(emailCheck.message);
       setLoading(false);
       return;
     }
@@ -79,20 +87,53 @@ const SigninPage = () => {
 
   const handleForgotPassword = async (e: React.MouseEvent) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
     if (!email) {
       setError("Please enter your email address first.");
       return;
     }
+
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      setError(emailCheck.message);
+      return;
+    }
     
     setLoading(true);
-    const { error } = await resetPasswordForEmail(email);
-    setLoading(false);
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess("Reset link sent! Please check your inbox.");
-      setError(null);
+    try {
+      // 1. Verify that email exists in the student registration database
+      const res = await fetch("/api/auth/verify-student", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to verify student credentials.");
+      }
+      
+      if (!data.registered) {
+        setError("This email address is not registered as a student.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Send the reset link since the student email is verified
+      const { error } = await resetPasswordForEmail(email);
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess("Reset link sent! Please check your inbox.");
+      }
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
     }
   };
 
