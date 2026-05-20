@@ -336,10 +336,15 @@ export default function AdminDashboard() {
     }
     setIsStartingSession(true);
 
+    let meetingUrl = newSession.url.trim();
+    if (!meetingUrl.startsWith("http://") && !meetingUrl.startsWith("https://")) {
+      meetingUrl = "https://" + meetingUrl;
+    }
+
     const payload: any = { 
       course_id: newSession.course, 
       course_title: newSession.course, 
-      session_url: newSession.url, 
+      session_url: meetingUrl, 
       is_live: editingSessionId ? liveSessions.find(s => s.id === editingSessionId)?.is_live : !isScheduled,
       scheduled_at: isScheduled ? new Date(newSession.scheduled_at).toISOString() : null,
     };
@@ -743,8 +748,11 @@ export default function AdminDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Meeting URL (YouTube/Zoom/Webex)</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Meeting URL (YouTube/Zoom/Webex/Meet/Teams)</label>
                     <input type="url" placeholder="https://" value={newSession.url} onChange={e => setNewSession({...newSession, url: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-semibold" />
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                      💡 External meeting URLs (Google Meet, Zoom, Webex, Teams, etc.) automatically open in native mobile apps.
+                    </p>
                   </div>
                   <div className="md:col-span-2">
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Class Topic / Session Name</label>
