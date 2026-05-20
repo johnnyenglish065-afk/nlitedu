@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "motion/react";
 import { FaGoogle, FaGithub, FaUser, FaEnvelope, FaLock, FaArrowRight, FaCheckCircle } from "react-icons/fa";
+import { validateEmail } from "@/lib/validation";
 
 const SignupPage = () => {
   const [name, setName] = useState("");
@@ -40,6 +41,12 @@ const SignupPage = () => {
     // Validation
     if (!name.trim()) {
       setError("Please enter your full name.");
+      setLoading(false);
+      return;
+    }
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      setError(emailCheck.message);
       setLoading(false);
       return;
     }
