@@ -92,6 +92,7 @@ const EnrollmentPageContent = () => {
     qualification: "",
     marksheet12Url: "",
     marksheetSemUrl: "",
+    duration: "",
   });
   const [marksheet12File, setMarksheet12File] = useState<File | null>(null);
   const [marksheetSemFile, setMarksheetSemFile] = useState<File | null>(null);
@@ -290,6 +291,7 @@ const EnrollmentPageContent = () => {
       form.qualification !== "" &&
       form.marks10.trim() !== "" &&
       form.marksSem.trim() !== "" &&
+      (!isInternship || form.duration !== "") &&
       (marksheet12File !== null || marksheetSemFile !== null);
 
     // College ID is mandatory for college students (govt/private), not for job professionals
@@ -336,6 +338,7 @@ const EnrollmentPageContent = () => {
     if (!form.marksSem.trim()) return "Please enter your Last semester marks.";
     if (!marksheet12File && !marksheetSemFile) return "Please upload your 10th/12th marksheet OR your latest semester marksheet.";
     if (marksheet12File && marksheetSemFile) return "Please upload ONLY ONE certificate (do not upload both).";
+    if (isInternship && !form.duration) return "Please select internship duration.";
     return null;
   };
 
@@ -408,6 +411,7 @@ const EnrollmentPageContent = () => {
         college_type: form.collegeType,
         state: form.state,
         course_title: form.course,
+        duration: isInternship ? form.duration : null,
         message: form.message,
         qualification: form.qualification,
         marks10: form.marks10,
@@ -923,7 +927,28 @@ const EnrollmentPageContent = () => {
               />
             </label>
 
-            {/* Interested Internship Courses removed */}
+            {isInternship && (
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Internship Duration <span className="text-red-500">*</span>
+                </span>
+                <div className="grid grid-cols-3 gap-3">
+                  {["2 Weeks", "4 Weeks", "6 Weeks"].map((dur) => (
+                    <label key={dur} className={`cursor-pointer rounded-xl border-2 px-4 py-3 text-center font-semibold transition ${form.duration === dur ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-300" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-600"}`}>
+                      <input
+                        type="radio"
+                        name="duration"
+                        value={dur}
+                        checked={form.duration === dur}
+                        onChange={handleChange}
+                        className="hidden"
+                      />
+                      {dur}
+                    </label>
+                  ))}
+                </div>
+              </label>
+            )}
 
             <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between border-t border-slate-200 dark:border-slate-800">
               <button
@@ -996,7 +1021,7 @@ const EnrollmentPageContent = () => {
               </div>
               <div className="flex items-center justify-between">
                 <dt className="font-medium">Duration</dt>
-                <dd>{course.duration || "—"}</dd>
+                <dd>{isInternship && form.duration ? form.duration : (course.duration || "—")}</dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="font-medium">College Type</dt>
