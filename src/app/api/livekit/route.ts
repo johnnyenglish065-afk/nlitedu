@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   try {
     const at = new AccessToken(apiKey, apiSecret, {
       identity: username,
-      // name can also be provided if available
+      name: username,
     });
 
     at.addGrant({ 
