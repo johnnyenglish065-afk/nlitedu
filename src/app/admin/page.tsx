@@ -104,7 +104,7 @@ export default function AdminDashboard() {
   const [liveAttendance, setLiveAttendance] = useState<LiveAttendance[]>([]);
   const [isStartingSession, setIsStartingSession] = useState(false);
   const [newSession, setNewSession] = useState({ course: "", url: "", scheduled_at: "", course_title: "" });
-  const [isNativeAgora, setIsNativeAgora] = useState(false);
+  const [isNativeLiveKit, setIsNativeLiveKit] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
 
   // Recorded Sessions State
@@ -338,9 +338,9 @@ export default function AdminDashboard() {
     setIsStartingSession(true);
 
     let meetingUrl = newSession.url.trim();
-    if (isNativeAgora) {
-      meetingUrl = meetingUrl.startsWith("agora://") ? meetingUrl : "agora://" + meetingUrl;
-    } else if (!meetingUrl.startsWith("http://") && !meetingUrl.startsWith("https://") && !meetingUrl.startsWith("agora://")) {
+    if (isNativeLiveKit) {
+      meetingUrl = meetingUrl.startsWith("livekit://") ? meetingUrl : "livekit://" + meetingUrl;
+    } else if (!meetingUrl.startsWith("http://") && !meetingUrl.startsWith("https://") && !meetingUrl.startsWith("livekit://")) {
       meetingUrl = "https://" + meetingUrl;
     }
 
@@ -360,7 +360,7 @@ export default function AdminDashboard() {
       const { error } = await supabase.from("live_sessions").update(payload).eq("id", editingSessionId);
       if (!error) {
         setNewSession({ course: "", url: "", scheduled_at: "", course_title: "" });
-        setIsNativeAgora(false);
+        setIsNativeLiveKit(false);
         setEditingSessionId(null);
         alert("Session Updated!");
         fetchLiveSessions();
@@ -371,7 +371,7 @@ export default function AdminDashboard() {
       const { error } = await supabase.from("live_sessions").insert([payload]);
       if (!error) { 
         setNewSession({ course: "", url: "", scheduled_at: "", course_title: "" }); 
-        setIsNativeAgora(false);
+        setIsNativeLiveKit(false);
         alert(isScheduled ? "Class Scheduled!" : "Class Started!"); 
         fetchLiveSessions();
       } else {
@@ -757,12 +757,12 @@ export default function AdminDashboard() {
                       <label className="text-xs font-bold text-slate-500 uppercase block">Meeting URL / Channel Name</label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <span className="text-[10px] font-bold text-primary uppercase">Native In-App Class</span>
-                        <input type="checkbox" checked={isNativeAgora} onChange={(e) => setIsNativeAgora(e.target.checked)} className="accent-primary w-3 h-3" />
+                        <input type="checkbox" checked={isNativeLiveKit} onChange={(e) => setIsNativeLiveKit(e.target.checked)} className="accent-primary w-3 h-3" />
                       </label>
                     </div>
-                    <input type={isNativeAgora ? "text" : "url"} placeholder={isNativeAgora ? "Enter Channel Name (e.g. flutter_class_1)" : "https://"} value={newSession.url} onChange={e => setNewSession({...newSession, url: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-semibold" />
+                    <input type={isNativeLiveKit ? "text" : "url"} placeholder={isNativeLiveKit ? "Enter Channel Name (e.g. flutter_class_1)" : "https://"} value={newSession.url} onChange={e => setNewSession({...newSession, url: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-semibold" />
                     <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                      {isNativeAgora ? "💡 Students will watch the live class natively inside the NLITedu mobile app using Agora." : "💡 External meeting URLs (Google Meet, Zoom, Webex, Teams, etc.) automatically open in native mobile apps."}
+                      {isNativeLiveKit ? "💡 Students will watch the live class natively inside the NLITedu mobile app using LiveKit." : "💡 External meeting URLs (Google Meet, Zoom, Webex, Teams, etc.) automatically open in native mobile apps."}
                     </p>
                   </div>
                   <div className="md:col-span-2">
@@ -842,8 +842,8 @@ export default function AdminDashboard() {
                         )}
                         {s.is_live && (
                           <>
-                            {s.session_url.startsWith('agora://') && (
-                              <a href={`/admin/broadcast?channel=${s.session_url.replace('agora://', '')}`} target="_blank" className="px-4 py-2 bg-primary/10 text-primary text-[10px] font-black rounded-xl hover:bg-primary hover:text-white transition-all flex items-center gap-1.5" title="Open Broadcast Studio">
+                            {(s.session_url.startsWith('livekit://') || s.session_url.startsWith('agora://')) && (
+                              <a href={`/admin/broadcast?channel=${s.session_url.replace('livekit://', '').replace('agora://', '')}`} target="_blank" className="px-4 py-2 bg-primary/10 text-primary text-[10px] font-black rounded-xl hover:bg-primary hover:text-white transition-all flex items-center gap-1.5" title="Open Broadcast Studio">
                                 <FaVideo size={10} /> STUDIO
                               </a>
                             )}
