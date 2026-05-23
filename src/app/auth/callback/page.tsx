@@ -14,6 +14,7 @@ export default function AuthCallbackPage() {
       // Extract PKCE auth code from the URL search parameters
       const url = new URL(window.location.href);
       const code = url.searchParams.get("code");
+      const next = url.searchParams.get("next") ?? "/";
 
       let exchangeError = null;
       if (code) {
@@ -28,8 +29,8 @@ export default function AuthCallbackPage() {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
       if (session && !exchangeError && !sessionError) {
-        // Redirect to homepage after successful handshake
-        router.push("/");
+        // Redirect to next or homepage after successful handshake
+        router.push(next);
         router.refresh();
       } else {
         // If there's an error or no session, redirect to signin with error message

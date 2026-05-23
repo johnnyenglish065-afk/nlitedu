@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("email")
-      .eq("email", cleanEmail)
+      .ilike("email", cleanEmail)
       .limit(1);
 
     if (profileError) {
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     const { data: enrollment, error: enrollmentError } = await supabaseAdmin
       .from("enrollments")
       .select("email")
-      .eq("email", cleanEmail)
+      .ilike("email", cleanEmail)
       .limit(1);
 
     if (enrollmentError) {

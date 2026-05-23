@@ -104,26 +104,9 @@ const SigninPage = () => {
     setLoading(true);
 
     try {
-      // 1. Verify that email exists in the student registration database
-      const res = await fetch("/api/auth/verify-student", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to verify student credentials.");
-      }
-      
-      if (!data.registered) {
-        setError("This email address is not registered as a student.");
-        setLoading(false);
-        return;
-      }
+      // Send the reset link directly via Supabase
+      // Supabase securely handles whether the user exists or not internally
 
-      // 2. Send the reset link since the student email is verified
       const { error } = await resetPasswordForEmail(email);
       if (error) {
         setError(error.message);
