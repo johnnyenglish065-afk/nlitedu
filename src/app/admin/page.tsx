@@ -841,7 +841,14 @@ export default function AdminDashboard() {
                           <button onClick={() => handleActivateScheduled(s.id)} className="px-4 py-2 bg-green-50 text-green-600 text-[10px] font-black rounded-xl hover:bg-green-600 hover:text-white transition-all">START</button>
                         )}
                         {s.is_live && (
-                          <button onClick={() => handleEndLive(s.id)} className="px-4 py-2 bg-red-50 text-red-600 text-[10px] font-black rounded-xl hover:bg-red-600 hover:text-white transition-all">END</button>
+                          <>
+                            {s.session_url.startsWith('agora://') && (
+                              <a href={`/admin/broadcast?channel=${s.session_url.replace('agora://', '')}`} target="_blank" className="px-4 py-2 bg-primary/10 text-primary text-[10px] font-black rounded-xl hover:bg-primary hover:text-white transition-all flex items-center gap-1.5" title="Open Broadcast Studio">
+                                <FaVideo size={10} /> STUDIO
+                              </a>
+                            )}
+                            <button onClick={() => handleEndLive(s.id)} className="px-4 py-2 bg-red-50 text-red-600 text-[10px] font-black rounded-xl hover:bg-red-600 hover:text-white transition-all">END</button>
+                          </>
                         )}
                         <button onClick={() => handleDeleteSession(s.id)} className="p-2 text-slate-300 hover:text-red-500"><FaTrash size={12} /></button>
                       </div>
