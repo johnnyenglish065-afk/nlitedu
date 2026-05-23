@@ -122,6 +122,29 @@ function BroadcastStudioContent() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex overflow-hidden relative">
+        <style dangerouslySetInnerHTML={{__html: `
+          /* Hide the local participant's screen share video to prevent the infinite mirror effect */
+          .lk-participant-tile[data-lk-local-participant="true"][data-lk-source="screen_share"] video {
+            opacity: 0 !important;
+          }
+          .lk-participant-tile[data-lk-local-participant="true"][data-lk-source="screen_share"]::after {
+            content: "You are sharing your screen. Students are seeing your screen perfectly.\\A\\ATo avoid the mirror effect, share a specific Window or Tab instead of the Entire Screen.";
+            white-space: pre-wrap;
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 3rem;
+            background: #0f172a;
+            color: #94a3b8;
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1.6;
+            z-index: 10;
+          }
+        `}} />
         <div className="flex-1 flex flex-col overflow-hidden relative bg-black" data-lk-theme="default">
           {token && serverUrl ? (
             <LiveKitRoom
