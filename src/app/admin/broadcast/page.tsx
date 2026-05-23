@@ -123,12 +123,20 @@ function BroadcastStudioContent() {
       {/* Main Content Area */}
       <main className="flex-1 flex overflow-hidden relative">
         <style dangerouslySetInnerHTML={{__html: `
-          /* Hide the local participant's screen share video to prevent the infinite mirror effect */
+          /* Hide the local participant's screen share video by default to prevent the infinite mirror effect */
           .lk-participant-tile[data-lk-local-participant="true"][data-lk-source="screen_share"] video {
-            opacity: 0 !important;
+            opacity: 0.05 !important;
+            transition: all 0.3s ease;
           }
+          
+          /* Show the video fully when hovered for preview */
+          .lk-participant-tile[data-lk-local-participant="true"][data-lk-source="screen_share"]:hover video {
+            opacity: 1 !important;
+          }
+
+          /* Overlay message */
           .lk-participant-tile[data-lk-local-participant="true"][data-lk-source="screen_share"]::after {
-            content: "You are sharing your screen. Students are seeing your screen perfectly.\\A\\ATo avoid the mirror effect, share a specific Window or Tab instead of the Entire Screen.";
+            content: "🖥️ Screen Share Active\\A\\A👀 Hover here to preview your screen\\A\\A💡 Tip: To prevent the mirror effect, share a specific Window or Tab instead of the Entire Screen.";
             white-space: pre-wrap;
             position: absolute;
             inset: 0;
@@ -137,12 +145,23 @@ function BroadcastStudioContent() {
             justify-content: center;
             text-align: center;
             padding: 3rem;
-            background: #0f172a;
-            color: #94a3b8;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            color: #cbd5e1;
             font-size: 1.1rem;
             font-weight: 600;
-            line-height: 1.6;
+            line-height: 1.8;
             z-index: 10;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            border-radius: 12px;
+            margin: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+          }
+
+          /* Hide overlay when hovering to show preview */
+          .lk-participant-tile[data-lk-local-participant="true"][data-lk-source="screen_share"]:hover::after {
+            opacity: 0;
           }
         `}} />
         <div className="flex-1 flex flex-col overflow-hidden relative bg-black" data-lk-theme="default">
