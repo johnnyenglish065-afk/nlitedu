@@ -18,6 +18,50 @@ function BroadcastStudioContent() {
 
   const [token, setToken] = useState("");
   const [isLive, setIsLive] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
+
+  const handleGoLive = async () => {
+    setIsStarting(true);
+    try {
+      const { data } = await supabase
+        .from('live_sessions')
+        .select('id')
+        .or(`session_url.eq.livekit://${channel},session_url.eq.agora://${channel}`)
+        .single();
+        
+      if (data?.id) {
+        await supabase.from('live_sessions').update({ is_live: true, started_at: new Date().toISOString() }).eq('id', data.id);
+      }
+      setIsLive(true);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to go live");
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  const handleEndBroadcast = async () => {
+    setIsEnding(true);
+    try {
+      const { data } = await supabase
+        .from('live_sessions')
+        .select('id')
+        .or(`session_url.eq.livekit://${channel},session_url.eq.agora://${channel}`)
+        .single();
+        
+      if (data?.id) {
+        await supabase.from('live_sessions').update({ is_live: false }).eq('id', data.id);
+      }
+      setIsLive(false);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to end broadcast");
+    } finally {
+      setIsEnding(false);
+    }
+  };
 
   // Fetch token
   useEffect(() => {
@@ -56,12 +100,21 @@ function BroadcastStudioContent() {
         </div>
         
         <div className="flex items-center gap-4">
-          {isLive && (
+          {!isLive ? (
             <button 
-              onClick={() => setIsLive(false)}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition-colors border border-slate-700"
+              onClick={handleGoLive}
+              disabled={!token || isStarting}
+              className="px-6 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 min-w-[140px] flex items-center justify-center"
             >
-              End Broadcast
+              {isStarting ? "Starting..." : "START BROADCAST"}
+            </button>
+          ) : (
+            <button 
+              onClick={handleEndBroadcast}
+              disabled={isEnding}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition-colors border border-slate-700 disabled:opacity-50 min-w-[140px] flex items-center justify-center"
+            >
+              {isEnding ? "Ending..." : "End Broadcast"}
             </button>
           )}
         </div>
@@ -70,34 +123,7 @@ function BroadcastStudioContent() {
       {/* Main Content Area */}
       <main className="flex-1 flex overflow-hidden relative">
         <div className="flex-1 flex flex-col overflow-hidden relative bg-black" data-lk-theme="default">
-          {!isLive ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
-              <div className="absolute inset-0 bg-primary/5 blur-[150px] rounded-full pointer-events-none"></div>
-              <div className="z-10 flex flex-col items-center bg-slate-900/80 backdrop-blur-xl p-10 rounded-3xl border border-slate-800 shadow-2xl max-w-lg w-full text-center">
-                <div className="w-20 h-20 rounded-2xl bg-red-500/20 flex items-center justify-center mb-6 border border-red-500/30">
-                  <FaVideo className="text-red-500 text-3xl" />
-                </div>
-                <h2 className="text-3xl font-black text-white mb-4">Ready to go live?</h2>
-                <p className="text-slate-400 mb-8">Click below to start broadcasting your camera and screen to all students in the <span className="text-primary font-bold">{channel}</span> channel.</p>
-                
-                <button 
-                  onClick={() => setIsLive(true)}
-                  disabled={!token}
-                  className="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-slate-700 disabled:to-slate-600 disabled:text-slate-400 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 text-lg"
-                >
-                  {!token ? "Authenticating..." : (
-                    <>
-                      <span className="relative flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-                      </span>
-                      START BROADCAST
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          ) : token && serverUrl ? (
+          {token && serverUrl ? (
             <LiveKitRoom
               video={true}
               audio={true}
