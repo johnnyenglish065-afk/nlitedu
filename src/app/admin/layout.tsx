@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaShieldAlt, FaArrowLeft } from "react-icons/fa";
 import Link from "next/link";
@@ -14,6 +14,7 @@ export default function AdminLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [authorized, setAuthorized] = useState(false);
 
   // Admin access is restricted to info@nlitedu.com for this phase
@@ -62,6 +63,16 @@ export default function AdminLayout({
             <FaArrowLeft /> Go Home Now
           </Link>
         </motion.div>
+      </div>
+    );
+  }
+
+  const isBroadcast = pathname?.includes("/admin/broadcast");
+
+  if (isBroadcast) {
+    return (
+      <div className="min-h-screen bg-slate-950">
+        {children}
       </div>
     );
   }
