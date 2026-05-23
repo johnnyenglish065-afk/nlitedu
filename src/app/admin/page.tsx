@@ -104,6 +104,7 @@ export default function AdminDashboard() {
   const [liveAttendance, setLiveAttendance] = useState<LiveAttendance[]>([]);
   const [isStartingSession, setIsStartingSession] = useState(false);
   const [newSession, setNewSession] = useState({ course: "", url: "", scheduled_at: "", course_title: "" });
+  const [isNativeAgora, setIsNativeAgora] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
 
   // Recorded Sessions State
@@ -337,7 +338,9 @@ export default function AdminDashboard() {
     setIsStartingSession(true);
 
     let meetingUrl = newSession.url.trim();
-    if (!meetingUrl.startsWith("http://") && !meetingUrl.startsWith("https://")) {
+    if (isNativeAgora) {
+      meetingUrl = meetingUrl.startsWith("agora://") ? meetingUrl : "agora://" + meetingUrl;
+    } else if (!meetingUrl.startsWith("http://") && !meetingUrl.startsWith("https://") && !meetingUrl.startsWith("agora://")) {
       meetingUrl = "https://" + meetingUrl;
     }
 
@@ -357,6 +360,7 @@ export default function AdminDashboard() {
       const { error } = await supabase.from("live_sessions").update(payload).eq("id", editingSessionId);
       if (!error) {
         setNewSession({ course: "", url: "", scheduled_at: "", course_title: "" });
+        setIsNativeAgora(false);
         setEditingSessionId(null);
         alert("Session Updated!");
         fetchLiveSessions();
@@ -367,6 +371,7 @@ export default function AdminDashboard() {
       const { error } = await supabase.from("live_sessions").insert([payload]);
       if (!error) { 
         setNewSession({ course: "", url: "", scheduled_at: "", course_title: "" }); 
+        setIsNativeAgora(false);
         alert(isScheduled ? "Class Scheduled!" : "Class Started!"); 
         fetchLiveSessions();
       } else {
@@ -748,10 +753,16 @@ export default function AdminDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Meeting URL (YouTube/Zoom/Webex/Meet/Teams)</label>
-                    <input type="url" placeholder="https://" value={newSession.url} onChange={e => setNewSession({...newSession, url: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-semibold" />
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase block">Meeting URL / Channel Name</label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <span className="text-[10px] font-bold text-primary uppercase">Native In-App Class</span>
+                        <input type="checkbox" checked={isNativeAgora} onChange={(e) => setIsNativeAgora(e.target.checked)} className="accent-primary w-3 h-3" />
+                      </label>
+                    </div>
+                    <input type={isNativeAgora ? "text" : "url"} placeholder={isNativeAgora ? "Enter Channel Name (e.g. flutter_class_1)" : "https://"} value={newSession.url} onChange={e => setNewSession({...newSession, url: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl outline-none font-semibold" />
                     <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                      💡 External meeting URLs (Google Meet, Zoom, Webex, Teams, etc.) automatically open in native mobile apps.
+                      {isNativeAgora ? "💡 Students will watch the live class natively inside the NLITedu mobile app using Agora." : "💡 External meeting URLs (Google Meet, Zoom, Webex, Teams, etc.) automatically open in native mobile apps."}
                     </p>
                   </div>
                   <div className="md:col-span-2">
