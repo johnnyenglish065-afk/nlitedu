@@ -10,7 +10,18 @@ import {
   LiveKitRoom,
   VideoConference,
   RoomAudioRenderer,
+  useLocalParticipant,
 } from '@livekit/components-react';
+
+function TrackStateSaver() {
+  const { localParticipant } = useLocalParticipant();
+  useEffect(() => {
+    if (localParticipant) {
+      sessionStorage.setItem('livekit-screenshare', localParticipant.isScreenShareEnabled ? 'true' : 'false');
+    }
+  }, [localParticipant?.isScreenShareEnabled]);
+  return null;
+}
 
 function BroadcastStudioContent() {
   const searchParams = useSearchParams();
@@ -22,6 +33,8 @@ function BroadcastStudioContent() {
   const [isEnding, setIsEnding] = useState(false);
   const [initialVideoEnabled, setInitialVideoEnabled] = useState(true);
   const [initialAudioEnabled, setInitialAudioEnabled] = useState(true);
+  const [initialScreenEnabled, setInitialScreenEnabled] = useState(false);
+  const [choicesLoaded, setChoicesLoaded] = useState(false);
 
   const handleGoLive = async () => {
     if (!supabase) {
@@ -99,15 +112,26 @@ function BroadcastStudioContent() {
           }
         }
         
-        // 3. Restore camera/mic preferences
-        const savedChoices = localStorage.getItem('livekit-user-choices');
-        if (savedChoices) {
-          const parsed = JSON.parse(savedChoices);
-          if (parsed.videoEnabled !== undefined) setInitialVideoEnabled(parsed.videoEnabled);
-          if (parsed.audioEnabled !== undefined) setInitialAudioEnabled(parsed.audioEnabled);
+        // 3. Restore camera/mic preferences and screen share state
+        try {
+          const savedChoices = localStorage.getItem('livekit-user-choices');
+          if (savedChoices) {
+            const parsed = JSON.parse(savedChoices);
+            if (parsed.videoEnabled !== undefined) setInitialVideoEnabled(parsed.videoEnabled);
+            if (parsed.audioEnabled !== undefined) setInitialAudioEnabled(parsed.audioEnabled);
+          }
+          const savedScreenShare = sessionStorage.getItem('livekit-screenshare');
+          if (savedScreenShare === 'true') {
+            setInitialScreenEnabled(true);
+          }
+        } catch (e) {
+          console.error("Error reading user choices", e);
+        } finally {
+          setChoicesLoaded(true);
         }
       } catch (e) {
         console.error("Error fetching token or session state", e);
+        setChoicesLoaded(true); // Always render eventually
       }
     })();
   }, [channel]);
@@ -197,15 +221,17 @@ function BroadcastStudioContent() {
           }
         `}} />
         <div className="flex-1 flex flex-col overflow-hidden relative bg-black" data-lk-theme="default">
-          {token && serverUrl ? (
+          {token && serverUrl && choicesLoaded ? (
             <LiveKitRoom
               video={initialVideoEnabled}
               audio={initialAudioEnabled}
+              screen={initialScreenEnabled}
               token={token}
               serverUrl={serverUrl}
               connect={true}
               className="flex-1 w-full h-full relative"
             >
+              <TrackStateSaver />
               <VideoConference />
               <RoomAudioRenderer />
             </LiveKitRoom>
