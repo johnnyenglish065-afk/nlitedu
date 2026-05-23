@@ -20,6 +20,8 @@ function BroadcastStudioContent() {
   const [isLive, setIsLive] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
+  const [initialVideoEnabled, setInitialVideoEnabled] = useState(true);
+  const [initialAudioEnabled, setInitialAudioEnabled] = useState(true);
 
   const handleGoLive = async () => {
     if (!supabase) {
@@ -95,6 +97,14 @@ function BroadcastStudioContent() {
           if (sessionData && sessionData.is_live) {
             setIsLive(true);
           }
+        }
+        
+        // 3. Restore camera/mic preferences
+        const savedChoices = localStorage.getItem('livekit-user-choices');
+        if (savedChoices) {
+          const parsed = JSON.parse(savedChoices);
+          if (parsed.videoEnabled !== undefined) setInitialVideoEnabled(parsed.videoEnabled);
+          if (parsed.audioEnabled !== undefined) setInitialAudioEnabled(parsed.audioEnabled);
         }
       } catch (e) {
         console.error("Error fetching token or session state", e);
@@ -189,8 +199,8 @@ function BroadcastStudioContent() {
         <div className="flex-1 flex flex-col overflow-hidden relative bg-black" data-lk-theme="default">
           {token && serverUrl ? (
             <LiveKitRoom
-              video={true}
-              audio={true}
+              video={initialVideoEnabled}
+              audio={initialAudioEnabled}
               token={token}
               serverUrl={serverUrl}
               connect={true}
