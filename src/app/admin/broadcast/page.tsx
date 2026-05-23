@@ -71,10 +71,11 @@ function BroadcastStudioContent() {
     }
   };
 
-  // Fetch token
+  // Fetch token and restore session state
   useEffect(() => {
     (async () => {
       try {
+        // 1. Fetch token
         const resp = await fetch(`/api/livekit?room=${channel}&username=Instructor&role=instructor`);
         const data = await resp.json();
         if (data.token) {
@@ -82,8 +83,21 @@ function BroadcastStudioContent() {
         } else {
           console.error("Token fetch failed:", data.error);
         }
+
+        // 2. Fetch current session status to survive page reloads
+        if (supabase) {
+          const { data: sessionData } = await supabase
+            .from('live_sessions')
+            .select('is_live')
+            .or(`session_url.eq.livekit://${channel},session_url.eq.agora://${channel}`)
+            .single();
+            
+          if (sessionData && sessionData.is_live) {
+            setIsLive(true);
+          }
+        }
       } catch (e) {
-        console.error("Error fetching token", e);
+        console.error("Error fetching token or session state", e);
       }
     })();
   }, [channel]);
