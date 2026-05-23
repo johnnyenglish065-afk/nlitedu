@@ -11,7 +11,64 @@ import {
   VideoConference,
   RoomAudioRenderer,
   useLocalParticipant,
+  Chat,
+  useParticipants,
+  useRoomContext,
 } from '@livekit/components-react';
+import { FaUsers, FaMicrophoneSlash, FaBan, FaHandPaper } from "react-icons/fa";
+
+function ParticipantModeration() {
+  const participants = useParticipants();
+  const room = useRoomContext();
+  
+  const handleKick = (identity: string) => {
+    alert(`Kick signal sent for ${identity}. (Backend API integration required for forced disconnect)`);
+  };
+
+  const handleMute = (identity: string) => {
+    alert(`Mute request sent to ${identity}.`);
+    // Send a data message requesting mute via LiveKit
+    const encoder = new TextEncoder();
+    const data = encoder.encode(JSON.stringify({ action: 'MUTE_MIC', target: identity }));
+    room.localParticipant.publishData(data, { reliable: true });
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-slate-900 border-l border-slate-800 w-[350px] shrink-0 z-20 shadow-2xl">
+      <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+        <h2 className="text-white font-bold text-sm flex items-center gap-2">
+          <FaUsers className="text-primary" /> Students ({participants.length})
+        </h2>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {participants.map((p) => (
+          <div key={p.identity} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-slate-700">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase">
+                {p.name ? p.name.substring(0, 2) : p.identity.substring(0, 2)}
+              </div>
+              <div>
+                <p className="text-white text-xs font-bold">{p.name || p.identity}</p>
+                <p className="text-slate-400 text-[10px]">{p.isMicrophoneEnabled ? "Mic On" : "Mic Off"}</p>
+              </div>
+            </div>
+            
+            {!p.isLocal && (
+              <div className="flex gap-2">
+                <button onClick={() => handleMute(p.identity)} className="p-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 transition" title="Request Mute">
+                  <FaMicrophoneSlash className="text-[10px]" />
+                </button>
+                <button onClick={() => handleKick(p.identity)} className="p-1.5 bg-red-500/20 hover:bg-red-500/40 rounded text-red-500 transition" title="Kick Student">
+                  <FaBan className="text-[10px]" />
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function TrackStateSaver() {
   const { localParticipant } = useLocalParticipant();
@@ -35,6 +92,8 @@ function BroadcastStudioContent() {
   const [initialAudioEnabled, setInitialAudioEnabled] = useState(true);
   const [initialScreenEnabled, setInitialScreenEnabled] = useState(false);
   const [choicesLoaded, setChoicesLoaded] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isModerationOpen, setIsModerationOpen] = useState(false);
 
   const handleGoLive = async () => {
     if (!supabase) {
@@ -83,6 +142,92 @@ function BroadcastStudioContent() {
       alert("Failed to end broadcast");
     } finally {
       setIsEnding(false);
+    }
+  };
+
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+
+  const handleStartRecording = async () => {
+    try {
+      // 1. Capture screen and system audio
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: true,
+      });
+
+      // 2. Capture microphone audio (instructor's voice)
+      const voiceStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false,
+      });
+
+      // 3. Mix audio streams so both screen and mic are recorded
+      const audioContext = new AudioContext();
+      const destination = audioContext.createMediaStreamDestination();
+      
+      if (displayStream.getAudioTracks().length > 0) {
+        const displaySource = audioContext.createMediaStreamSource(new MediaStream([displayStream.getAudioTracks()[0]]));
+        displaySource.connect(destination);
+      }
+      
+      if (voiceStream.getAudioTracks().length > 0) {
+        const voiceSource = audioContext.createMediaStreamSource(new MediaStream([voiceStream.getAudioTracks()[0]]));
+        voiceSource.connect(destination);
+      }
+
+      // Combine video from display and mixed audio
+      const combinedStream = new MediaStream([
+        ...displayStream.getVideoTracks(),
+        ...destination.stream.getAudioTracks()
+      ]);
+
+      const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `nlitedu-broadcast-${new Date().toISOString().slice(0,10)}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(url);
+        recordedChunksRef.current = [];
+        setIsRecording(false);
+        
+        // Cleanup tracks
+        displayStream.getTracks().forEach(t => t.stop());
+        voiceStream.getTracks().forEach(t => t.stop());
+        audioContext.close();
+      };
+
+      // Stop recording if the user clicks "Stop sharing" on the browser native UI
+      displayStream.getVideoTracks()[0].onended = () => {
+        if (recorder.state !== 'inactive') recorder.stop();
+      };
+
+      recordedChunksRef.current = [];
+      recorder.start(1000); // chunk every 1 second
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Error starting recording:", err);
+      alert("Failed to start recording. Please ensure you grant screen and microphone permissions.");
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
     }
   };
 
@@ -156,6 +301,41 @@ function BroadcastStudioContent() {
         </div>
         
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              setIsModerationOpen(!isModerationOpen);
+              if (!isModerationOpen) setIsChatOpen(false);
+            }}
+            className={`px-4 py-2 flex items-center gap-2 text-xs font-bold rounded-lg transition-all border ${isModerationOpen ? 'bg-primary/20 border-primary text-primary' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'}`}
+          >
+            <FaUsers className="text-sm" />
+            {isModerationOpen ? 'Hide Students' : 'Students'}
+          </button>
+
+          <button
+            onClick={() => {
+              setIsChatOpen(!isChatOpen);
+              if (!isChatOpen) setIsModerationOpen(false);
+            }}
+            className={`px-4 py-2 flex items-center gap-2 text-xs font-bold rounded-lg transition-all border ${isChatOpen ? 'bg-primary/20 border-primary text-primary' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'}`}
+          >
+            <FaComments className="text-sm" />
+            {isChatOpen ? 'Hide Chat' : 'Show Chat'}
+          </button>
+
+          <button
+            onClick={isRecording ? handleStopRecording : handleStartRecording}
+            className={`px-4 py-2 flex items-center gap-2 text-xs font-bold rounded-lg transition-all ${
+              isRecording 
+                ? 'bg-slate-800 text-red-500 border border-red-500/50 hover:bg-slate-700 animate-pulse' 
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+            }`}
+            title="Records your screen and microphone directly to your computer (No cloud storage required)"
+          >
+            <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-red-500' : 'bg-slate-500'}`}></div>
+            {isRecording ? "Stop Recording" : "Record Offline"}
+          </button>
+
           {!isLive ? (
             <button 
               onClick={handleGoLive}
@@ -229,11 +409,36 @@ function BroadcastStudioContent() {
               token={token}
               serverUrl={serverUrl}
               connect={true}
-              className="flex-1 w-full h-full relative"
+              className="flex-1 w-full h-full relative flex"
             >
-              <TrackStateSaver />
-              <VideoConference />
-              <RoomAudioRenderer />
+              <div className="flex-1 flex flex-col relative h-full">
+                <TrackStateSaver />
+                <VideoConference />
+                <RoomAudioRenderer />
+              </div>
+              
+              {/* Chat Sidebar */}
+              {isChatOpen && (
+                <div className="w-[350px] h-full border-l border-slate-800 bg-slate-900 flex flex-col relative shrink-0 z-20 shadow-2xl">
+                  <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+                    <h2 className="text-white font-bold text-sm flex items-center gap-2">
+                      <FaComments className="text-primary" /> Live Class Chat
+                    </h2>
+                    <button onClick={() => setIsChatOpen(false)} className="text-slate-400 hover:text-white text-xs">Close</button>
+                  </div>
+                  <div className="flex-1 overflow-hidden relative">
+                    <style dangerouslySetInnerHTML={{__html: `
+                      .lk-chat { width: 100% !important; height: 100% !important; max-height: 100% !important; border: none !important; border-radius: 0 !important; }
+                      .lk-chat-messages { padding: 1rem !important; }
+                      .lk-chat-form { padding: 1rem !important; border-top: 1px solid rgba(255,255,255,0.05); }
+                    `}} />
+                    <Chat />
+                  </div>
+                </div>
+              )}
+
+              {/* Moderation Sidebar */}
+              {isModerationOpen && <ParticipantModeration />}
             </LiveKitRoom>
           ) : (
             <div className="flex-1 flex items-center justify-center">
