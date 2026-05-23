@@ -22,6 +22,10 @@ function BroadcastStudioContent() {
   const [isEnding, setIsEnding] = useState(false);
 
   const handleGoLive = async () => {
+    if (!supabase) {
+      alert("Supabase is not initialized. Cannot go live.");
+      return;
+    }
     setIsStarting(true);
     try {
       const { data } = await supabase
@@ -43,6 +47,10 @@ function BroadcastStudioContent() {
   };
 
   const handleEndBroadcast = async () => {
+    if (!supabase) {
+      alert("Supabase is not initialized. Cannot end broadcast.");
+      return;
+    }
     setIsEnding(true);
     try {
       const { data } = await supabase
