@@ -114,7 +114,7 @@ function BroadcastStudioContent() {
         
         // 3. Restore camera/mic preferences and screen share state
         try {
-          const savedChoices = localStorage.getItem('livekit-user-choices');
+          const savedChoices = localStorage.getItem('lk-user-choices');
           if (savedChoices) {
             const parsed = JSON.parse(savedChoices);
             if (parsed.videoEnabled !== undefined) setInitialVideoEnabled(parsed.videoEnabled);
