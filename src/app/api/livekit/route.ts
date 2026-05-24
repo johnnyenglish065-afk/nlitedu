@@ -1,4 +1,4 @@
-import { AccessToken } from 'livekit-server-sdk';
+import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -39,5 +39,35 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error generating token:', error);
     return NextResponse.json({ error: 'Failed to generate token' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { room, identity } = body;
+    
+    if (!room || !identity) {
+      return NextResponse.json({ error: 'Missing parameters: room and identity are required' }, { status: 400 });
+    }
+
+    const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL;
+    const apiKey = process.env.LIVEKIT_API_KEY;
+    const apiSecret = process.env.LIVEKIT_API_SECRET;
+
+    if (!livekitUrl || !apiKey || !apiSecret) {
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+    }
+
+    // RoomServiceClient typically expects an http/https URL, not wss://
+    const httpUrl = livekitUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+    
+    const roomService = new RoomServiceClient(httpUrl, apiKey, apiSecret);
+    await roomService.removeParticipant(room, identity);
+    
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error kicking participant:', error);
+    return NextResponse.json({ error: error.message || 'Failed to kick participant' }, { status: 500 });
   }
 }
