@@ -14,14 +14,7 @@ const nextConfig = {
   basePath: "",
   assetPrefix: "",
 
-  // ✅ Required: Excalidraw ships ESM-only packages that Next.js cannot bundle
-  // without explicit transpilation. Without this, the canvas renders blank.
-  transpilePackages: [
-    "@excalidraw/excalidraw",
-    "@excalidraw/laser-pointer",
-    "@excalidraw/mermaid-to-excalidraw",
-    "@excalidraw/random-username",
-  ],
+  // Fabric.js is CommonJS-compatible — no special transpilation needed
 
   // ✅ Required for Next.js 16+ (Turbopack default) — silences the webpack/turbopack mismatch error
   turbopack: {},
