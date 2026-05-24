@@ -1,23 +1,10 @@
 "use client";
-import dynamic from 'next/dynamic';
-import { ErrorBoundary } from 'react-error-boundary';
 import { FaTimes, FaDesktop, FaCompress, FaPlay, FaStop } from 'react-icons/fa';
+import { Tldraw } from 'tldraw';
+import 'tldraw/tldraw.css';
 
-// Excalidraw MUST be dynamically imported with ssr: false to avoid Next.js document/window errors
-const Excalidraw = dynamic(
-  () => import('@excalidraw/excalidraw').then((mod) => mod.Excalidraw),
-  { 
-    ssr: false, 
-    loading: () => (
-      <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 bg-[#fdfdfd]">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p>Loading Excalidraw...</p>
-        </div>
-      </div>
-    ) 
-  }
-);
+// HEADER HEIGHT constant – keeps calc() in sync
+const HEADER_H = 56; // px
 
 interface WhiteboardProps {
   onClose: () => void;
@@ -39,69 +26,121 @@ export default function WhiteboardModal({
   channel = 'default'
 }: WhiteboardProps) {
 
-  return (
-    <div className={`fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center transition-all duration-300 ${(!isOpen || isMinimized) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-      <div className="w-full h-full max-w-[1400px] bg-[#fdfdfd] rounded-2xl shadow-2xl flex flex-col relative border border-slate-700 overflow-hidden">
-        
-        {/* Header Bar */}
-        <div className="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 shrink-0 z-[10]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
-              <FaDesktop />
-            </div>
-            <div>
-              <h2 className="text-white font-semibold text-sm">Interactive Whiteboard (Excalidraw)</h2>
-              <p className="text-slate-400 text-xs">Advanced smartclass tools enabled</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={toggleShare}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
-                isSharing 
-                  ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20' 
-                  : 'bg-blue-600 hover:bg-blue-500 text-white'
-              }`}
-            >
-              {isSharing ? (
-                <><FaStop className="text-xs" /> Stop Sharing</>
-              ) : (
-                <><FaPlay className="text-xs" /> Share to Class</>
-              )}
-            </button>
-            <div className="w-px h-6 bg-slate-700 mx-2"></div>
-            <button 
-              onClick={() => setIsMinimized(true)}
-              className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors"
-              title="Minimize Whiteboard"
-            >
-              <FaCompress />
-            </button>
-            <button 
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors"
-              title="Close Whiteboard"
-            >
-              <FaTimes />
-            </button>
-          </div>
-        </div>
+  if (!isOpen || isMinimized) return null;
 
-        {/* Excalidraw Canvas */}
-        <div className="flex-1 relative overflow-hidden" style={{ width: '100%', height: '100%' }}>
-          <div className="absolute inset-0">
-            <ErrorBoundary fallback={<div className="p-10 text-red-500 font-bold bg-white h-full w-full flex items-center justify-center">Excalidraw failed to load. Please clear your cache and try again.</div>}>
-              <Excalidraw theme="light" />
-            </ErrorBoundary>
+  return (
+    <>
+      {/* Full-screen overlay */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 100,
+          background: 'rgba(2, 6, 23, 0.85)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+        }}
+      >
+        {/* Modal shell – fixed size so children get real pixels */}
+        <div
+          className="whiteboard-container"
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            maxWidth: 1400,
+            background: '#fdfdfd',
+            borderRadius: 16,
+            boxShadow: '0 25px 80px rgba(0,0,0,0.6)',
+            border: '1px solid #334155',
+            overflow: 'hidden',
+          }}
+        >
+          {/* ── Header Bar ── */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: HEADER_H,
+              background: '#0f172a',
+              borderBottom: '1px solid #1e293b',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '0 16px',
+              zIndex: 10,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60a5fa' }}>
+                <FaDesktop />
+              </div>
+              <div>
+                <h2 style={{ color: '#fff', fontWeight: 600, fontSize: 14, margin: 0 }}>Advanced Live Whiteboard</h2>
+                <p style={{ color: '#94a3b8', fontSize: 11, margin: 0 }}>Powered by Tldraw</p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                onClick={toggleShare}
+                style={{
+                  padding: '6px 16px',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  cursor: 'pointer',
+                  border: isSharing ? '1px solid rgba(239,68,68,0.3)' : 'none',
+                  background: isSharing ? 'rgba(239,68,68,0.1)' : '#2563eb',
+                  color: isSharing ? '#ef4444' : '#fff',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {isSharing ? <><FaStop style={{ fontSize: 10 }} /> Stop Sharing</> : <><FaPlay style={{ fontSize: 10 }} /> Share to Class</>}
+              </button>
+
+              <div style={{ width: 1, height: 24, background: '#334155', margin: '0 8px' }} />
+
+              <button
+                onClick={() => setIsMinimized(true)}
+                title="Minimize Whiteboard"
+                style={{ width: 32, height: 32, borderRadius: '50%', background: '#1e293b', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
+              >
+                <FaCompress />
+              </button>
+
+              <button
+                onClick={onClose}
+                title="Close Whiteboard"
+                style={{ width: 32, height: 32, borderRadius: '50%', background: '#1e293b', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
+              >
+                <FaTimes />
+              </button>
+            </div>
           </div>
-          
-          {/* Foolproof Watermark Cover that blocks clicks (covers bottom right if needed) */}
-          <div 
-            className="absolute bottom-0 right-0 w-[200px] h-[60px] bg-transparent z-[9999] rounded-tl-lg cursor-default pointer-events-auto pointer-events-none"
-          ></div>
+
+          {/* ── Tldraw Canvas ── */}
+          <div
+            style={{
+              position: 'absolute',
+              top: HEADER_H,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          >
+            <Tldraw persistenceKey={`nlitedu-whiteboard-${channel}`} />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
