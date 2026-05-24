@@ -1,8 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-@import "tldraw/tldraw.css";
 
 @import 'tailwindcss';
+
+/* tldraw CSS MUST come AFTER tailwindcss so its styles override Tailwind's reset */
+@import "tldraw/tldraw.css";
 
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
@@ -154,6 +156,25 @@
   body {
     font-family: "Inter", sans-serif;
   }
+}
+
+/* Protect tldraw UI from Tailwind's global resets */
+.tl-container,
+.tl-container *,
+.tl-container *::before,
+.tl-container *::after {
+  border-color: revert;
+  box-sizing: border-box;
+}
+
+/* Ensure tldraw toolbar buttons remain visible */
+.tl-container button {
+  all: revert;
+}
+
+/* Ensure tldraw popovers/menus are not clipped */
+.tl-container [data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
 }
 
 @layer components {
