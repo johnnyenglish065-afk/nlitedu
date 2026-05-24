@@ -334,12 +334,13 @@ function WhiteboardPublisher({
     setIsWhiteboardOpen(false);
     setIsWhiteboardMinimized(false);
   };
+
+  if (!isWhiteboardOpen) return null;
   
   return (
     <>
       <WhiteboardModal 
         onClose={handleClose} 
-        isOpen={isWhiteboardOpen}
         isMinimized={isWhiteboardMinimized}
         setIsMinimized={setIsWhiteboardMinimized}
         isSharing={isSharing}
@@ -347,7 +348,7 @@ function WhiteboardPublisher({
         channel={channel}
       />
       {/* Floating Restore Button when minimized */}
-      {isWhiteboardMinimized && isWhiteboardOpen && (
+      {isWhiteboardMinimized && (
         <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-slate-900 border border-primary p-2 rounded-lg shadow-2xl animate-pulse">
           <FaChalkboard className="text-primary text-xl" />
           <div className="flex flex-col mr-4">
