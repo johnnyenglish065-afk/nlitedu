@@ -6,21 +6,25 @@ import { FaTimes, FaDesktop, FaCompress, FaPlay, FaStop } from 'react-icons/fa';
 
 interface WhiteboardProps {
   onClose: () => void;
+  isOpen: boolean;
   isMinimized: boolean;
   setIsMinimized: (val: boolean) => void;
   isSharing: boolean;
   toggleShare: () => void;
+  channel?: string;
 }
 
 export default function WhiteboardModal({ 
   onClose, 
+  isOpen,
   isMinimized, 
   setIsMinimized,
   isSharing,
-  toggleShare 
+  toggleShare,
+  channel = 'default'
 }: WhiteboardProps) {
   return (
-    <div className={`fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center transition-all duration-300 ${isMinimized ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center transition-all duration-300 ${!isOpen || isMinimized ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ display: !isOpen && !isMinimized ? 'none' : 'flex' }}>
       <div className="w-full h-full max-w-[1400px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col relative border border-slate-700">
         
         {/* Header Bar */}
@@ -82,7 +86,7 @@ export default function WhiteboardModal({
           `}} />
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
             <ErrorBoundary fallback={<div className="p-10 text-red-500 font-bold bg-white h-full w-full">Tldraw failed to load. Please clear your cache and try again.</div>}>
-              <Tldraw />
+              <Tldraw persistenceKey={`nlitedu-whiteboard-${channel}`} />
             </ErrorBoundary>
           </div>
           
