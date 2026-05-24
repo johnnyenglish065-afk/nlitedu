@@ -1,8 +1,9 @@
 "use client";
-import { Tldraw } from 'tldraw';
-import 'tldraw/tldraw.css';
+import { ReactSketchCanvas, ReactSketchCanvasRef } from 'react-sketch-canvas';
 import { ErrorBoundary } from 'react-error-boundary';
-import { FaTimes, FaDesktop, FaCompress, FaPlay, FaStop } from 'react-icons/fa';
+import { FaTimes, FaDesktop, FaCompress, FaPlay, FaStop, FaPen, FaEraser, FaUndo, FaRedo, FaTrash } from 'react-icons/fa';
+import { useState, useRef } from 'react';
+
 interface WhiteboardProps {
   onClose: () => void;
   isOpen: boolean;
@@ -22,48 +23,71 @@ export default function WhiteboardModal({
   toggleShare,
   channel = 'default'
 }: WhiteboardProps) {
+  const canvasRef = useRef<ReactSketchCanvasRef>(null);
+  const [eraseMode, setEraseMode] = useState(false);
+  const [strokeColor, setStrokeColor] = useState('#000000');
+  const [strokeWidth, setStrokeWidth] = useState(4);
 
+  const colors = ['#000000', '#e74c3c', '#2ecc71', '#3498db', '#f1c40f', '#9b59b6'];
+
+  const handleEraserClick = () => {
+    setEraseMode(true);
+    canvasRef.current?.eraseMode(true);
+  };
+
+  const handlePenClick = () => {
+    setEraseMode(false);
+    canvasRef.current?.eraseMode(false);
+  };
+
+  const handleUndoClick = () => {
+    canvasRef.current?.undo();
+  };
+
+  const handleRedoClick = () => {
+    canvasRef.current?.redo();
+  };
+
+  const handleClearClick = () => {
+    canvasRef.current?.clearCanvas();
+  };
 
   return (
     <div className={`fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center transition-all duration-300 ${(!isOpen || isMinimized) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-      <div className="w-full h-full max-w-[1400px] bg-white rounded-2xl shadow-2xl flex flex-col relative border border-slate-700">
+      <div className="w-full h-full max-w-[1400px] bg-white rounded-2xl shadow-2xl flex flex-col relative border border-slate-700 overflow-hidden">
         
         {/* Header Bar */}
         <div className="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center">
-              <FaDesktop className="text-primary" />
+            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+              <FaDesktop />
             </div>
             <div>
-              <h2 className="text-white font-bold text-sm flex items-center gap-2">
-                Interactive Whiteboard 
-                {isSharing ? (
-                  <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-500 text-[10px] animate-pulse">LIVE</span>
-                ) : (
-                  <span className="px-2 py-0.5 rounded-full bg-slate-700 text-slate-400 text-[10px]">Private</span>
-                )}
-              </h2>
-              <p className="text-slate-400 text-[10px]">{isSharing ? 'Students can see this.' : 'Only you can see this right now.'}</p>
+              <h2 className="text-white font-semibold text-sm">Interactive Whiteboard</h2>
+              <p className="text-slate-400 text-xs">Only you can see this right now.</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button 
               onClick={toggleShare}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${isSharing ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-primary hover:bg-primary/80 text-black'}`}
-              title={isSharing ? "Stop sharing your screen" : "Click to select 'Current Tab' and share the whiteboard"}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
+                isSharing 
+                  ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20' 
+                  : 'bg-blue-600 hover:bg-blue-500 text-white'
+              }`}
             >
               {isSharing ? (
-                <><FaStop /> Stop Sharing</>
+                <><FaStop className="text-xs" /> Stop Sharing</>
               ) : (
-                <><FaPlay /> Share to Class</>
+                <><FaPlay className="text-xs" /> Share to Class</>
               )}
             </button>
-            <div className="w-px h-6 bg-slate-700 mx-1"></div>
+            <div className="w-px h-6 bg-slate-700 mx-2"></div>
             <button 
               onClick={() => setIsMinimized(true)}
               className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors"
-              title="Minimize"
+              title="Minimize Whiteboard"
             >
               <FaCompress />
             </button>
@@ -77,23 +101,69 @@ export default function WhiteboardModal({
           </div>
         </div>
 
-        {/* Tldraw Canvas */}
-        <div className="whiteboard-container" style={{ position: 'relative', width: '100%', height: '100%', flex: 1, backgroundColor: '#f8f9fa' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-            <ErrorBoundary fallback={<div className="p-10 text-red-500 font-bold bg-white h-full w-full">Tldraw failed to load. Please clear your cache and try again.</div>}>
-              <Tldraw persistenceKey={`nlitedu-whiteboard-${channel}`} />
-            </ErrorBoundary>
+        {/* Toolbar */}
+        <div className="h-12 bg-slate-100 border-b border-slate-300 flex items-center px-4 gap-4 shrink-0">
+          <div className="flex bg-white rounded-md shadow-sm border border-slate-200 p-1">
+            <button 
+              onClick={handlePenClick}
+              className={`p-2 rounded ${!eraseMode ? 'bg-blue-100 text-blue-600' : 'text-slate-600 hover:bg-slate-100'}`}
+              title="Pen"
+            >
+              <FaPen className="text-sm" />
+            </button>
+            <button 
+              onClick={handleEraserClick}
+              className={`p-2 rounded ${eraseMode ? 'bg-blue-100 text-blue-600' : 'text-slate-600 hover:bg-slate-100'}`}
+              title="Eraser"
+            >
+              <FaEraser className="text-sm" />
+            </button>
           </div>
-          
-          {/* Foolproof Watermark Cover that blocks clicks */}
-          <div 
-            className="absolute bottom-0 right-0 w-[200px] h-[60px] bg-[#f8f9fa] z-[9999] rounded-tl-lg cursor-default"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          ></div>
+
+          <div className="w-px h-6 bg-slate-300"></div>
+
+          <div className="flex gap-1">
+            {colors.map(color => (
+              <button
+                key={color}
+                onClick={() => { setStrokeColor(color); handlePenClick(); }}
+                className={`w-6 h-6 rounded-full border-2 ${strokeColor === color && !eraseMode ? 'border-blue-500 scale-110' : 'border-transparent hover:scale-110'} transition-transform`}
+                style={{ backgroundColor: color }}
+                title="Color"
+              />
+            ))}
+          </div>
+
+          <div className="w-px h-6 bg-slate-300"></div>
+
+          <div className="flex gap-2">
+            <button onClick={handleUndoClick} className="p-2 text-slate-600 hover:bg-slate-200 rounded" title="Undo">
+              <FaUndo className="text-sm" />
+            </button>
+            <button onClick={handleRedoClick} className="p-2 text-slate-600 hover:bg-slate-200 rounded" title="Redo">
+              <FaRedo className="text-sm" />
+            </button>
+          </div>
+
+          <div className="ml-auto">
+            <button onClick={handleClearClick} className="p-2 text-red-600 hover:bg-red-100 rounded flex items-center gap-2 text-sm font-medium">
+              <FaTrash className="text-sm" /> Clear All
+            </button>
+          </div>
+        </div>
+
+        {/* Canvas */}
+        <div className="flex-1 bg-white relative cursor-crosshair">
+          <ErrorBoundary fallback={<div className="p-10 text-red-500 font-bold bg-white h-full w-full">Whiteboard failed to load.</div>}>
+             <ReactSketchCanvas
+                ref={canvasRef}
+                strokeWidth={eraseMode ? 20 : strokeWidth}
+                strokeColor={strokeColor}
+                canvasColor="transparent"
+                width="100%"
+                height="100%"
+              />
+          </ErrorBoundary>
         </div>
       </div>
     </div>
