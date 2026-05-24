@@ -72,15 +72,16 @@ export default function WhiteboardModal({
         </div>
 
         {/* Tldraw Canvas */}
-        <div className="flex-1 relative whiteboard-container bg-[#f8f9fa]">
+        <div className="flex-1 relative whiteboard-container bg-[#f8f9fa] min-h-0">
           <style dangerouslySetInnerHTML={{__html: `
             /* Hide the tldraw license watermark via pointer events just in case */
             a[href*="tldraw.dev"] {
               pointer-events: none !important;
             }
           `}} />
-          <Tldraw persistenceKey="nlitedu-broadcast-whiteboard">
-          </Tldraw>
+          <div className="absolute inset-0">
+            <Tldraw persistenceKey="nlitedu-broadcast-whiteboard" />
+          </div>
           
           {/* Foolproof Watermark Cover that blocks clicks */}
           <div 

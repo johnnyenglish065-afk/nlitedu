@@ -601,6 +601,10 @@ function BroadcastStudioContent() {
           if (savedScreenShare === 'true') {
             setInitialScreenEnabled(true);
           }
+          const savedPreJoin = sessionStorage.getItem('nlitedu-prejoin-choices');
+          if (savedPreJoin) {
+            setPreJoinChoices(JSON.parse(savedPreJoin));
+          }
         } catch (e) {
           console.error("Error reading user choices", e);
         } finally {
@@ -642,7 +646,10 @@ function BroadcastStudioContent() {
                 videoEnabled: initialVideoEnabled,
                 audioEnabled: initialAudioEnabled,
               }}
-              onSubmit={(values) => setPreJoinChoices(values)}
+              onSubmit={(values) => {
+                sessionStorage.setItem('nlitedu-prejoin-choices', JSON.stringify(values));
+                setPreJoinChoices(values);
+              }}
             />
           </div>
         </div>
