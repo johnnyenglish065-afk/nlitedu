@@ -21,7 +21,8 @@ import {
 } from '@livekit/components-react';
 import { Track, VideoPresets } from 'livekit-client';
 import { FaUsers, FaMicrophoneSlash, FaBan, FaHandPaper, FaChalkboard } from "react-icons/fa";
-import WhiteboardModal from './Whiteboard';
+import dynamic from 'next/dynamic';
+const WhiteboardModal = dynamic(() => import('./Whiteboard'), { ssr: false });
 
 function ParticipantModeration({ isVisible }: { isVisible: boolean }) {
   const participants = useParticipants();
