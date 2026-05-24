@@ -335,12 +335,11 @@ function WhiteboardPublisher({
     setIsWhiteboardMinimized(false);
   };
 
-  if (!isWhiteboardOpen) return null;
-  
   return (
     <>
       <WhiteboardModal 
         onClose={handleClose} 
+        isOpen={isWhiteboardOpen}
         isMinimized={isWhiteboardMinimized}
         setIsMinimized={setIsWhiteboardMinimized}
         isSharing={isSharing}
@@ -695,6 +694,7 @@ function BroadcastStudioContent() {
           <button
             onClick={() => {
               setIsWhiteboardOpen(true);
+              setIsWhiteboardMinimized(false);
             }}
             className="px-4 py-2 flex items-center gap-2 text-xs font-bold rounded-lg transition-all border bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
             title="Open Interactive Whiteboard"

@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 
 interface WhiteboardProps {
   onClose: () => void;
+  isOpen: boolean;
   isMinimized: boolean;
   setIsMinimized: (val: boolean) => void;
   isSharing: boolean;
@@ -17,6 +18,7 @@ interface WhiteboardProps {
 
 export default function WhiteboardModal({ 
   onClose, 
+  isOpen,
   isMinimized, 
   setIsMinimized,
   isSharing,
@@ -51,7 +53,7 @@ export default function WhiteboardModal({
   }, []);
 
   return (
-    <div className={`fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center transition-all duration-300 ${isMinimized ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center transition-all duration-300 ${(!isOpen || isMinimized) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       <div className="w-full h-full max-w-[1400px] bg-white rounded-2xl shadow-2xl flex flex-col relative border border-slate-700">
         
         {/* Header Bar */}
