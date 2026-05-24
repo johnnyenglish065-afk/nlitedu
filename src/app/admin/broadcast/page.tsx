@@ -6,7 +6,6 @@ import { FaBroadcastTower, FaCommentDots, FaPaperPlane, FaComments, FaVideo } fr
 import { supabase } from "@/lib/supabaseClient";
 
 import '@livekit/components-styles';
-// tldraw CSS is loaded at RUNTIME inside Whiteboard.tsx to prevent Tailwind v4 from overriding it
 
 import {
   LiveKitRoom,
