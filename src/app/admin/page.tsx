@@ -287,12 +287,33 @@ export default function AdminDashboard() {
     if (!supabase) return;
     try {
       if (enrollments.length === 0) setLoading(true);
-      const { data, error } = await supabase
-        .from("enrollments")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setEnrollments(data || []);
+      
+      let allEnrollments: any[] = [];
+      let fetchMore = true;
+      let from = 0;
+      const step = 1000;
+
+      while (fetchMore) {
+        const { data, error } = await supabase
+          .from("enrollments")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .range(from, from + step - 1);
+          
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allEnrollments = [...allEnrollments, ...data];
+          from += step;
+          if (data.length < step) {
+            fetchMore = false; // Reached the end
+          }
+        } else {
+          fetchMore = false; // No more data
+        }
+      }
+
+      setEnrollments(allEnrollments);
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
