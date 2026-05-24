@@ -47,6 +47,7 @@ export default function WhiteboardModal({
     link.onerror = () => {
       // Fallback: try to dynamically import the local CSS
       console.warn('CDN tldraw CSS failed, attempting local import');
+      // @ts-ignore
       import('tldraw/tldraw.css').then(() => setCssReady(true)).catch(() => setCssReady(true));
     };
     document.head.appendChild(link);
