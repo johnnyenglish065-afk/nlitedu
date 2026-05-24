@@ -1,8 +1,10 @@
 "use client";
 import { Tldraw } from 'tldraw';
-import 'tldraw/tldraw.css';
+// CSS is loaded at RUNTIME below to prevent Next.js production bundler from
+// merging it with Tailwind, which causes Tailwind's reset to override tldraw toolbar styles.
 import { ErrorBoundary } from 'react-error-boundary';
 import { FaTimes, FaDesktop, FaCompress, FaPlay, FaStop } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
 
 interface WhiteboardProps {
   onClose: () => void;
@@ -21,6 +23,33 @@ export default function WhiteboardModal({
   toggleShare,
   channel = 'default'
 }: WhiteboardProps) {
+  const [cssReady, setCssReady] = useState(false);
+
+  useEffect(() => {
+    // Load tldraw CSS at RUNTIME so it always comes AFTER Tailwind's CSS.
+    // In production, Next.js bundles all build-time CSS into one file where
+    // Tailwind's reset can override tldraw. Runtime injection fixes this.
+    const linkId = 'tldraw-runtime-css';
+    const existing = document.getElementById(linkId) as HTMLLinkElement | null;
+    
+    if (existing) {
+      setCssReady(true);
+      return;
+    }
+
+    const link = document.createElement('link');
+    link.id = linkId;
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/tldraw@5.0.1/tldraw.css';
+    link.onload = () => setCssReady(true);
+    link.onerror = () => {
+      // Fallback: try to dynamically import the local CSS
+      console.warn('CDN tldraw CSS failed, attempting local import');
+      import('tldraw/tldraw.css').then(() => setCssReady(true)).catch(() => setCssReady(true));
+    };
+    document.head.appendChild(link);
+  }, []);
+
   return (
     <div className={`fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center transition-all duration-300 ${isMinimized ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       <div className="w-full h-full max-w-[1400px] bg-white rounded-2xl shadow-2xl flex flex-col relative border border-slate-700">
@@ -76,15 +105,15 @@ export default function WhiteboardModal({
 
         {/* Tldraw Canvas */}
         <div className="whiteboard-container" style={{ position: 'relative', width: '100%', height: '100%', flex: 1, backgroundColor: '#f8f9fa' }}>
-          <style dangerouslySetInnerHTML={{__html: `
-            /* Hide the tldraw license watermark via pointer events just in case */
-            a[href*="tldraw.dev"] {
-              pointer-events: none !important;
-            }
-          `}} />
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
             <ErrorBoundary fallback={<div className="p-10 text-red-500 font-bold bg-white h-full w-full">Tldraw failed to load. Please clear your cache and try again.</div>}>
-              <Tldraw persistenceKey={`nlitedu-whiteboard-${channel}`} />
+              {cssReady ? (
+                <Tldraw persistenceKey={`nlitedu-whiteboard-${channel}`} />
+              ) : (
+                <div className="flex items-center justify-center h-full w-full">
+                  <div className="text-slate-500 text-sm animate-pulse">Loading whiteboard...</div>
+                </div>
+              )}
             </ErrorBoundary>
           </div>
           
