@@ -1,7 +1,25 @@
 "use client";
-import { useEffect } from 'react';
 import { FaTimes, FaDesktop, FaCompress, FaPlay, FaStop } from 'react-icons/fa';
-import { Tldraw } from 'tldraw';
+import dynamic from 'next/dynamic';
+import { ErrorBoundary } from 'react-error-boundary';
+
+// 1. Ensure CSS is loaded correctly
+import 'tldraw/tldraw.css';
+
+// 2. Production-safe dynamic import to completely avoid SSR/Hydration mismatches
+const DynamicTldraw = dynamic(
+  () => import('tldraw').then((m) => m.Tldraw),
+  { 
+    ssr: false,
+    loading: () => (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', background: '#fdfdfd', color: '#64748b' }}>
+        <div style={{ width: 40, height: 40, border: '4px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: 16 }} />
+        <p style={{ fontSize: 14, fontWeight: 600 }}>Loading Advanced Whiteboard...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
+);
 
 // HEADER HEIGHT constant – keeps calc() in sync
 const HEADER_H = 56; // px
@@ -25,18 +43,6 @@ export default function WhiteboardModal({
   toggleShare,
   channel = 'default'
 }: WhiteboardProps) {
-
-  // Dynamically inject Tldraw CSS at runtime to prevent Tailwind v4 from overriding it in production
-  useEffect(() => {
-    if (isOpen && !document.getElementById('tldraw-runtime-css')) {
-      const link = document.createElement('link');
-      link.id = 'tldraw-runtime-css';
-      link.rel = 'stylesheet';
-      link.href = '/tldraw.css';
-      // Append to the VERY END of the head to ensure highest specificity
-      document.head.appendChild(link);
-    }
-  }, [isOpen]);
 
   if (!isOpen || isMinimized) return null;
 
@@ -149,7 +155,16 @@ export default function WhiteboardModal({
               bottom: 0,
             }}
           >
-            <Tldraw persistenceKey={`nlitedu-whiteboard-${channel}`} />
+            <ErrorBoundary
+              fallback={
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 40, textAlign: 'center', color: '#ef4444', background: '#fef2f2' }}>
+                  <p style={{ fontWeight: 'bold', fontSize: 16 }}>Failed to load whiteboard engine.</p>
+                  <p style={{ fontSize: 13, marginTop: 8 }}>Please refresh the page to try again.</p>
+                </div>
+              }
+            >
+              <DynamicTldraw persistenceKey={`nlitedu-whiteboard-${channel}`} />
+            </ErrorBoundary>
           </div>
         </div>
       </div>
