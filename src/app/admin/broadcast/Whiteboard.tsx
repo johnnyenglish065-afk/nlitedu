@@ -72,7 +72,7 @@ export default function WhiteboardModal({
         </div>
 
         {/* Tldraw Canvas */}
-        <div style={{ position: 'relative', width: '100%', height: '100%', flex: 1, backgroundColor: '#f8f9fa' }}>
+        <div className="whiteboard-container" style={{ position: 'relative', width: '100%', height: '100%', flex: 1, backgroundColor: '#f8f9fa' }}>
           <style dangerouslySetInnerHTML={{__html: `
             /* Hide the tldraw license watermark via pointer events just in case */
             a[href*="tldraw.dev"] {

@@ -6,6 +6,8 @@ import { FaBroadcastTower, FaCommentDots, FaPaperPlane, FaComments, FaVideo } fr
 import { supabase } from "@/lib/supabaseClient";
 
 import '@livekit/components-styles';
+import 'tldraw/tldraw.css'; // MUST BE IMPORTED AT TOP LEVEL FOR NEXT.JS BUILDER
+
 import {
   LiveKitRoom,
   VideoConference,
