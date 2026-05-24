@@ -1,6 +1,7 @@
 "use client";
 import { Tldraw } from 'tldraw';
 import 'tldraw/tldraw.css';
+import { ErrorBoundary } from 'react-error-boundary';
 import { FaTimes, FaDesktop, FaCompress, FaPlay, FaStop } from 'react-icons/fa';
 
 interface WhiteboardProps {
@@ -80,7 +81,9 @@ export default function WhiteboardModal({
             }
           `}} />
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-            <Tldraw persistenceKey="nlitedu-broadcast-whiteboard" />
+            <ErrorBoundary fallback={<div className="p-10 text-red-500 font-bold bg-white h-full w-full">Tldraw failed to load. Please clear your cache and try again.</div>}>
+              <Tldraw />
+            </ErrorBoundary>
           </div>
           
           {/* Foolproof Watermark Cover that blocks clicks */}
