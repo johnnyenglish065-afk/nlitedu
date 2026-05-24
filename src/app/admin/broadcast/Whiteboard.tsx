@@ -1,7 +1,7 @@
 "use client";
+import { useEffect } from 'react';
 import { FaTimes, FaDesktop, FaCompress, FaPlay, FaStop } from 'react-icons/fa';
 import { Tldraw } from 'tldraw';
-import 'tldraw/tldraw.css';
 
 // HEADER HEIGHT constant – keeps calc() in sync
 const HEADER_H = 56; // px
@@ -25,6 +25,18 @@ export default function WhiteboardModal({
   toggleShare,
   channel = 'default'
 }: WhiteboardProps) {
+
+  // Dynamically inject Tldraw CSS at runtime to prevent Tailwind v4 from overriding it in production
+  useEffect(() => {
+    if (isOpen && !document.getElementById('tldraw-runtime-css')) {
+      const link = document.createElement('link');
+      link.id = 'tldraw-runtime-css';
+      link.rel = 'stylesheet';
+      link.href = '/tldraw.css';
+      // Append to the VERY END of the head to ensure highest specificity
+      document.head.appendChild(link);
+    }
+  }, [isOpen]);
 
   if (!isOpen || isMinimized) return null;
 
