@@ -74,7 +74,8 @@ export default function WhiteboardModal({
             borderRadius: 16,
             boxShadow: '0 25px 80px rgba(0,0,0,0.6)',
             border: '1px solid #334155',
-            overflow: 'hidden',
+            // REMOVED overflow: 'hidden' because it clips the bottom-right Tldraw watermark, 
+            // which triggers Tldraw's production DRM and hides the entire UI!
           }}
         >
           {/* ── Header Bar ── */}
@@ -87,6 +88,8 @@ export default function WhiteboardModal({
               height: HEADER_H,
               background: '#0f172a',
               borderBottom: '1px solid #1e293b',
+              borderTopLeftRadius: 15,
+              borderTopRightRadius: 15,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
