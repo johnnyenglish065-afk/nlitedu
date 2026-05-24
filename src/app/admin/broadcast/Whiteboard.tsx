@@ -72,14 +72,14 @@ export default function WhiteboardModal({
         </div>
 
         {/* Tldraw Canvas */}
-        <div className="flex-1 relative whiteboard-container bg-[#f8f9fa] min-h-0">
+        <div style={{ position: 'relative', width: '100%', height: '100%', flex: 1, backgroundColor: '#f8f9fa' }}>
           <style dangerouslySetInnerHTML={{__html: `
             /* Hide the tldraw license watermark via pointer events just in case */
             a[href*="tldraw.dev"] {
               pointer-events: none !important;
             }
           `}} />
-          <div className="absolute inset-0">
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
             <Tldraw persistenceKey="nlitedu-broadcast-whiteboard" />
           </div>
           
