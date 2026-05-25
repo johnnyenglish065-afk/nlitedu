@@ -383,6 +383,17 @@ function BroadcastStudioContent() {
   const [isWhiteboardMinimized, setIsWhiteboardMinimized] = useState(false);
   const [preJoinChoices, setPreJoinChoices] = useState<LocalUserChoices | undefined>(undefined);
 
+  const isLiveRef = useRef(isLive);
+  const isEndingRef = useRef(isEnding);
+
+  useEffect(() => {
+    isLiveRef.current = isLive;
+  }, [isLive]);
+
+  useEffect(() => {
+    isEndingRef.current = isEnding;
+  }, [isEnding]);
+
   const handleGoLive = async () => {
     if (!supabase) {
       alert("Supabase is not initialized. Cannot go live.");
@@ -585,7 +596,11 @@ function BroadcastStudioContent() {
                 const newRecord = payload.new as any;
                 if (newRecord && newRecord.session_url && newRecord.session_url.includes(channel)) {
                   if (newRecord.is_live !== undefined) {
-                    setIsLive(newRecord.is_live);
+                    const nextIsLive = newRecord.is_live;
+                    if (isLiveRef.current && !nextIsLive && !isEndingRef.current) {
+                      alert("The live class has been ended by the administrator.");
+                    }
+                    setIsLive(nextIsLive);
                   }
                 }
               }
@@ -814,71 +829,103 @@ function BroadcastStudioContent() {
         `}} />
         <div className="flex-1 flex flex-col overflow-hidden relative bg-black" data-lk-theme="default">
           {token && serverUrl && choicesLoaded ? (
-            <LiveKitRoom
-              video={preJoinChoices.videoEnabled}
-              audio={preJoinChoices.audioEnabled}
-              screen={initialScreenEnabled}
-              token={token}
-              serverUrl={serverUrl}
-              connect={true}
-              className="flex-1 w-full h-full relative flex"
-              options={{
-                videoCaptureDefaults: {
-                  resolution: VideoPresets.h1080.resolution,
-                  deviceId: preJoinChoices.videoDeviceId,
-                },
-                audioCaptureDefaults: {
-                  deviceId: preJoinChoices.audioDeviceId,
-                  echoCancellation: true,
-                  noiseSuppression: true,
-                  autoGainControl: true,
-                },
-                publishDefaults: {
-                  videoSimulcastLayers: [
-                    VideoPresets.h1080,
-                    VideoPresets.h720,
-                    VideoPresets.h360,
-                  ],
-                  screenShareEncoding: VideoPresets.h1080.encoding,
-                }
-              }}
-            >
-              <div className="flex-1 flex flex-col relative h-full">
-                <TrackStateSaver />
-                <WhiteboardPublisher 
-                  isWhiteboardOpen={isWhiteboardOpen} 
-                  setIsWhiteboardOpen={setIsWhiteboardOpen} 
-                  isWhiteboardMinimized={isWhiteboardMinimized}
-                  setIsWhiteboardMinimized={setIsWhiteboardMinimized}
-                  channel={channel}
-                />
-                <VideoConference />
-                <RoomAudioRenderer />
-              </div>
-              
-              {/* Chat Sidebar */}
-              {isChatOpen && (
-                <div className="w-[350px] h-full border-l border-slate-800 bg-slate-900 flex flex-col relative shrink-0 z-20 shadow-2xl">
-                  <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
-                    <h2 className="text-white font-bold text-sm flex items-center gap-2">
-                      <FaComments className="text-primary" /> Live Class Chat
-                    </h2>
-                    <button onClick={() => setIsChatOpen(false)} className="text-slate-400 hover:text-white text-xs">Close</button>
+            isLive ? (
+              <LiveKitRoom
+                video={preJoinChoices.videoEnabled}
+                audio={preJoinChoices.audioEnabled}
+                screen={initialScreenEnabled}
+                token={token}
+                serverUrl={serverUrl}
+                connect={true}
+                className="flex-1 w-full h-full relative flex"
+                options={{
+                  videoCaptureDefaults: {
+                    resolution: VideoPresets.h1080.resolution,
+                    deviceId: preJoinChoices.videoDeviceId,
+                  },
+                  audioCaptureDefaults: {
+                    deviceId: preJoinChoices.audioDeviceId,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                  },
+                  publishDefaults: {
+                    videoSimulcastLayers: [
+                      VideoPresets.h1080,
+                      VideoPresets.h720,
+                      VideoPresets.h360,
+                    ],
+                    screenShareEncoding: VideoPresets.h1080.encoding,
+                  }
+                }}
+              >
+                <div className="flex-1 flex flex-col relative h-full">
+                  <TrackStateSaver />
+                  <WhiteboardPublisher 
+                    isWhiteboardOpen={isWhiteboardOpen} 
+                    setIsWhiteboardOpen={setIsWhiteboardOpen} 
+                    isWhiteboardMinimized={isWhiteboardMinimized}
+                    setIsWhiteboardMinimized={setIsWhiteboardMinimized}
+                    channel={channel}
+                  />
+                  <VideoConference />
+                  <RoomAudioRenderer />
+                </div>
+                
+                {/* Chat Sidebar */}
+                {isChatOpen && (
+                  <div className="w-[350px] h-full border-l border-slate-800 bg-slate-900 flex flex-col relative shrink-0 z-20 shadow-2xl">
+                    <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+                      <h2 className="text-white font-bold text-sm flex items-center gap-2">
+                        <FaComments className="text-primary" /> Live Class Chat
+                      </h2>
+                      <button onClick={() => setIsChatOpen(false)} className="text-slate-400 hover:text-white text-xs">Close</button>
+                    </div>
+                    <div className="flex-1 overflow-hidden relative">
+                      <style dangerouslySetInnerHTML={{__html: `
+                        .lk-chat { width: 100% !important; height: 100% !important; max-height: 100% !important; border: none !important; border-radius: 0 !important; }
+                        .lk-chat-messages { padding: 1rem !important; }
+                        .lk-chat-form { padding: 1rem !important; border-top: 1px solid rgba(255,255,255,0.05); }
+                      `}} />
+                      <Chat />
+                    </div>
                   </div>
-                  <div className="flex-1 overflow-hidden relative">
-                    <style dangerouslySetInnerHTML={{__html: `
-                      .lk-chat { width: 100% !important; height: 100% !important; max-height: 100% !important; border: none !important; border-radius: 0 !important; }
-                      .lk-chat-messages { padding: 1rem !important; }
-                      .lk-chat-form { padding: 1rem !important; border-top: 1px solid rgba(255,255,255,0.05); }
-                    `}} />
-                    <Chat />
+                )}
+
+                {/* Moderation Sidebar */}
+                <ParticipantModeration isVisible={isModerationOpen} />
+              </LiveKitRoom>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center bg-slate-950 text-white p-6 relative overflow-hidden">
+                {/* Background decorative patterns */}
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full filter blur-[120px] pointer-events-none" />
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-500/5 rounded-full filter blur-[120px] pointer-events-none" />
+
+                <div className="max-w-md w-full bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-8 text-center shadow-2xl relative z-10">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center mx-auto mb-6 shadow-inner animate-pulse">
+                    <FaBroadcastTower className="text-3xl text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-black mb-3 text-white tracking-tight">Studio Standby Room</h2>
+                  <p className="text-slate-400 text-sm mb-8 leading-relaxed font-medium">
+                    You have joined the broadcast studio successfully. Your camera and microphone are tested and ready. Click <span className="text-primary font-bold">START BROADCAST</span> to begin teaching.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <button
+                      onClick={handleGoLive}
+                      disabled={isStarting}
+                      className="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-black rounded-2xl transition-all shadow-lg shadow-red-600/30 hover:shadow-red-500/40 disabled:opacity-50 flex items-center justify-center gap-2 text-sm tracking-wider transform active:scale-[0.98]"
+                    >
+                      <FaVideo className="text-lg" />
+                      {isStarting ? "STARTING BROADCAST..." : "START BROADCAST NOW"}
+                    </button>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                      Students will only be able to view once live
+                    </p>
                   </div>
                 </div>
-              )}
-
-              {/* Moderation Sidebar */}
-              <ParticipantModeration isVisible={isModerationOpen} />
-            </LiveKitRoom>
+              </div>
+            )
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-white animate-pulse">Connecting to LiveKit Server...</div>
