@@ -124,75 +124,8 @@ export default function WhiteboardModal({
     link.click();
   }, [channel]);
 
-  // Initialize Fabric canvas
-  useEffect(() => {
-    if (!isOpen || isMinimized || !canvasRef.current) return;
-
-    let canvas: any;
-    let resizeObserver: ResizeObserver;
-
-    const initCanvas = async () => {
-      const fabric = await import('fabric');
-      const container = containerRef.current;
-      if (!container || !canvasRef.current) return;
-
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-
-      canvas = new fabric.Canvas(canvasRef.current, {
-        width: w,
-        height: h,
-        backgroundColor: '#ffffff',
-        isDrawingMode: true,
-        selection: false,
-      });
-
-      // Set up free drawing brush
-      canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-      canvas.freeDrawingBrush.color = activeColor;
-      canvas.freeDrawingBrush.width = lineWidth;
-
-      fabricRef.current = canvas;
-
-      // Load saved state
-      try {
-        const saved = localStorage.getItem(`wb-${channel}`);
-        if (saved) {
-          await canvas.loadFromJSON(JSON.parse(saved));
-          canvas.renderAll();
-        }
-      } catch {}
-
-      // Save initial state
-      saveHistory();
-
-      // Event: after each path is created
-      canvas.on('path:created', () => saveHistory());
-      canvas.on('object:modified', () => saveHistory());
-
-      // Handle resizing
-      resizeObserver = new ResizeObserver(() => {
-        if (container && canvas) {
-          canvas.setDimensions({ width: container.clientWidth, height: container.clientHeight });
-          canvas.renderAll();
-        }
-      });
-      resizeObserver.observe(container);
-    };
-
-    initCanvas();
-
-    return () => {
-      if (resizeObserver) resizeObserver.disconnect();
-      if (canvas) canvas.dispose();
-      fabricRef.current = null;
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isMinimized]);
-
-  // Apply tool changes to canvas
-  useEffect(() => {
-    const canvas = fabricRef.current;
+  // ─── Apply Tool / Brush Changes ───
+  const applyTools = useCallback((canvas: any) => {
     if (!canvas) return;
 
     // Clean up previous shape drawing events
@@ -209,28 +142,33 @@ export default function WhiteboardModal({
     } else if (activeTool === 'eraser') {
       canvas.isDrawingMode = true;
       canvas.selection = false;
-      canvas.freeDrawingBrush = new (require('fabric').PencilBrush)(canvas);
-      canvas.freeDrawingBrush.color = '#ffffff';
-      canvas.freeDrawingBrush.width = lineWidth * 4;
+      import('fabric').then((fabric) => {
+        canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+        canvas.freeDrawingBrush.color = '#ffffff';
+        canvas.freeDrawingBrush.width = lineWidth * 4;
+      });
     } else if (activeTool === 'pen') {
       canvas.isDrawingMode = true;
       canvas.selection = false;
-      canvas.freeDrawingBrush = new (require('fabric').PencilBrush)(canvas);
-      canvas.freeDrawingBrush.color = activeColor;
-      canvas.freeDrawingBrush.width = lineWidth;
+      import('fabric').then((fabric) => {
+        canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+        canvas.freeDrawingBrush.color = activeColor;
+        canvas.freeDrawingBrush.width = lineWidth;
+      });
     } else if (activeTool === 'highlighter') {
       canvas.isDrawingMode = true;
       canvas.selection = false;
-      canvas.freeDrawingBrush = new (require('fabric').PencilBrush)(canvas);
-      // Convert hex to rgba with 40% opacity
-      const hexToRgba = (hex: string) => {
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
-        return `rgba(${r},${g},${b},0.35)`;
-      };
-      canvas.freeDrawingBrush.color = hexToRgba(activeColor);
-      canvas.freeDrawingBrush.width = lineWidth * 5;
+      import('fabric').then((fabric) => {
+        canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+        const hexToRgba = (hex: string) => {
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          return `rgba(${r},${g},${b},0.35)`;
+        };
+        canvas.freeDrawingBrush.color = hexToRgba(activeColor);
+        canvas.freeDrawingBrush.width = lineWidth * 5;
+      });
     } else if (activeTool === 'text') {
       canvas.isDrawingMode = false;
       canvas.selection = false;
@@ -249,7 +187,6 @@ export default function WhiteboardModal({
         canvas.setActiveObject(text);
         text.enterEditing();
         saveHistory();
-        // Switch to select after placing text
         setActiveTool('select');
       });
     } else if (shapeTools.includes(activeTool)) {
@@ -270,7 +207,6 @@ export default function WhiteboardModal({
         const w = pointer.x - sx;
         const h = pointer.y - sy;
 
-        // Remove previous preview
         if (activeShapeRef.current) canvas.remove(activeShapeRef.current);
 
         let shape: any;
@@ -285,12 +221,10 @@ export default function WhiteboardModal({
         } else if (activeTool === 'line') {
           shape = new fabric.Line([sx, sy, pointer.x, pointer.y], { ...commonOpts });
         } else if (activeTool === 'arrow') {
-          // Arrow: line + triangle head
           shape = new fabric.Line([sx, sy, pointer.x, pointer.y], { ...commonOpts });
         } else if (activeTool === 'triangle') {
           shape = new fabric.Triangle({ left: Math.min(sx, pointer.x), top: Math.min(sy, pointer.y), width: Math.abs(w), height: Math.abs(h), ...commonOpts });
         } else if (activeTool === 'star') {
-          // Use polygon for star
           const cx = (sx + pointer.x) / 2;
           const cy = (sy + pointer.y) / 2;
           const R = Math.max(Math.abs(w), Math.abs(h)) / 2;
@@ -322,6 +256,75 @@ export default function WhiteboardModal({
     }
   }, [activeTool, activeColor, lineWidth, saveHistory]);
 
+  // Initialize Fabric canvas
+  useEffect(() => {
+    if (!isOpen || !canvasRef.current || engine !== 'classic') return;
+
+    let canvas: any;
+    let resizeObserver: ResizeObserver;
+
+    const initCanvas = async () => {
+      const fabric = await import('fabric');
+      const container = containerRef.current;
+      if (!container || !canvasRef.current) return;
+
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+
+      canvas = new fabric.Canvas(canvasRef.current, {
+        width: w,
+        height: h,
+        backgroundColor: '#ffffff',
+        isDrawingMode: true,
+        selection: false,
+      });
+
+      fabricRef.current = canvas;
+
+      // Apply initial tools/brushes
+      applyTools(canvas);
+
+      // Load saved state
+      try {
+        const saved = localStorage.getItem(`wb-${channel}`);
+        if (saved) {
+          await canvas.loadFromJSON(JSON.parse(saved));
+          canvas.renderAll();
+        }
+      } catch {}
+
+      // Save initial state
+      saveHistory();
+
+      // Event: after each path is created
+      canvas.on('path:created', () => saveHistory());
+      canvas.on('object:modified', () => saveHistory());
+
+      // Handle resizing
+      resizeObserver = new ResizeObserver(() => {
+        if (container && canvas && container.clientWidth > 0 && container.clientHeight > 0) {
+          canvas.setDimensions({ width: container.clientWidth, height: container.clientHeight });
+          canvas.renderAll();
+        }
+      });
+      resizeObserver.observe(container);
+    };
+
+    initCanvas();
+
+    return () => {
+      if (resizeObserver) resizeObserver.disconnect();
+      if (canvas) canvas.dispose();
+      fabricRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, engine]);
+
+  // Apply tool changes to canvas when active tool, color, or line width changes
+  useEffect(() => {
+    applyTools(fabricRef.current);
+  }, [applyTools]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -343,7 +346,7 @@ export default function WhiteboardModal({
     return () => window.removeEventListener('keydown', handler);
   }, [isOpen, undo, redo, saveHistory]);
 
-  if (!isOpen || isMinimized) return null;
+  if (!isOpen) return null;
 
   // ─── Tool Button ───
   const ToolBtn = ({ tool, icon, title }: { tool: Tool; icon: React.ReactNode; title: string }) => (
@@ -367,7 +370,7 @@ export default function WhiteboardModal({
   return (
     <>
       {/* Full-screen overlay */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(2,6,23,0.85)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(2,6,23,0.85)', backdropFilter: 'blur(6px)', display: isMinimized ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div
           className="whiteboard-container"
           style={{ position: 'relative', width: '100%', height: '100%', maxWidth: 1400, background: '#fdfdfd', borderRadius: 16, boxShadow: '0 25px 80px rgba(0,0,0,0.6)', border: '1px solid #334155', overflow: 'hidden' }}
