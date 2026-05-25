@@ -244,10 +244,25 @@ function ParticipantModeration({ isVisible }: { isVisible: boolean }) {
 function TrackStateSaver() {
   const { localParticipant } = useLocalParticipant();
   useEffect(() => {
-    if (localParticipant) {
-      sessionStorage.setItem('livekit-screenshare', localParticipant.isScreenShareEnabled ? 'true' : 'false');
-    }
-  }, [localParticipant?.isScreenShareEnabled]);
+    if (!localParticipant) return;
+
+    const checkScreenShare = () => {
+      const hasActualScreenShare = Array.from(localParticipant.trackPublications.values()).some(
+        pub => pub.source === Track.Source.ScreenShare && pub.trackName !== 'whiteboard'
+      );
+      sessionStorage.setItem('livekit-screenshare', hasActualScreenShare ? 'true' : 'false');
+    };
+
+    checkScreenShare();
+
+    localParticipant.on('localTrackPublished', checkScreenShare);
+    localParticipant.on('localTrackUnpublished', checkScreenShare);
+
+    return () => {
+      localParticipant.off('localTrackPublished', checkScreenShare);
+      localParticipant.off('localTrackUnpublished', checkScreenShare);
+    };
+  }, [localParticipant]);
   return null;
 }
 
@@ -315,22 +330,35 @@ function WhiteboardPublisher({
   const { localParticipant } = useLocalParticipant();
   const [isSharing, setIsSharing] = useState(false);
   
-  // Sync the isSharing state with actual screen share state
+  // Sync the isSharing state with actual whiteboard screen share state
   useEffect(() => {
-    if (localParticipant) {
-      setIsSharing(localParticipant.isScreenShareEnabled);
-    }
-  }, [localParticipant, localParticipant?.isScreenShareEnabled]);
+    if (!localParticipant) return;
+
+    const checkWhiteboardShare = () => {
+      const pub = localParticipant.getTrackPublicationByName('whiteboard');
+      setIsSharing(!!pub);
+    };
+
+    checkWhiteboardShare();
+
+    localParticipant.on('localTrackPublished', checkWhiteboardShare);
+    localParticipant.on('localTrackUnpublished', checkWhiteboardShare);
+
+    return () => {
+      localParticipant.off('localTrackPublished', checkWhiteboardShare);
+      localParticipant.off('localTrackUnpublished', checkWhiteboardShare);
+    };
+  }, [localParticipant]);
 
   // Automatically unpublish screen share/whiteboard if broadcast ends/turns off
   useEffect(() => {
     if (!isLive && isSharing && localParticipant) {
-      const screenTrack = localParticipant.getTrackPublication(Track.Source.ScreenShare);
-      if (screenTrack) {
-        localParticipant.unpublishTrack(screenTrack.track!).then(() => {
-          screenTrack.track?.stop();
+      const whiteboardTrack = localParticipant.getTrackPublicationByName('whiteboard');
+      if (whiteboardTrack) {
+        localParticipant.unpublishTrack(whiteboardTrack.track!).then(() => {
+          whiteboardTrack.track?.stop();
         }).catch((e) => {
-          console.error("Failed to stop screen share on going offline", e);
+          console.error("Failed to stop whiteboard share on going offline", e);
         });
       }
     }
@@ -344,7 +372,8 @@ function WhiteboardPublisher({
       return;
     }
     
-    if (!localParticipant.isScreenShareEnabled) {
+    const whiteboardTrack = localParticipant.getTrackPublicationByName('whiteboard');
+    if (!whiteboardTrack) {
       try {
         // Request the current tab with a preference to hide the popup's surface switching if possible
         const stream = await navigator.mediaDevices.getDisplayMedia({ 
@@ -384,14 +413,11 @@ function WhiteboardPublisher({
       }
     } else {
       try {
-        // Find the active screen share track and stop it
-        const screenTrack = localParticipant.getTrackPublication(Track.Source.ScreenShare);
-        if (screenTrack) {
-          await localParticipant.unpublishTrack(screenTrack.track!);
-          screenTrack.track?.stop();
-        }
+        // Find the active whiteboard screen share track and stop it
+        await localParticipant.unpublishTrack(whiteboardTrack.track!);
+        whiteboardTrack.track?.stop();
       } catch (e) {
-        console.error("Failed to stop screen share", e);
+        console.error("Failed to stop whiteboard share", e);
       }
     }
   };
