@@ -38,6 +38,8 @@ export default function WhiteboardModal({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [engine, setEngine] = useState<'classic' | 'exsyncboard'>('exsyncboard');
+  const whiteboardUrl = process.env.NEXT_PUBLIC_WHITEBOARD_URL || 'http://localhost:3001';
   const [activeTool, setActiveTool] = useState<Tool>('pen');
   const [activeColor, setActiveColor] = useState('#1e1e1e');
   const [lineWidth, setLineWidth] = useState(4);
@@ -369,6 +371,43 @@ export default function WhiteboardModal({
                 <p style={{ color: '#94a3b8', fontSize: 11, margin: 0 }}>Powered by NLITedu</p>
               </div>
             </div>
+
+            {/* Whiteboard Engine Switcher */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#1e293b', padding: 4, borderRadius: 8 }}>
+              <button
+                onClick={() => setEngine('classic')}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: engine === 'classic' ? '#3b82f6' : 'transparent',
+                  color: engine === 'classic' ? '#fff' : '#94a3b8',
+                  transition: 'all 0.15s',
+                }}
+              >
+                Classic
+              </button>
+              <button
+                onClick={() => setEngine('exsyncboard')}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: engine === 'exsyncboard' ? '#3b82f6' : 'transparent',
+                  color: engine === 'exsyncboard' ? '#fff' : '#94a3b8',
+                  transition: 'all 0.15s',
+                }}
+              >
+                EXsyncboard
+              </button>
+            </div>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <button onClick={toggleShare} style={{ padding: '6px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: isSharing ? '1px solid rgba(239,68,68,0.3)' : 'none', background: isSharing ? 'rgba(239,68,68,0.1)' : '#2563eb', color: isSharing ? '#ef4444' : '#fff', transition: 'all 0.2s' }}>
                 {isSharing ? <><FaStop style={{ fontSize: 10 }} /> Stop Sharing</> : <><FaPlay style={{ fontSize: 10 }} /> Share to Class</>}
@@ -384,101 +423,128 @@ export default function WhiteboardModal({
           </div>
 
           {/* ── Toolbar ── */}
-          <div style={{ position: 'absolute', top: HEADER_H, left: 0, right: 0, height: TOOLBAR_H, background: '#0f172a', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', padding: '0 12px', gap: 4, zIndex: 10, overflowX: 'auto' }}>
-            {/* Drawing tools */}
-            <ToolBtn tool="select" icon={<FaMousePointer />} title="Select (V)" />
-            <ToolBtn tool="pen" icon={<FaPen />} title="Pen" />
-            <ToolBtn tool="highlighter" icon={<FaHighlighter />} title="Highlighter" />
-            <ToolBtn tool="eraser" icon={<FaEraser />} title="Eraser" />
-            <Divider />
-            {/* Shape tools */}
-            <ToolBtn tool="line" icon={<FaMinus />} title="Line" />
-            <ToolBtn tool="arrow" icon={<FaLongArrowAltRight />} title="Arrow" />
-            <ToolBtn tool="rect" icon={<FaSquare />} title="Rectangle" />
-            <ToolBtn tool="circle" icon={<FaCircle />} title="Circle" />
-            <ToolBtn tool="triangle" icon={<span style={{ fontSize: 12 }}>▲</span>} title="Triangle" />
-            <ToolBtn tool="star" icon={<FaStar />} title="Star" />
-            <Divider />
-            {/* Text */}
-            <ToolBtn tool="text" icon={<FaFont />} title="Text" />
-            <Divider />
+          {engine === 'classic' && (
+            <div style={{ position: 'absolute', top: HEADER_H, left: 0, right: 0, height: TOOLBAR_H, background: '#0f172a', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', padding: '0 12px', gap: 4, zIndex: 10, overflowX: 'auto' }}>
+              {/* Drawing tools */}
+              <ToolBtn tool="select" icon={<FaMousePointer />} title="Select (V)" />
+              <ToolBtn tool="pen" icon={<FaPen />} title="Pen" />
+              <ToolBtn tool="highlighter" icon={<FaHighlighter />} title="Highlighter" />
+              <ToolBtn tool="eraser" icon={<FaEraser />} title="Eraser" />
+              <Divider />
+              {/* Shape tools */}
+              <ToolBtn tool="line" icon={<FaMinus />} title="Line" />
+              <ToolBtn tool="arrow" icon={<FaLongArrowAltRight />} title="Arrow" />
+              <ToolBtn tool="rect" icon={<FaSquare />} title="Rectangle" />
+              <ToolBtn tool="circle" icon={<FaCircle />} title="Circle" />
+              <ToolBtn tool="triangle" icon={<span style={{ fontSize: 12 }}>▲</span>} title="Triangle" />
+              <ToolBtn tool="star" icon={<FaStar />} title="Star" />
+              <Divider />
+              {/* Text */}
+              <ToolBtn tool="text" icon={<FaFont />} title="Text" />
+              <Divider />
 
-            {/* Color picker toggle */}
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => { setShowColorPicker(!showColorPicker); setShowWidthPicker(false); }}
-                title="Color"
-                style={{ width: 36, height: 36, borderRadius: 8, border: '2px solid #334155', background: '#1e293b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-              >
-                <div style={{ width: 20, height: 20, borderRadius: 4, background: activeColor, border: '1px solid rgba(255,255,255,0.2)' }} />
+              {/* Color picker toggle */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => { setShowColorPicker(!showColorPicker); setShowWidthPicker(false); }}
+                  title="Color"
+                  style={{ width: 36, height: 36, borderRadius: 8, border: '2px solid #334155', background: '#1e293b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                >
+                  <div style={{ width: 20, height: 20, borderRadius: 4, background: activeColor, border: '1px solid rgba(255,255,255,0.2)' }} />
+                </button>
+                {showColorPicker && (
+                  <div style={{ position: 'absolute', top: 44, left: 0, background: '#1e293b', borderRadius: 12, padding: 12, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', border: '1px solid #334155', zIndex: 50 }}>
+                    {COLORS.map((c) => (
+                      <button key={c} onClick={() => { setActiveColor(c); setShowColorPicker(false); }} style={{ width: 28, height: 28, borderRadius: 6, background: c, border: activeColor === c ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', transition: 'transform 0.1s' }} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Line width picker toggle */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => { setShowWidthPicker(!showWidthPicker); setShowColorPicker(false); }}
+                  title="Stroke Width"
+                  style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: '#1e293b', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}
+                >
+                  {lineWidth}px
+                </button>
+                {showWidthPicker && (
+                  <div style={{ position: 'absolute', top: 44, left: 0, background: '#1e293b', borderRadius: 12, padding: 10, display: 'flex', gap: 6, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', border: '1px solid #334155', zIndex: 50 }}>
+                    {LINE_WIDTHS.map((w) => (
+                      <button key={w} onClick={() => { setLineWidth(w); setShowWidthPicker(false); }} style={{ width: 32, height: 32, borderRadius: 6, background: lineWidth === w ? '#3b82f6' : '#0f172a', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>
+                        {w}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Divider />
+              {/* Actions */}
+              <button onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: '#1e293b', color: canUndo ? '#94a3b8' : '#334155', cursor: canUndo ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
+                <FaUndo />
               </button>
-              {showColorPicker && (
-                <div style={{ position: 'absolute', top: 44, left: 0, background: '#1e293b', borderRadius: 12, padding: 12, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', border: '1px solid #334155', zIndex: 50 }}>
-                  {COLORS.map((c) => (
-                    <button key={c} onClick={() => { setActiveColor(c); setShowColorPicker(false); }} style={{ width: 28, height: 28, borderRadius: 6, background: c, border: activeColor === c ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', transition: 'transform 0.1s' }} />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Line width picker toggle */}
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => { setShowWidthPicker(!showWidthPicker); setShowColorPicker(false); }}
-                title="Stroke Width"
-                style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: '#1e293b', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}
-              >
-                {lineWidth}px
+              <button onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)" style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: '#1e293b', color: canRedo ? '#94a3b8' : '#334155', cursor: canRedo ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
+                <FaRedo />
               </button>
-              {showWidthPicker && (
-                <div style={{ position: 'absolute', top: 44, left: 0, background: '#1e293b', borderRadius: 12, padding: 10, display: 'flex', gap: 6, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', border: '1px solid #334155', zIndex: 50 }}>
-                  {LINE_WIDTHS.map((w) => (
-                    <button key={w} onClick={() => { setLineWidth(w); setShowWidthPicker(false); }} style={{ width: 32, height: 32, borderRadius: 6, background: lineWidth === w ? '#3b82f6' : '#0f172a', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>
-                      {w}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <button onClick={() => setShowGrid(!showGrid)} title="Toggle Grid" style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: showGrid ? '#3b82f6' : '#1e293b', color: showGrid ? '#fff' : '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
+                <FaTh />
+              </button>
+              <button onClick={downloadCanvas} title="Download as PNG" style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: '#1e293b', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
+                <FaDownload />
+              </button>
+              <button onClick={clearCanvas} title="Clear Canvas" style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: '#1e293b', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
+                <FaTrashAlt />
+              </button>
             </div>
+          )}
 
-            <Divider />
-            {/* Actions */}
-            <button onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: '#1e293b', color: canUndo ? '#94a3b8' : '#334155', cursor: canUndo ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
-              <FaUndo />
-            </button>
-            <button onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)" style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: '#1e293b', color: canRedo ? '#94a3b8' : '#334155', cursor: canRedo ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
-              <FaRedo />
-            </button>
-            <button onClick={() => setShowGrid(!showGrid)} title="Toggle Grid" style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: showGrid ? '#3b82f6' : '#1e293b', color: showGrid ? '#fff' : '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
-              <FaTh />
-            </button>
-            <button onClick={downloadCanvas} title="Download as PNG" style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: '#1e293b', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
-              <FaDownload />
-            </button>
-            <button onClick={clearCanvas} title="Clear Canvas" style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: '#1e293b', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
-              <FaTrashAlt />
-            </button>
-          </div>
-
-          {/* ── Canvas Area ── */}
-          <div
-            ref={containerRef}
-            style={{
-              position: 'absolute',
-              top: HEADER_H + TOOLBAR_H,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: '#ffffff',
-              backgroundImage: showGrid
-                ? 'linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)'
-                : 'none',
-              backgroundSize: showGrid ? '24px 24px' : 'auto',
-              cursor: activeTool === 'select' ? 'default' : activeTool === 'eraser' ? 'cell' : 'crosshair',
-            }}
-          >
-            <canvas ref={canvasRef} />
-          </div>
+          {/* ── Canvas / Board Area ── */}
+          {engine === 'classic' ? (
+            <div
+              ref={containerRef}
+              style={{
+                position: 'absolute',
+                top: HEADER_H + TOOLBAR_H,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: '#ffffff',
+                backgroundImage: showGrid
+                  ? 'linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)'
+                  : 'none',
+                backgroundSize: showGrid ? '24px 24px' : 'auto',
+                cursor: activeTool === 'select' ? 'default' : activeTool === 'eraser' ? 'cell' : 'crosshair',
+              }}
+            >
+              <canvas ref={canvasRef} />
+            </div>
+          ) : (
+            <div
+              style={{
+                position: 'absolute',
+                top: HEADER_H,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: '#ffffff',
+              }}
+            >
+              <iframe
+                src={whiteboardUrl}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  background: '#ffffff',
+                }}
+                allow="clipboard-read; clipboard-write"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-downloads"
+              />
+            </div>
+          )}
         </div>
       </div>
     </>
