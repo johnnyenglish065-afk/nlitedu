@@ -254,6 +254,7 @@ function TrackStateSaver() {
 function EnforceBroadcastState({ isLive, preJoinChoices }: { isLive: boolean; preJoinChoices: LocalUserChoices | undefined }) {
   const { localParticipant } = useLocalParticipant();
   const alertShownRef = useRef(false);
+  const wasLiveRef = useRef(isLive);
 
   useEffect(() => {
     if (!localParticipant) return;
@@ -280,7 +281,8 @@ function EnforceBroadcastState({ isLive, preJoinChoices }: { isLive: boolean; pr
         }, 3000);
       }
     } else {
-      if (preJoinChoices) {
+      // Transition from offline to live: Enable tracks once using preJoinChoices
+      if (!wasLiveRef.current && preJoinChoices) {
         if (preJoinChoices.videoEnabled && !localParticipant.isCameraEnabled) {
           localParticipant.setCameraEnabled(true);
         }
@@ -289,6 +291,7 @@ function EnforceBroadcastState({ isLive, preJoinChoices }: { isLive: boolean; pr
         }
       }
     }
+    wasLiveRef.current = isLive;
   }, [isLive, localParticipant, localParticipant?.isCameraEnabled, localParticipant?.isMicrophoneEnabled, localParticipant?.isScreenShareEnabled, preJoinChoices]);
 
   return null;
