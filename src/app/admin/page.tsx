@@ -444,14 +444,14 @@ export default function AdminDashboard() {
     if (!supabase) return;
     const { error } = await supabase
       .from("live_sessions")
-      .update({ is_live: true, started_at: new Date().toISOString() })
+      .update({ is_live: true, status: 'live', started_at: new Date().toISOString() })
       .eq("id", id);
     if (!error) fetchLiveSessions();
   };
 
   const handleEndLive = async (id: string) => {
     if (!supabase) return;
-    await supabase.from("live_sessions").update({ is_live: false }).eq("id", id);
+    await supabase.from("live_sessions").update({ is_live: false, status: 'ended' }).eq("id", id);
     fetchLiveSessions();
   };
 
@@ -873,7 +873,14 @@ export default function AdminDashboard() {
                             >
                               <FaVideo size={10} /> STUDIO
                             </a>
-                            {s.is_live && (
+                            {!s.is_live ? (
+                              <button 
+                                onClick={() => handleActivateScheduled(s.id)} 
+                                className="px-4 py-2 bg-green-50 text-green-600 text-[10px] font-black rounded-xl hover:bg-green-600 hover:text-white transition-all"
+                              >
+                                START
+                              </button>
+                            ) : (
                               <button 
                                 onClick={() => handleEndLive(s.id)} 
                                 className="px-4 py-2 bg-red-50 text-red-600 text-[10px] font-black rounded-xl hover:bg-red-600 hover:text-white transition-all"
