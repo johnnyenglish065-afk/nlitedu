@@ -1,5 +1,6 @@
 import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -12,6 +13,41 @@ export async function GET(request: NextRequest) {
   }
   if (!username) {
     return NextResponse.json({ error: 'Missing "username" query parameter' }, { status: 400 });
+  }
+
+  // Restrict student access to live classes only
+  if (!isInstructor) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey =
+      process.env.SUPABASE_SECRET_KEY ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Supabase configuration missing in LiveKit token generator");
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+    }
+
+    try {
+      const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
+      const { data: session, error: sessionError } = await supabaseAdmin
+        .from('live_sessions')
+        .select('is_live')
+        .or(`session_url.eq.livekit://${room},session_url.eq.agora://${room}`)
+        .maybeSingle();
+
+      if (sessionError) {
+        console.error("Database error checking live session:", sessionError);
+        return NextResponse.json({ error: 'Failed to verify session status' }, { status: 500 });
+      }
+
+      if (!session || !session.is_live) {
+        return NextResponse.json({ error: 'This live session is not currently active.' }, { status: 403 });
+      }
+    } catch (dbErr) {
+      console.error("Exception checking live session:", dbErr);
+      return NextResponse.json({ error: 'Failed to verify session status' }, { status: 500 });
+    }
   }
 
   const apiKey = process.env.LIVEKIT_API_KEY;

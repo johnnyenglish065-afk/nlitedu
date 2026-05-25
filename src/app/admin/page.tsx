@@ -365,17 +365,22 @@ export default function AdminDashboard() {
       meetingUrl = "https://" + meetingUrl;
     }
 
+    const isNative = meetingUrl.startsWith("livekit://") || meetingUrl.startsWith("agora://");
     const payload: any = { 
       course_id: newSession.course, 
       course_title: newSession.course, 
       session_url: meetingUrl, 
-      is_live: editingSessionId ? liveSessions.find(s => s.id === editingSessionId)?.is_live : !isScheduled,
+      is_live: editingSessionId 
+        ? liveSessions.find(s => s.id === editingSessionId)?.is_live 
+        : (isNative ? false : !isScheduled),
       scheduled_at: isScheduled ? new Date(newSession.scheduled_at).toISOString() : null,
+      status: isNative ? 'setup' : (!isScheduled ? 'live' : 'upcoming')
     };
 
-    if (!editingSessionId && !isScheduled) {
+    if (!editingSessionId && !isScheduled && !isNative) {
       payload.started_at = new Date().toISOString();
     }
+
 
     if (editingSessionId) {
       const { error } = await supabase.from("live_sessions").update(payload).eq("id", editingSessionId);
@@ -858,17 +863,42 @@ export default function AdminDashboard() {
                         >
                           <FaEdit size={12} />
                         </button>
-                        {!s.is_live && (
-                          <button onClick={() => handleActivateScheduled(s.id)} className="px-4 py-2 bg-green-50 text-green-600 text-[10px] font-black rounded-xl hover:bg-green-600 hover:text-white transition-all">START</button>
-                        )}
-                        {s.is_live && (
+                        {s.session_url.startsWith('livekit://') || s.session_url.startsWith('agora://') ? (
                           <>
-                            {(s.session_url.startsWith('livekit://') || s.session_url.startsWith('agora://')) && (
-                              <a href={`/admin/broadcast?channel=${s.session_url.replace('livekit://', '').replace('agora://', '')}`} target="_blank" className="px-4 py-2 bg-primary/10 text-primary text-[10px] font-black rounded-xl hover:bg-primary hover:text-white transition-all flex items-center gap-1.5" title="Open Broadcast Studio">
-                                <FaVideo size={10} /> STUDIO
-                              </a>
+                            <a 
+                              href={`/admin/broadcast?channel=${s.session_url.replace('livekit://', '').replace('agora://', '')}`} 
+                              target="_blank" 
+                              className="px-4 py-2 bg-primary/10 text-primary text-[10px] font-black rounded-xl hover:bg-primary hover:text-white transition-all flex items-center gap-1.5" 
+                              title="Open Broadcast Studio"
+                            >
+                              <FaVideo size={10} /> STUDIO
+                            </a>
+                            {s.is_live && (
+                              <button 
+                                onClick={() => handleEndLive(s.id)} 
+                                className="px-4 py-2 bg-red-50 text-red-600 text-[10px] font-black rounded-xl hover:bg-red-600 hover:text-white transition-all"
+                              >
+                                END
+                              </button>
                             )}
-                            <button onClick={() => handleEndLive(s.id)} className="px-4 py-2 bg-red-50 text-red-600 text-[10px] font-black rounded-xl hover:bg-red-600 hover:text-white transition-all">END</button>
+                          </>
+                        ) : (
+                          <>
+                            {!s.is_live ? (
+                              <button 
+                                onClick={() => handleActivateScheduled(s.id)} 
+                                className="px-4 py-2 bg-green-50 text-green-600 text-[10px] font-black rounded-xl hover:bg-green-600 hover:text-white transition-all"
+                              >
+                                START
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => handleEndLive(s.id)} 
+                                className="px-4 py-2 bg-red-50 text-red-600 text-[10px] font-black rounded-xl hover:bg-red-600 hover:text-white transition-all"
+                              >
+                                END
+                              </button>
+                            )}
                           </>
                         )}
                         <button onClick={() => handleDeleteSession(s.id)} className="p-2 text-slate-300 hover:text-red-500"><FaTrash size={12} /></button>
