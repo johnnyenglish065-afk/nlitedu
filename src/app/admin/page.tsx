@@ -373,8 +373,7 @@ export default function AdminDashboard() {
       is_live: editingSessionId 
         ? liveSessions.find(s => s.id === editingSessionId)?.is_live 
         : (isNative ? false : !isScheduled),
-      scheduled_at: isScheduled ? new Date(newSession.scheduled_at).toISOString() : null,
-      status: isNative ? 'setup' : (!isScheduled ? 'live' : 'upcoming')
+      scheduled_at: isScheduled ? new Date(newSession.scheduled_at).toISOString() : null
     };
 
     if (!editingSessionId && !isScheduled && !isNative) {
@@ -444,14 +443,14 @@ export default function AdminDashboard() {
     if (!supabase) return;
     const { error } = await supabase
       .from("live_sessions")
-      .update({ is_live: true, status: 'live', started_at: new Date().toISOString() })
+      .update({ is_live: true, started_at: new Date().toISOString() })
       .eq("id", id);
     if (!error) fetchLiveSessions();
   };
 
   const handleEndLive = async (id: string) => {
     if (!supabase) return;
-    await supabase.from("live_sessions").update({ is_live: false, status: 'ended' }).eq("id", id);
+    await supabase.from("live_sessions").update({ is_live: false }).eq("id", id);
     fetchLiveSessions();
   };
 
