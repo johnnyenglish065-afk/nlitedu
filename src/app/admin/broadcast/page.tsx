@@ -408,15 +408,14 @@ function BroadcastStudioContent() {
         .maybeSingle(); // Use maybeSingle to prevent throw on 0 rows
         
       if (data?.id) {
-        await supabase.from('live_sessions').update({ is_live: true, status: 'live', started_at: new Date().toISOString() }).eq('id', data.id);
+        await supabase.from('live_sessions').update({ is_live: true, started_at: new Date().toISOString() }).eq('id', data.id);
       } else {
         // Create the session if it doesn't exist
         await supabase.from('live_sessions').insert({
           title: `Live Class: ${channel}`,
           session_url: `livekit://${channel}`,
           is_live: true,
-          started_at: new Date().toISOString(),
-          status: 'live'
+          started_at: new Date().toISOString()
         });
       }
       setIsLive(true);
@@ -442,7 +441,7 @@ function BroadcastStudioContent() {
         .maybeSingle();
         
       if (data?.id) {
-        await supabase.from('live_sessions').update({ is_live: false, status: 'ended' }).eq('id', data.id);
+        await supabase.from('live_sessions').update({ is_live: false }).eq('id', data.id);
       }
       setIsLive(false);
     } catch (e) {
