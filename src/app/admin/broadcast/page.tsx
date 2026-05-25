@@ -408,7 +408,7 @@ function BroadcastStudioContent() {
         .maybeSingle(); // Use maybeSingle to prevent throw on 0 rows
         
       if (data?.id) {
-        await supabase.from('live_sessions').update({ is_live: true, started_at: new Date().toISOString() }).eq('id', data.id);
+        await supabase.from('live_sessions').update({ is_live: true, status: 'live', started_at: new Date().toISOString() }).eq('id', data.id);
       } else {
         // Create the session if it doesn't exist
         await supabase.from('live_sessions').insert({
@@ -829,36 +829,51 @@ function BroadcastStudioContent() {
         `}} />
         <div className="flex-1 flex flex-col overflow-hidden relative bg-black" data-lk-theme="default">
           {token && serverUrl && choicesLoaded ? (
-            isLive ? (
-              <LiveKitRoom
-                video={preJoinChoices.videoEnabled}
-                audio={preJoinChoices.audioEnabled}
-                screen={initialScreenEnabled}
-                token={token}
-                serverUrl={serverUrl}
-                connect={true}
-                className="flex-1 w-full h-full relative flex"
-                options={{
-                  videoCaptureDefaults: {
-                    resolution: VideoPresets.h1080.resolution,
-                    deviceId: preJoinChoices.videoDeviceId,
-                  },
-                  audioCaptureDefaults: {
-                    deviceId: preJoinChoices.audioDeviceId,
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true,
-                  },
-                  publishDefaults: {
-                    videoSimulcastLayers: [
-                      VideoPresets.h1080,
-                      VideoPresets.h720,
-                      VideoPresets.h360,
-                    ],
-                    screenShareEncoding: VideoPresets.h1080.encoding,
-                  }
-                }}
-              >
+            <LiveKitRoom
+              video={preJoinChoices.videoEnabled}
+              audio={preJoinChoices.audioEnabled}
+              screen={initialScreenEnabled}
+              token={token}
+              serverUrl={serverUrl}
+              connect={true}
+              className="flex-1 w-full h-full relative flex flex-col"
+              options={{
+                videoCaptureDefaults: {
+                  resolution: VideoPresets.h1080.resolution,
+                  deviceId: preJoinChoices.videoDeviceId,
+                },
+                audioCaptureDefaults: {
+                  deviceId: preJoinChoices.audioDeviceId,
+                  echoCancellation: true,
+                  noiseSuppression: true,
+                  autoGainControl: true,
+                },
+                publishDefaults: {
+                  videoSimulcastLayers: [
+                    VideoPresets.h1080,
+                    VideoPresets.h720,
+                    VideoPresets.h360,
+                  ],
+                  screenShareEncoding: VideoPresets.h1080.encoding,
+                }
+              }}
+            >
+              {!isLive && (
+                <div className="bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-b border-amber-500/20 px-6 py-2.5 flex items-center justify-center z-30 backdrop-blur-md shadow-md shrink-0">
+                  <div className="flex items-center gap-3">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                    </span>
+                    <span className="text-amber-400 text-xs font-black uppercase tracking-widest">Pre-Broadcast Setup Mode</span>
+                    <span className="text-slate-400 text-[11px] font-medium">— Students cannot see your feed or join until you click</span>
+                    <span className="text-red-400 text-[11px] font-extrabold uppercase tracking-wider bg-red-500/10 px-2.5 py-0.5 rounded border border-red-500/20 shadow-inner">Start Broadcast</span>
+                    <span className="text-slate-400 text-[11px] font-medium">in the top right.</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex-1 flex relative overflow-hidden">
                 <div className="flex-1 flex flex-col relative h-full">
                   <TrackStateSaver />
                   <WhiteboardPublisher 
@@ -894,38 +909,8 @@ function BroadcastStudioContent() {
 
                 {/* Moderation Sidebar */}
                 <ParticipantModeration isVisible={isModerationOpen} />
-              </LiveKitRoom>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center bg-slate-950 text-white p-6 relative overflow-hidden">
-                {/* Background decorative patterns */}
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full filter blur-[120px] pointer-events-none" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-500/5 rounded-full filter blur-[120px] pointer-events-none" />
-
-                <div className="max-w-md w-full bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-8 text-center shadow-2xl relative z-10">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center mx-auto mb-6 shadow-inner animate-pulse">
-                    <FaBroadcastTower className="text-3xl text-primary" />
-                  </div>
-                  <h2 className="text-2xl font-black mb-3 text-white tracking-tight">Studio Standby Room</h2>
-                  <p className="text-slate-400 text-sm mb-8 leading-relaxed font-medium">
-                    You have joined the broadcast studio successfully. Your camera and microphone are tested and ready. Click <span className="text-primary font-bold">START BROADCAST</span> to begin teaching.
-                  </p>
-                  
-                  <div className="space-y-4">
-                    <button
-                      onClick={handleGoLive}
-                      disabled={isStarting}
-                      className="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-black rounded-2xl transition-all shadow-lg shadow-red-600/30 hover:shadow-red-500/40 disabled:opacity-50 flex items-center justify-center gap-2 text-sm tracking-wider transform active:scale-[0.98]"
-                    >
-                      <FaVideo className="text-lg" />
-                      {isStarting ? "STARTING BROADCAST..." : "START BROADCAST NOW"}
-                    </button>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                      Students will only be able to view once live
-                    </p>
-                  </div>
-                </div>
               </div>
-            )
+            </LiveKitRoom>
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-white animate-pulse">Connecting to LiveKit Server...</div>
