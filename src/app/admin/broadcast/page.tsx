@@ -251,18 +251,63 @@ function TrackStateSaver() {
   return null;
 }
 
+function EnforceBroadcastState({ isLive, preJoinChoices }: { isLive: boolean; preJoinChoices: LocalUserChoices | undefined }) {
+  const { localParticipant } = useLocalParticipant();
+  const alertShownRef = useRef(false);
+
+  useEffect(() => {
+    if (!localParticipant) return;
+
+    if (!isLive) {
+      let triggered = false;
+      if (localParticipant.isCameraEnabled) {
+        localParticipant.setCameraEnabled(false);
+        triggered = true;
+      }
+      if (localParticipant.isMicrophoneEnabled) {
+        localParticipant.setMicrophoneEnabled(false);
+        triggered = true;
+      }
+      if (localParticipant.isScreenShareEnabled) {
+        localParticipant.setScreenShareEnabled(false);
+        triggered = true;
+      }
+      if (triggered && !alertShownRef.current) {
+        alertShownRef.current = true;
+        alert("Camera, microphone, and screen sharing are disabled in Pre-Broadcast Setup Mode. Click 'START BROADCAST' to begin.");
+        setTimeout(() => {
+          alertShownRef.current = false;
+        }, 3000);
+      }
+    } else {
+      if (preJoinChoices) {
+        if (preJoinChoices.videoEnabled && !localParticipant.isCameraEnabled) {
+          localParticipant.setCameraEnabled(true);
+        }
+        if (preJoinChoices.audioEnabled && !localParticipant.isMicrophoneEnabled) {
+          localParticipant.setMicrophoneEnabled(true);
+        }
+      }
+    }
+  }, [isLive, localParticipant, localParticipant?.isCameraEnabled, localParticipant?.isMicrophoneEnabled, localParticipant?.isScreenShareEnabled, preJoinChoices]);
+
+  return null;
+}
+
 function WhiteboardPublisher({ 
   isWhiteboardOpen, 
   setIsWhiteboardOpen,
   isWhiteboardMinimized,
   setIsWhiteboardMinimized,
-  channel
+  channel,
+  isLive
 }: { 
   isWhiteboardOpen: boolean, 
   setIsWhiteboardOpen: (val: boolean) => void,
   isWhiteboardMinimized: boolean,
   setIsWhiteboardMinimized: (val: boolean) => void,
-  channel: string
+  channel: string,
+  isLive: boolean
 }) {
   const { localParticipant } = useLocalParticipant();
   const [isSharing, setIsSharing] = useState(false);
@@ -274,8 +319,27 @@ function WhiteboardPublisher({
     }
   }, [localParticipant, localParticipant?.isScreenShareEnabled]);
 
+  // Automatically unpublish screen share/whiteboard if broadcast ends/turns off
+  useEffect(() => {
+    if (!isLive && isSharing && localParticipant) {
+      const screenTrack = localParticipant.getTrackPublication(Track.Source.ScreenShare);
+      if (screenTrack) {
+        localParticipant.unpublishTrack(screenTrack.track!).then(() => {
+          screenTrack.track?.stop();
+        }).catch((e) => {
+          console.error("Failed to stop screen share on going offline", e);
+        });
+      }
+    }
+  }, [isLive, isSharing, localParticipant]);
+
   const toggleShare = async () => {
     if (!localParticipant) return;
+
+    if (!isLive) {
+      alert("Please click 'START BROADCAST' to go live before sharing the whiteboard.");
+      return;
+    }
     
     if (!localParticipant.isScreenShareEnabled) {
       try {
@@ -835,9 +899,9 @@ function BroadcastStudioContent() {
         <div className="flex-1 flex flex-col overflow-hidden relative bg-black" data-lk-theme="default">
           {token && serverUrl && choicesLoaded ? (
             <LiveKitRoom
-              video={preJoinChoices.videoEnabled}
-              audio={preJoinChoices.audioEnabled}
-              screen={initialScreenEnabled}
+              video={isLive ? preJoinChoices.videoEnabled : false}
+              audio={isLive ? preJoinChoices.audioEnabled : false}
+              screen={isLive ? initialScreenEnabled : false}
               token={token}
               serverUrl={serverUrl}
               connect={true}
@@ -881,12 +945,14 @@ function BroadcastStudioContent() {
               <div className="flex-1 flex relative overflow-hidden">
                 <div className="flex-1 flex flex-col relative h-full">
                   <TrackStateSaver />
+                  <EnforceBroadcastState isLive={isLive} preJoinChoices={preJoinChoices} />
                   <WhiteboardPublisher 
                     isWhiteboardOpen={isWhiteboardOpen} 
                     setIsWhiteboardOpen={setIsWhiteboardOpen} 
                     isWhiteboardMinimized={isWhiteboardMinimized}
                     setIsWhiteboardMinimized={setIsWhiteboardMinimized}
                     channel={channel}
+                    isLive={isLive}
                   />
                   <VideoConference />
                   <RoomAudioRenderer />
