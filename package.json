@@ -6,6 +6,7 @@
     "deploy": "next build && gh-pages -d out",
     "predeploy": "next build",
     "dev": "next dev",
+    "dev:whiteboard": "yarn --cwd E:\\CISCO\\excalidraw-master\\excalidraw-master start",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
