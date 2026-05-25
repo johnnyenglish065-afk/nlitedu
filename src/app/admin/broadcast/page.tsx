@@ -405,10 +405,12 @@ function BroadcastStudioContent() {
         .from('live_sessions')
         .select('id')
         .or(`session_url.eq.livekit://${channel},session_url.eq.agora://${channel}`)
-        .maybeSingle(); // Use maybeSingle to prevent throw on 0 rows
+        .order('id', { ascending: false })
+        .limit(1);
         
-      if (data?.id) {
-        await supabase.from('live_sessions').update({ is_live: true, started_at: new Date().toISOString() }).eq('id', data.id);
+      const session = data?.[0];
+      if (session?.id) {
+        await supabase.from('live_sessions').update({ is_live: true, started_at: new Date().toISOString() }).eq('id', session.id);
       } else {
         // Create the session if it doesn't exist
         await supabase.from('live_sessions').insert({
@@ -438,10 +440,12 @@ function BroadcastStudioContent() {
         .from('live_sessions')
         .select('id')
         .or(`session_url.eq.livekit://${channel},session_url.eq.agora://${channel}`)
-        .maybeSingle();
+        .order('id', { ascending: false })
+        .limit(1);
         
-      if (data?.id) {
-        await supabase.from('live_sessions').update({ is_live: false }).eq('id', data.id);
+      const session = data?.[0];
+      if (session?.id) {
+        await supabase.from('live_sessions').update({ is_live: false }).eq('id', session.id);
       }
       setIsLive(false);
     } catch (e) {
@@ -573,13 +577,15 @@ function BroadcastStudioContent() {
 
         // 2. Fetch current session status to survive page reloads
         if (supabase) {
-          const { data: sessionData, error } = await supabase
+          const { data: sessionsData } = await supabase
             .from('live_sessions')
             .select('is_live')
             .or(`session_url.eq.livekit://${channel},session_url.eq.agora://${channel}`)
-            .maybeSingle();
+            .order('id', { ascending: false })
+            .limit(1);
             
-          if (sessionData && sessionData.is_live) {
+          const latestSession = sessionsData?.[0];
+          if (latestSession && latestSession.is_live) {
             setIsLive(true);
           }
 

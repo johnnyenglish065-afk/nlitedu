@@ -30,18 +30,18 @@ export async function GET(request: NextRequest) {
 
     try {
       const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
-      const { data: session, error: sessionError } = await supabaseAdmin
+      const { data: sessions, error: sessionError } = await supabaseAdmin
         .from('live_sessions')
         .select('is_live')
-        .or(`session_url.eq.livekit://${room},session_url.eq.agora://${room}`)
-        .maybeSingle();
+        .or(`session_url.eq.livekit://${room},session_url.eq.agora://${room}`);
 
       if (sessionError) {
         console.error("Database error checking live session:", sessionError);
         return NextResponse.json({ error: 'Failed to verify session status' }, { status: 500 });
       }
 
-      if (!session || !session.is_live) {
+      const isLive = sessions && sessions.some((s: any) => s.is_live);
+      if (!isLive) {
         return NextResponse.json({ error: 'This live session is not currently active.' }, { status: 403 });
       }
     } catch (dbErr) {
