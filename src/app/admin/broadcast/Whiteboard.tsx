@@ -1,6 +1,18 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { FaTimes, FaCompress, FaPlay, FaStop, FaPen, FaHighlighter, FaEraser, FaSquare, FaCircle, FaFont, FaMinus, FaUndo, FaRedo, FaTrashAlt, FaMousePointer, FaTh, FaLongArrowAltRight, FaStar, FaDownload } from 'react-icons/fa';
+import dynamic from 'next/dynamic';
+import "@excalidraw/excalidraw/index.css";
+
+// Dynamically import Excalidraw to prevent SSR window reference issues
+const Excalidraw = dynamic(
+  async () => {
+    const { Excalidraw } = await import('@excalidraw/excalidraw');
+    return Excalidraw;
+  },
+  { ssr: false }
+);
+
 
 // ─── Types ───
 type Tool = 'select' | 'pen' | 'highlighter' | 'eraser' | 'line' | 'arrow' | 'rect' | 'circle' | 'triangle' | 'star' | 'text';
@@ -532,17 +544,7 @@ export default function WhiteboardModal({
                 background: '#ffffff',
               }}
             >
-              <iframe
-                src={whiteboardUrl}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  background: '#ffffff',
-                }}
-                allow="clipboard-read; clipboard-write"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-downloads"
-              />
+              <Excalidraw />
             </div>
           )}
         </div>
