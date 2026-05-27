@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import ShinyText from "./shinnytext";
 import EnrollDropdown from "./EnrollDropdown";
+import { FaLaptopCode, FaTools, FaIndustry, FaArrowLeft } from "react-icons/fa";
 
 const Hero = () => {
   const router = useRouter();
@@ -35,10 +36,20 @@ const Hero = () => {
   });
    
 
- // selection state for EnrollDropdown
-const [selection, setSelection] = useState<
-  { type: "govt" | "private"; state: string } | null
->(null);
+  // selection state for EnrollDropdown
+  const [selection, setSelection] = useState<
+    { type: "govt" | "private"; state: string } | null
+  >(null);
+
+  const [enrollStep, setEnrollStep] = useState<"choice" | "details">("choice");
+  const [selectedProgram, setSelectedProgram] = useState<"internship" | "workshop" | "site-visit" | null>(null);
+
+  const handleOpenEnrollModal = () => {
+    setEnrollStep("choice");
+    setSelectedProgram(null);
+    setSelection(null);
+    setShowEnrollModal(true);
+  };
 
 
   // useEffect(() => {
@@ -189,8 +200,8 @@ const [selection, setSelection] = useState<
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Enroll Now Button */}
                 <button
-                  onClick={() => setShowEnrollModal(true)}
-                  className="inline-block rounded bg-blue-600 px-8 py-3 text-base font-medium text-white transition hover:bg-blue-700 w-full sm:w-auto text-center"
+                  onClick={handleOpenEnrollModal}
+                  className="inline-block rounded bg-blue-600 px-8 py-3 text-base font-medium text-white transition hover:bg-blue-700 w-full sm:w-auto text-center shadow-lg shadow-blue-600/20"
                 >
                   Enroll Now ▾
                 </button>
@@ -204,58 +215,6 @@ const [selection, setSelection] = useState<
                 </Link>
               </div>
 
-              {/* Enroll Modal */}
-              {showEnrollModal && (
-                <div
-                  className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40"
-                  onClick={(e) => {
-                    if (e.target === e.currentTarget)
-                      setShowEnrollModal(false);
-                  }}
-                >
-                  <div className="animate-fade-in relative mx-4 max-h-[90vh] w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-700">
-                    <div className="max-h-[50vh] space-y-6 overflow-y-auto p-6">
-                      {/* Pass selection handler down */}
-                      <EnrollDropdown onSelectionChange={setSelection} />
-                    </div>
-
-                    {/* Buttons section */}
-                    <div className="flex justify-end space-x-3 border-t border-gray-100 px-6 py-4 dark:border-gray-800">
-                      {/* Close button */}
-                      <button
-                        onClick={() => setShowEnrollModal(false)}
-                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                      >
-                        Close
-                      </button>
-
-                      {/* Next button */}
-                      <button
-                        onClick={() => {
-                          if (!selection) {
-                            alert(
-                              "Please select a state and college type first!",
-                            );
-                            return;
-                          }
-                          router.push(
-                            `/enroll?course=general&type=${selection.type}&state=${encodeURIComponent(
-                              selection.state,
-                            )}`,
-                          );
-                        }}
-                        className={`rounded-md px-4 py-2 text-sm font-medium text-white transition ${
-                          selection
-                            ? "bg-blue-600 hover:bg-blue-700"
-                            : "cursor-not-allowed bg-gray-400 hover:bg-gray-500"
-                        }`}
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Right Column - Hero Image */}
@@ -691,6 +650,186 @@ const [selection, setSelection] = useState<
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Enroll Modal — rendered outside the z-10 section so it appears above the header */}
+      {showEnrollModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity"
+          onClick={(e) => {
+            if (e.target === e.currentTarget)
+              setShowEnrollModal(false);
+          }}
+        >
+          <div
+            className={`animate-fade-in relative mx-4 max-h-[90vh] w-full overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800 transition-all duration-300 ${
+              enrollStep === "choice" ? "max-w-3xl" : "max-w-2xl"
+            }`}
+          >
+            <div className="max-h-[70vh] space-y-6 overflow-y-auto p-6 md:p-8">
+              {enrollStep === "choice" ? (
+                <>
+                  <div className="text-center mb-8">
+                    <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full">
+                      Next-Gen Learning
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mt-2">
+                      Choose Your Program Path
+                    </h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">
+                      Select an option below to fill out the enrollment application.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Internship Card */}
+                    <button
+                      onClick={() => {
+                        setSelectedProgram("internship");
+                        setEnrollStep("details");
+                      }}
+                      className="flex flex-col items-center p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 hover:bg-blue-50/40 dark:bg-slate-900/50 dark:hover:bg-blue-950/20 hover:border-blue-500 dark:hover:border-blue-500 text-center transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl"
+                    >
+                      <div className="p-4 rounded-2xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 mb-4 transition-transform group-hover:scale-110 shadow-md shadow-blue-500/10">
+                        <FaLaptopCode className="w-7 h-7" />
+                      </div>
+                      <span className="font-bold text-lg text-slate-800 dark:text-white mb-2">
+                        Internship
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        Work on industry-led live projects and earn credentials.
+                      </span>
+                      <span className="mt-4 text-xs font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-full">
+                        4-12 Weeks
+                      </span>
+                    </button>
+
+                    {/* Workshop Card */}
+                    <button
+                      onClick={() => {
+                        setSelectedProgram("workshop");
+                        setEnrollStep("details");
+                      }}
+                      className="flex flex-col items-center p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 hover:bg-violet-50/40 dark:bg-slate-900/50 dark:hover:bg-violet-950/20 hover:border-violet-500 dark:hover:border-violet-500 text-center transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl"
+                    >
+                      <div className="p-4 rounded-2xl bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400 mb-4 transition-transform group-hover:scale-110 shadow-md shadow-violet-500/10">
+                        <FaTools className="w-7 h-7" />
+                      </div>
+                      <span className="font-bold text-lg text-slate-800 dark:text-white mb-2">
+                        Workshop
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        Outcome-based intensive bootcamps led by tech experts.
+                      </span>
+                      <span className="mt-4 text-xs font-semibold bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400 px-3 py-1.5 rounded-full">
+                        7-28 Days
+                      </span>
+                    </button>
+
+                    {/* Site Visit Card */}
+                    <button
+                      onClick={() => {
+                        setSelectedProgram("site-visit");
+                        setEnrollStep("details");
+                      }}
+                      className="flex flex-col items-center p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 hover:bg-emerald-50/40 dark:bg-slate-900/50 dark:hover:bg-emerald-950/20 hover:border-emerald-500 dark:hover:border-emerald-500 text-center transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl"
+                    >
+                      <div className="p-4 rounded-2xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 mb-4 transition-transform group-hover:scale-110 shadow-md shadow-emerald-500/10">
+                        <FaIndustry className="w-7 h-7" />
+                      </div>
+                      <span className="font-bold text-lg text-slate-800 dark:text-white mb-2">
+                        Site Visit
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        Real-world industrial exposure at engineering plants.
+                      </span>
+                      <span className="mt-4 text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-full">
+                        7-21 Days
+                      </span>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <button
+                      onClick={() => {
+                        setEnrollStep("choice");
+                        setSelection(null);
+                      }}
+                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition"
+                    >
+                      <FaArrowLeft className="w-4 h-4" />
+                    </button>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                        {selectedProgram === "internship" && "Internship Enrollment"}
+                        {selectedProgram === "workshop" && "Technical Workshop Enrollment"}
+                        {selectedProgram === "site-visit" && "Industrial Site Visit Enrollment"}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Step 2 of 2: Confirm State and College Category
+                      </p>
+                    </div>
+                  </div>
+                  <EnrollDropdown onSelectionChange={setSelection} />
+                </>
+              )}
+            </div>
+
+            {/* Buttons section */}
+            <div className="flex justify-end space-x-3 border-t border-slate-100 px-6 py-4 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+              {enrollStep === "choice" ? (
+                <button
+                  onClick={() => setShowEnrollModal(false)}
+                  className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                  Cancel
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      setEnrollStep("choice");
+                      setSelection(null);
+                    }}
+                    className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                  >
+                    Back
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (!selection) {
+                        alert("Please select a state and college type first!");
+                        return;
+                      }
+                      let path = "/enroll";
+                      if (selectedProgram === "workshop") {
+                        path = "/workshop/enroll";
+                      } else if (selectedProgram === "site-visit") {
+                        path = "/site-visit/enroll";
+                      }
+                      router.push(
+                        `${path}?course=general&type=${selection.type}&state=${encodeURIComponent(
+                          selection.state
+                        )}`
+                      );
+                      setShowEnrollModal(false);
+                    }}
+                    className={`rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition ${
+                      selection
+                        ? "bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/10"
+                        : "cursor-not-allowed bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-500"
+                    }`}
+                  >
+                    Next
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

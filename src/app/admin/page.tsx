@@ -7,7 +7,7 @@ import {
   FaClock, FaEye, FaUniversity, FaFilter, FaFileCsv,
   FaVideo, FaStop, FaPlay, FaUsers, FaLink, FaBroadcastTower,
   FaClipboardList, FaPlus, FaTrash, FaEnvelope, FaEdit,
-  FaPlayCircle, FaExternalLinkAlt
+  FaPlayCircle, FaExternalLinkAlt, FaLock
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import EnrollmentDetail from "../../components/Admin/EnrollmentDetail";
@@ -65,6 +65,9 @@ interface Enrollment {
   marksheetSemUrl?: string;
   message?: string;
   interested_internships?: string;
+  enrollment_type?: string;
+  internship_mode?: string;
+  duration?: string;
 }
 
 interface Quiz {
@@ -93,7 +96,9 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [typeFilter, setTypeFilter] = useState("ALL");
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
+  const [isRevenueVisible, setIsRevenueVisible] = useState(false);
   
   // Courses
   const [courses, setCourses] = useState<any[]>([]);
@@ -642,7 +647,11 @@ export default function AdminDashboard() {
   const filteredEnrollments = enrollments.filter(e => {
     const matchesSearch = e.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || e.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "ALL" || e.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    
+    let eType = (e.enrollment_type || "internship").toLowerCase();
+    const matchesType = typeFilter === "ALL" || eType === typeFilter.toLowerCase();
+    
+    return matchesSearch && matchesStatus && matchesType;
   });
 
   const stats = {
@@ -650,6 +659,20 @@ export default function AdminDashboard() {
     paid: enrollments.filter(e => e.status === "PAID").length,
     pending: enrollments.filter(e => e.status === "PENDING").length,
     revenue: enrollments.filter(e => e.status === "PAID").length * 499
+  };
+
+  const handleRevenueClick = () => {
+    if (isRevenueVisible) {
+      setIsRevenueVisible(false);
+      return;
+    }
+    const pin = window.prompt("Enter Admin PIN to view revenue:");
+    const correctPin = process.env.NEXT_PUBLIC_ADMIN_REVENUE_PIN || "703370";
+    if (pin === correctPin) {
+      setIsRevenueVisible(true);
+    } else if (pin !== null) {
+      alert("Incorrect PIN");
+    }
   };
 
   return (
@@ -685,9 +708,9 @@ export default function AdminDashboard() {
           { label: "Students", value: stats.total, icon: FaUserGraduate, color: "blue" },
           { label: "Paid", value: stats.paid, icon: FaCreditCard, color: "green" },
           { label: "Pending", value: stats.pending, icon: FaClock, color: "amber" },
-          { label: "Revenue", value: `₹${stats.revenue}`, icon: FaDownload, color: "purple" }
+          { label: "Revenue", value: isRevenueVisible ? `₹${stats.revenue}` : "*****", icon: isRevenueVisible ? FaDownload : FaLock, color: "purple", onClick: handleRevenueClick }
         ].map((s, i) => (
-          <div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div key={i} onClick={s.onClick} className={`bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm ${s.onClick ? 'cursor-pointer hover:shadow-md transition-all' : ''}`}>
             <div className={`w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4`}>
               <s.icon className="text-primary text-lg" />
             </div>
@@ -712,6 +735,12 @@ export default function AdminDashboard() {
                     <option value="ALL">All Status</option>
                     <option value="PAID">Paid</option>
                     <option value="PENDING">Pending</option>
+                  </select>
+                  <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 outline-none">
+                    <option value="ALL">All Programs</option>
+                    <option value="internship">Internships</option>
+                    <option value="workshop">Workshops</option>
+                    <option value="site-visit">Site Visits</option>
                   </select>
                 </div>
                 <button onClick={downloadCSV} className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl shadow-lg">
@@ -739,9 +768,20 @@ export default function AdminDashboard() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{e.course_title}</span>
-                            <span className="text-xs text-slate-500 truncate max-w-[200px]">{e.college_name || "N/A"}</span>
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 leading-tight">{e.course_title}</span>
+                            <div className="flex items-center gap-2">
+                              {(!e.enrollment_type || e.enrollment_type === 'internship') && (
+                                <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 text-[9px] font-black uppercase tracking-widest inline-block w-max">Internship</span>
+                              )}
+                              {e.enrollment_type === 'workshop' && (
+                                <span className="px-2 py-0.5 rounded-md bg-fuchsia-100 text-fuchsia-700 text-[9px] font-black uppercase tracking-widest inline-block w-max">Workshop</span>
+                              )}
+                              {e.enrollment_type === 'site-visit' && (
+                                <span className="px-2 py-0.5 rounded-md bg-sky-100 text-sky-700 text-[9px] font-black uppercase tracking-widest inline-block w-max">Site Visit</span>
+                              )}
+                              <span className="text-[10px] text-slate-500 truncate max-w-[150px]">{e.college_name || "N/A"}</span>
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">

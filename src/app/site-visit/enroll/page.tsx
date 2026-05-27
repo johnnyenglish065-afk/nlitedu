@@ -12,7 +12,6 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { Suspense } from "react";
 
-import { fetchCourses } from "@/data/courses";
 const semesters = [
   "1st",
   "2nd",
@@ -37,39 +36,49 @@ const indianStates = [
   "Lakshadweep", "Delhi", "Puducherry", "Ladakh", "Jammu and Kashmir"
 ].sort();
 
-const EnrollmentPageContent = () => {
+const siteVisitsList = [
+  {
+    slug: "electrical-engg",
+    title: "Electrical Engineering Site Visit",
+    description: "Get hands-on exposure to smart power grids, electrical substations, industrial control systems, and automated motor control units.",
+    highlights: ["Substation Automation", "Transformer Assembly & Testing", "Smart Grid Infrastructure", "Industrial PLC Panels"]
+  },
+  {
+    slug: "automobile-engg",
+    title: "Automobile Engineering Site Visit",
+    description: "Visit state-of-the-art vehicle assembly lines, engine diagnostic centers, and explore electric vehicle (EV) chassis design and testing labs.",
+    highlights: ["Automated Assembly Lines", "IC Engine Assembly & Dyno", "EV Battery & Drivetrain Lab", "Chassis Fabrication Units"]
+  },
+  {
+    slug: "leather-engg",
+    title: "Leather Engineering Site Visit",
+    description: "Understand the end-to-end processing of leather, eco-friendly tannery automation, advanced testing labs, and industrial footwear manufacturing.",
+    highlights: ["Tanning Operations", "Effluent Treatment Plants (ETP)", "Quality Testing & Standards", "CNC Pattern Cutting & Stitching"]
+  },
+  {
+    slug: "chemical-engg",
+    title: "Chemical Engineering Site Visit",
+    description: "Tour large-scale process plants, petrochemical refineries, chemical reactors, and discover industrial distillation and purification setups.",
+    highlights: ["Distillation Columns", "Continuous Stirred-Tank Reactors", "Refinery Process Controls", "Safety & HAZOP Implementations"]
+  }
+];
+
+const SiteVisitEnrollmentPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const courseSlug = searchParams.get("course") || "general";
-  const programParam = searchParams.get("program");
-  const [courses, setCourses] = useState<any[]>([]);
-  const [loadingCourses, setLoadingCourses] = useState(true);
+  const siteVisitSlug = searchParams.get("course") || "general";
 
-  useEffect(() => {
-    fetchCourses().then((data) => {
-      setCourses(data);
-      setLoadingCourses(false);
-    });
-  }, []);
-
-  const course = useMemo(() => {
-    if (loadingCourses) return { title: "Loading...", description: "Loading course details...", highlights: [] };
-    const found = courses.find((item) => item.slug === courseSlug);
-    const defaultCourse = {
+  const siteVisit = useMemo(() => {
+    const found = siteVisitsList.find((item) => item.slug === siteVisitSlug);
+    const defaultSiteVisit = {
       slug: "general",
-      title: "NLIT Course Enrollment",
-      description: "Select your course and fill out the enrollment form so we can reserve your seat and begin your learning journey.",
-      highlights: ["Choose from courses across design, development, AI, and engineering", "Secure admission with a simple online form", "Receive course guidance from the NLIT team"],
+      title: "NLIT Site Visit Registration",
+      description: "Select your engineering discipline site visit and fill out the registration form to book your slot.",
+      highlights: ["Visit operational engineering plants", "Learn from industrial plant heads", "Get professional observation certificate"],
     };
-
-    if (!found) return defaultCourse;
-
-    return {
-      ...found,
-      highlights: Array.isArray(found.highlights) ? found.highlights : [],
-    };
-  }, [courseSlug, courses, loadingCourses]);
+    return found || defaultSiteVisit;
+  }, [siteVisitSlug]);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -84,7 +93,7 @@ const EnrollmentPageContent = () => {
     collegeName: "",
     collegeType: searchParams.get("type") || "",
     state: searchParams.get("state") || "",
-    course: course?.title || "",
+    course: siteVisit.title,
     message: "",
     marks10: "",
     marks12: "",
@@ -92,12 +101,11 @@ const EnrollmentPageContent = () => {
     qualification: "",
     marksheet12Url: "",
     marksheetSemUrl: "",
-    duration: "",
-    internshipMode: "Online",
+    duration: "7 Days",
+    internshipMode: "Offline",
   });
   const [marksheet12File, setMarksheet12File] = useState<File | null>(null);
   const [marksheetSemFile, setMarksheetSemFile] = useState<File | null>(null);
-  const [collegeIdFile, setCollegeIdFile] = useState<File | null>(null);
 
   const handle12FileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -119,22 +127,6 @@ const EnrollmentPageContent = () => {
     }
   };
 
-  const handleCollegeIdFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.size > 200 * 1024) {
-        alert("College ID file size must be under 200 KB.");
-        return;
-      }
-      const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
-      if (!allowedTypes.includes(file.type)) {
-        alert("Only JPG, JPEG, or PNG files are allowed for College ID.");
-        return;
-      }
-      setCollegeIdFile(file);
-    }
-  };
-
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -146,13 +138,13 @@ const EnrollmentPageContent = () => {
   // Persistence helpers
   const saveFormToLocal = (formData: any) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("pending_enrollment", JSON.stringify(formData));
+      localStorage.setItem("pending_site_visit_enrollment", JSON.stringify(formData));
     }
   };
 
   const loadFormFromLocal = () => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("pending_enrollment");
+      const saved = localStorage.getItem("pending_site_visit_enrollment");
       return saved ? JSON.parse(saved) : null;
     }
     return null;
@@ -160,7 +152,7 @@ const EnrollmentPageContent = () => {
 
   const clearFormFromLocal = () => {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("pending_enrollment");
+      localStorage.removeItem("pending_site_visit_enrollment");
     }
   };
 
@@ -175,9 +167,7 @@ const EnrollmentPageContent = () => {
 
   // Post-payment verification effect
   useEffect(() => {
-    // Check if we returned from Cashfree checkout with an order_id
     const orderId = searchParams.get("order_id");
-
     if (orderId) {
       setPendingOrderId(orderId);
       verifyPaymentStatus(orderId);
@@ -185,7 +175,7 @@ const EnrollmentPageContent = () => {
   }, [searchParams]);
 
   const handlePaymentSuccess = () => {
-    setSuccess("Enrollment Successful!");
+    setSuccess("Site Visit Enrollment Successful!");
     setPaymentVerified(true);
     setPendingOrderId(null);
     setError(null);
@@ -208,7 +198,6 @@ const EnrollmentPageContent = () => {
         throw new Error("Supabase client is not initialized");
       }
 
-      // Directly invoke the verify-cashfree-payment Edge Function
       const { data, error: invokeError } = await supabase.functions.invoke("verify-cashfree-payment", {
         body: { orderId },
       });
@@ -217,7 +206,6 @@ const EnrollmentPageContent = () => {
         throw new Error(invokeError.message || "Failed to call verification service");
       }
 
-      // Safe parse in case return type is string (due to missing application/json header on Edge Function response)
       let parsedData = data;
       if (typeof data === "string") {
         try {
@@ -244,85 +232,44 @@ const EnrollmentPageContent = () => {
     }
   };
 
-  // Determine if it is an internship course
-  const isInternship = useMemo(() => {
-    return programParam === "internship" || courseSlug === "general" || !course?.govt_price;
-  }, [programParam, courseSlug, course]);
-
-  // Determine fee based on college type and course
+  // Site Visit pricing: flat table based on duration × college type
+  // 7 Days  → Govt ₹999,  Private ₹1499
+  // 14 Days → Govt ₹1999, Private ₹2499
+  // 21 Days → Govt ₹3499, Private ₹3999
   const enrollmentFee = useMemo(() => {
-    if (loadingCourses) return 0;
+    const duration = form.duration || "";
 
-    // Apply legacy pricing rules (Bihar/Other State) for internship/general courses
-    if (isInternship) {
-      if (form.state === "Bihar") {
-        const duration = form.duration || "";
-        const mode = form.internshipMode || "Online";
-
-        if (form.collegeType === "govt") {
-          if (mode === "Online") {
-            if (duration.includes("2")) return 799;
-            if (duration.includes("4")) return 999;
-            if (duration.includes("6")) return 1199;
-            if (duration.includes("8")) return 1399;
-            return 999; // default fallback before selection
-          } else { // Online + Offline or Both
-            if (duration.includes("2")) return 1299;
-            if (duration.includes("4")) return 1499;
-            if (duration.includes("6")) return 1999;
-            if (duration.includes("8")) return 2499;
-            return 1499; // default fallback before selection
-          }
-        }
-        if (form.collegeType === "private") {
-          if (mode === "Online") {
-            if (duration.includes("2")) return 999;
-            if (duration.includes("4")) return 1499;
-            if (duration.includes("6")) return 1999;
-            if (duration.includes("8")) return 2499;
-            return 1999; // default fallback before selection
-          } else { // Online + Offline or Both
-            if (duration.includes("2")) return 1799;
-            if (duration.includes("4")) return 1999;
-            if (duration.includes("6")) return 2499;
-            if (duration.includes("8")) return 2999;
-            return 1999; // default fallback before selection
-          }
-        }
-        if (form.collegeType === "job") return 2999;
-        return 0;
-      }
-
-      // Other States
-      if (form.collegeType === "govt") {
-        return 1499;
-      }
-      if (form.collegeType === "private") return 1999;
-      if (form.collegeType === "job") return 2999;
-      return 0;
+    if (form.collegeType === "govt") {
+      if (duration.includes("7")) return 999;
+      if (duration.includes("14")) return 1999;
+      if (duration.includes("21")) return 3499;
+      return 999;
     }
-
-    // Apply strict tiered pricing for Foundation courses
-    if (form.collegeType === "govt") return course?.govt_price || 0;
-    if (form.collegeType === "private") return course?.pvt_price || 0;
-    if (form.collegeType === "job") return course?.job_price || 0;
+    if (form.collegeType === "private") {
+      if (duration.includes("7")) return 1499;
+      if (duration.includes("14")) return 2499;
+      if (duration.includes("21")) return 3999;
+      return 1499;
+    }
+    if (form.collegeType === "job") return 3999;
     return 0;
-  }, [form.collegeType, form.state, form.duration, form.internshipMode, course, isInternship, loadingCourses]);
+  }, [form.collegeType, form.duration]);
 
-  const displayPrice = course?.price ? (parseInt(course.price.replace(/\D/g, '')) || 0) : ((course?.pvt_price || 2999) + 4000);
+  const displayPrice = useMemo(() => {
+    return enrollmentFee + 2000;
+  }, [enrollmentFee]);
 
   const isCollegeStudent = form.collegeType === "govt" || form.collegeType === "private";
 
   // Check if form is fully filled
   const isFormComplete = useMemo(() => {
-    const baseComplete =
+    return (
       form.fullName.trim() !== "" &&
       form.fatherName.trim() !== "" &&
       form.gender !== "" &&
       form.email.trim() !== "" &&
       form.whatsapp.trim() !== "" &&
       form.dob !== "" &&
-      (isInternship || form.brn.trim() !== "") &&
       form.branch.trim() !== "" &&
       form.semester !== "" &&
       form.collegeName.trim() !== "" &&
@@ -331,26 +278,19 @@ const EnrollmentPageContent = () => {
       form.qualification !== "" &&
       form.marks10.trim() !== "" &&
       form.marksSem.trim() !== "" &&
-      (!isInternship || (form.duration !== "" && form.internshipMode !== "")) &&
-      (marksheet12File !== null || marksheetSemFile !== null);
-
-    // College ID is mandatory for college students (govt/private), not for job professionals
-    // Internship students are exempt from ID card upload
-    if (isCollegeStudent && !isInternship) {
-      return baseComplete && collegeIdFile !== null;
-    }
-    return baseComplete;
-  }, [form, marksheet12File, marksheetSemFile, collegeIdFile, isCollegeStudent, isInternship]);
+      (marksheet12File !== null || marksheetSemFile !== null)
+    );
+  }, [form, marksheet12File, marksheetSemFile]);
 
   useEffect(() => {
     setForm((current) => ({
       ...current,
-      course: course.title,
+      course: siteVisit.title,
       collegeType: searchParams.get("type") || current.collegeType,
       state: searchParams.get("state") || current.state,
       email: user?.email || current.email,
     }));
-  }, [course.title, searchParams, user]);
+  }, [siteVisit.title, searchParams, user]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -367,7 +307,6 @@ const EnrollmentPageContent = () => {
     if (!/\S+@\S+\.\S+/.test(form.email)) return "Please enter a valid email.";
     if (!form.whatsapp.trim()) return "Please enter your WhatsApp number.";
     if (!form.dob) return "Please select your date of birth.";
-    if (!isInternship && !form.brn.trim()) return "Please enter your College/University Reg. No.";
     if (!form.branch.trim()) return "Please enter your branch.";
     if (!form.semester) return "Please select your semester.";
     if (!form.collegeName.trim()) return "Please enter your college name.";
@@ -378,8 +317,6 @@ const EnrollmentPageContent = () => {
     if (!form.marksSem.trim()) return "Please enter your Last semester marks.";
     if (!marksheet12File && !marksheetSemFile) return "Please upload your 10th/12th marksheet OR your latest semester marksheet.";
     if (marksheet12File && marksheetSemFile) return "Please upload ONLY ONE certificate (do not upload both).";
-    if (isInternship && !form.internshipMode) return "Please select internship mode.";
-    if (isInternship && !form.duration) return "Please select internship duration.";
     return null;
   };
 
@@ -395,15 +332,13 @@ const EnrollmentPageContent = () => {
     }
 
     if (!supabaseConfigured) {
-      setError(
-        "Supabase is not configured. Please contact support.",
-      );
+      setError("Supabase is not configured. Please contact support.");
       return;
     }
     setPaymentLoading(true);
 
     try {
-      const orderId = `NLIT_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      const orderId = `NLIT_SV_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       if (!supabase) throw new Error("Database not initialized");
 
       let uploaded12Url = "";
@@ -420,8 +355,6 @@ const EnrollmentPageContent = () => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", uploadPreset!);
-
-        // Determine resource type: 'raw' for PDFs to bypass image-specific restrictions, 'auto' for others
         const resourceType = file.type === "application/pdf" ? "raw" : "auto";
 
         const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
@@ -437,7 +370,7 @@ const EnrollmentPageContent = () => {
       if (marksheet12File) uploaded12Url = await uploadToCloudinary(marksheet12File);
       if (marksheetSemFile) uploadedSemUrl = await uploadToCloudinary(marksheetSemFile);
 
-      // 1. Save Pending Enrollment
+      // Save to enrollments table in Supabase
       const pendingData: any = {
         full_name: form.fullName,
         father_name: form.fatherName,
@@ -445,16 +378,16 @@ const EnrollmentPageContent = () => {
         email: form.email,
         whatsapp: form.whatsapp,
         dob: form.dob,
-        brn: form.brn,
+        brn: form.brn || "SITE VISIT",
         branch: form.branch,
         semester: form.semester,
         college_name: form.collegeName,
         college_type: form.collegeType,
         state: form.state,
-        course_title: form.course,
-        duration: isInternship ? form.duration : null,
-        internship_mode: isInternship ? form.internshipMode : null,
-        message: isInternship ? `[Internship Mode: ${form.internshipMode}] ${form.message}` : form.message,
+        course_title: `${form.course} (Site Visit)`,
+        duration: form.duration,
+        internship_mode: form.internshipMode,
+        message: `[Site Visit Enrollment] ${form.message}`,
         qualification: form.qualification,
         marks10: form.marks10,
         marks12: form.marks12,
@@ -464,28 +397,15 @@ const EnrollmentPageContent = () => {
         user_id: user?.id,
         cf_payment_id: orderId,
         status: "PENDING",
-        enrollment_type: "internship",
+        enrollment_type: "site-visit",
       };
-      let { error: pendingError } = await supabase.from("enrollments").insert([
-        pendingData
-      ]);
 
-      if (pendingError && (pendingError.message?.includes("internship_mode") || pendingError.code === "42703")) {
-        // Fallback if database table has not been altered yet
-        const { internship_mode, ...fallbackData } = pendingData;
-        const fallbackResult = await supabase.from("enrollments").insert([fallbackData]);
-        pendingError = fallbackResult.error;
-      }
-
+      const { error: pendingError } = await supabase.from("enrollments").insert([pendingData]);
       if (pendingError) {
         console.warn("Could not save pending enrollment:", pendingError);
-        // We continue anyway, as the payment is the priority
       }
 
-      // 2. Create Cashfree Order using Supabase Client SDK
-      if (!supabase) {
-        throw new Error("Supabase client is not initialized");
-      }
+      // Create Cashfree Order
       const { data: orderData, error: orderError } = await supabase.functions.invoke("create-cashfree-order", {
         body: {
           amount: enrollmentFee,
@@ -500,17 +420,10 @@ const EnrollmentPageContent = () => {
         throw new Error(orderError.message || "Payment system unavailable");
       }
 
-      if (!orderData) {
-        throw new Error("Failed to receive order data from server.");
-      }
-
-
-      if (!orderData.payment_session_id) {
-        console.error("Missing payment_session_id. Full response:", orderData);
+      if (!orderData || !orderData.payment_session_id) {
         throw new Error("Payment session could not be created. Please try again.");
       }
 
-      // Ensure SDK is initialized
       let cfInstance = cashfree;
       if (!cfInstance && typeof window !== "undefined" && (window as any).Cashfree) {
         const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "sandbox";
@@ -519,11 +432,10 @@ const EnrollmentPageContent = () => {
       }
 
       if (!cfInstance) {
-        throw new Error("Payment gateway (Cashfree SDK) failed to load. Please refresh the page.");
+        throw new Error("Payment gateway failed to load. Please refresh the page.");
       }
 
       saveFormToLocal(form);
-
       cfInstance.checkout({
         paymentSessionId: orderData.payment_session_id,
       });
@@ -534,11 +446,6 @@ const EnrollmentPageContent = () => {
       setPaymentLoading(false);
     }
   };
-
-
-  // Maintenance Mode Check - Only applies to Foundation courses
-  // Maintenance mode manually disabled via update
-  const isMaintenanceMode = (process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true") && !isInternship;
 
   if (authLoading) {
     return (
@@ -564,7 +471,7 @@ const EnrollmentPageContent = () => {
               </div>
               <h2 className="mb-3 text-3xl font-bold text-slate-900 dark:text-white">Account Required</h2>
               <p className="mb-8 text-slate-600 dark:text-slate-400">
-                Please sign in to your NLITedu account to enroll in <span className="font-semibold text-blue-600">{course.title}</span> and track your certificates.
+                Please sign in to your NLITedu account to register for <span className="font-semibold text-blue-600">{siteVisit.title}</span> and track your verification certificates.
               </p>
 
               <div className="grid gap-4">
@@ -582,8 +489,8 @@ const EnrollmentPageContent = () => {
                 </Link>
               </div>
 
-              <Link href="/" className="mt-8 inline-block text-sm font-medium text-slate-500 hover:text-blue-600 dark:text-slate-400">
-                ← Back to Courses
+              <Link href="/site-visit" className="mt-8 inline-block text-sm font-medium text-slate-500 hover:text-blue-600 dark:text-slate-400">
+                ← Back to Site Visits
               </Link>
             </div>
           </motion.div>
@@ -605,54 +512,24 @@ const EnrollmentPageContent = () => {
         </div>
       </div>
 
-      {/* Maintenance Mode Overlay */}
-      {isMaintenanceMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', backgroundColor: 'rgba(0,0,0,0.4)' }}>
-          <div className="mx-4 max-w-lg w-full rounded-3xl border border-amber-200 bg-white/95 p-10 shadow-2xl dark:border-amber-800 dark:bg-slate-900/95 text-center animate-[fadeIn_0.3s_ease-out]">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
-              <svg className="h-10 w-10 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white sm:text-3xl">
-              Enrollment Temporarily Unavailable
-            </h1>
-            <p className="mt-4 text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-              We are currently performing scheduled maintenance and upgrades to improve your enrollment experience. The enrollment system will be back online shortly.
-            </p>
-            <div className="mt-6 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-6 py-4">
-              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                📧 For urgent inquiries, please contact the development team.
-              </p>
-            </div>
-            <Link
-              href="/"
-              className="mt-8 inline-block rounded-full bg-blue-600 px-8 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-            >
-              ← Return to Home
-            </Link>
-          </div>
-        </div>
-      )}
-
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900 sm:p-8">
           <div className="mb-10 flex items-start justify-between gap-4">
             <div className="flex-1">
               <p className="text-sm uppercase tracking-[0.2em] font-semibold text-blue-600 dark:text-blue-400">
-                📝 Enrollment Form
+                📝 Site Visit Registration
               </p>
-              <h1 className="mt-3 text-3xl font-bold sm:text-4xl bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent dark:from-blue-400 dark:to-blue-300">{course.title}</h1>
+              <h1 className="mt-3 text-3xl font-bold sm:text-4xl bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent dark:from-blue-400 dark:to-blue-300">{siteVisit.title}</h1>
             </div>
             <Link
-              href="/"
+              href="/site-visit"
               className="rounded-full bg-blue-50 border border-blue-200 px-5 py-2.5 text-sm font-semibold transition hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-700 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 whitespace-nowrap"
             >
-              ← Back Home
+              ← Back
             </Link>
           </div>
 
-          <p className="mb-8 text-base text-slate-600 leading-relaxed dark:text-slate-300 border-l-4 border-blue-500 pl-4">{course.description}</p>
+          <p className="mb-8 text-base text-slate-600 leading-relaxed dark:text-slate-300 border-l-4 border-blue-500 pl-4">{siteVisit.description}</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
@@ -833,8 +710,22 @@ const EnrollmentPageContent = () => {
                   onChange={handleChange}
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                   placeholder={form.collegeType === "job" ? "Enter Employee / Job ID" : "Enter Registration No."}
-                  required={!isInternship}
                 />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium">Site Visit Duration</span>
+                <select
+                  name="duration"
+                  value={form.duration}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  required
+                >
+                  <option value="7 Days">7 Days</option>
+                  <option value="14 Days">14 Days</option>
+                  <option value="21 Days">21 Days</option>
+                </select>
               </label>
 
               <label className="block">
@@ -853,27 +744,6 @@ const EnrollmentPageContent = () => {
                 </select>
               </label>
 
-              {/* College ID Upload — only for Govt/Private students, not for internships */}
-              {(isCollegeStudent && !isInternship) && (
-                <label className="block sm:col-span-2">
-                  <span className="mb-2 block text-sm font-medium">Upload College ID Card <span className="text-red-500">*</span> <span className="text-xs text-slate-400">(Max 200KB — JPG/PNG only)</span></span>
-                  <div className="flex items-center justify-center w-full">
-                    <label htmlFor="dropzone-college-id" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                        <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
-                        </svg>
-                        <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{collegeIdFile ? collegeIdFile.name : "Click to upload College ID"}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">JPG, JPEG, PNG (MAX. 200KB)</p>
-                      </div>
-                      <input id="dropzone-college-id" type="file" className="hidden" accept="image/jpeg,image/jpg,image/png" onChange={handleCollegeIdFileChange} />
-                    </label>
-                  </div>
-                  {collegeIdFile && (
-                    <p className="mt-2 text-xs text-green-600 dark:text-green-400 font-medium">✓ {collegeIdFile.name} ({(collegeIdFile.size / 1024).toFixed(1)} KB)</p>
-                  )}
-                </label>
-              )}
               <label className="block">
                 <span className="mb-2 block text-sm font-medium">State</span>
                 <select
@@ -936,7 +806,7 @@ const EnrollmentPageContent = () => {
                 <span className="mb-2 block text-sm font-medium">Upload 10th/12th Marksheet (Max 500KB)</span>
                 <div className="flex items-center justify-center w-full">
                   <label htmlFor="dropzone-file-1" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                     <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
                       <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                         <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
                       </svg>
@@ -973,50 +843,9 @@ const EnrollmentPageContent = () => {
                 onChange={handleChange}
                 rows={4}
                 className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                placeholder="Any additional details for the enrollment team"
+                placeholder="Any additional details or special requests for the site visit team"
               />
             </label>
-
-            {isInternship && (
-              <div className="space-y-4">
-                <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Internship Mode <span className="text-red-500">*</span>
-                  </span>
-                  <select
-                    name="internshipMode"
-                    value={form.internshipMode}
-                    onChange={handleChange}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    required
-                  >
-                    <option value="Online">Online</option>
-                    <option value="Online + Offline">Online + Offline</option>
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Internship Duration <span className="text-red-500">*</span>
-                  </span>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {["2 Weeks", "4 Weeks", "6 Weeks", "8 Weeks"].map((dur) => (
-                      <label key={dur} className={`cursor-pointer rounded-xl border-2 px-4 py-3 text-center font-semibold transition ${form.duration === dur ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-300" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-600"}`}>
-                        <input
-                          type="radio"
-                          name="duration"
-                          value={dur}
-                          checked={form.duration === dur}
-                          onChange={handleChange}
-                          className="hidden"
-                        />
-                        {dur}
-                      </label>
-                    ))}
-                  </div>
-                </label>
-              </div>
-            )}
 
             <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between border-t border-slate-200 dark:border-slate-800">
               <button
@@ -1029,17 +858,17 @@ const EnrollmentPageContent = () => {
                 ) : submitting ? (
                   <>⏳ Processing...</>
                 ) : isFormComplete && enrollmentFee > 0 ? (
-                  <><span className="line-through text-white/60 mr-1">₹{displayPrice.toLocaleString("en-IN")}</span> 💳 Pay ₹{enrollmentFee.toLocaleString("en-IN")} & Enroll</>
+                  <><span className="line-through text-white/60 mr-1">₹{displayPrice.toLocaleString("en-IN")}</span> 💳 Pay ₹{enrollmentFee.toLocaleString("en-IN")} & Register</>
                 ) : (
-                  <>✓ Fill Form to Enroll</>
+                  <>✓ Fill Form to Register</>
                 )}
               </button>
               <button
                 type="button"
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/site-visit")}
                 className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-300 bg-white px-8 py-3 text-base font-semibold text-slate-900 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900"
               >
-                ← Return Home
+                ← Return
               </button>
             </div>
           </form>
@@ -1049,7 +878,7 @@ const EnrollmentPageContent = () => {
           {success && (
             <SuccessModal
               onClose={() => setSuccess(null)}
-              courseTitle={course.title}
+              courseTitle={siteVisit.title}
               orderId={searchParams.get("order_id") || pendingOrderId || "N/A"}
               customerEmail={user?.email || form.email || ""}
             />
@@ -1058,20 +887,20 @@ const EnrollmentPageContent = () => {
 
         <aside className="sticky top-[170px] space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900 sm:p-8 h-fit">
           <div>
-            <h2 className="text-2xl font-bold flex items-center gap-2">📋 Course Summary</h2>
-            <p className="mt-3 text-slate-600 dark:text-slate-300">Review your enrollment details before submitting.</p>
+            <h2 className="text-2xl font-bold flex items-center gap-2">📋 Visit Summary</h2>
+            <p className="mt-3 text-slate-600 dark:text-slate-300">Review your registration details before submitting.</p>
           </div>
 
           <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 p-6 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700">
-            <p className="text-xs uppercase tracking-widest font-bold text-blue-600 dark:text-blue-400">🎓 Course</p>
-            <h3 className="mt-3 text-xl font-bold text-slate-900 dark:text-white">{course.title}</h3>
-            <p className="mt-2 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{course.description}</p>
+            <p className="text-xs uppercase tracking-widest font-bold text-blue-600 dark:text-blue-400">🎓 Target Plant</p>
+            <h3 className="mt-3 text-xl font-bold text-slate-900 dark:text-white">{siteVisit.title}</h3>
+            <p className="mt-2 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{siteVisit.description}</p>
           </div>
 
           <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 p-6 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700">
-            <p className="text-xs uppercase tracking-widest font-bold text-purple-600 dark:text-purple-400">✨ Highlights</p>
+            <p className="text-xs uppercase tracking-widest font-bold text-purple-600 dark:text-purple-400">✨ Observations & Learnings</p>
             <ul className="mt-4 space-y-2.5 text-slate-700 dark:text-slate-300">
-              {course.highlights?.map((item: string) => (
+              {siteVisit.highlights?.map((item: string) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-blue-600"></span>
                   <span>{item}</span>
@@ -1081,15 +910,11 @@ const EnrollmentPageContent = () => {
           </div>
 
           <div className="rounded-2xl bg-gradient-to-br from-green-50 to-green-100 p-6 dark:from-green-900/20 dark:to-green-800/20 border border-green-200 dark:border-green-700">
-            <p className="text-xs uppercase tracking-widest font-bold text-green-600 dark:text-green-400">✓ Enrollment Details</p>
+            <p className="text-xs uppercase tracking-widest font-bold text-green-600 dark:text-green-400">✓ Registration Details</p>
             <dl className="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-300">
               <div className="flex items-center justify-between">
-                <dt className="font-medium">Course</dt>
-                <dd>{course.title}</dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="font-medium">Duration</dt>
-                <dd>{isInternship && form.duration ? form.duration : (course.duration || "—")}</dd>
+                <dt className="font-medium">Site Visit</dt>
+                <dd>{siteVisit.title}</dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="font-medium">College Type</dt>
@@ -1142,15 +967,13 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
         format: "a4"
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth(); // 210
-      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
       const margin = 20;
 
-      // 1. Header Blue Band
-      pdf.setFillColor(37, 99, 235); // Blue-600
+      pdf.setFillColor(37, 99, 235);
       pdf.rect(0, 0, pdfWidth, 45, "F");
 
-      // Header Text
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(26);
       pdf.setFont("helvetica", "bold");
@@ -1162,22 +985,21 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
 
       pdf.setFontSize(11);
       pdf.setFont("helvetica", "bold");
-      pdf.text("OFFICIAL ENROLLMENT RECEIPT", pdfWidth - margin, 20, { align: "right" });
+      pdf.text("OFFICIAL SITE VISIT RECEIPT", pdfWidth - margin, 20, { align: "right" });
 
       pdf.setFontSize(8);
       pdf.setFont("helvetica", "normal");
       pdf.text(`Transaction ID: ${orderId}`, pdfWidth - margin, 26, { align: "right" });
 
-      // 2. Receipt Details Header
       let y = 65;
-      pdf.setTextColor(100, 116, 139); // Slate-500
+      pdf.setTextColor(100, 116, 139);
       pdf.setFontSize(10);
       pdf.setFont("helvetica", "bold");
       pdf.text("RECEIPT TO:", margin, y);
       pdf.text("RECEIPT DETAILS:", pdfWidth - margin, y, { align: "right" });
 
       y += 6;
-      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.setTextColor(15, 23, 42);
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
       pdf.text(customerEmail.split("@")[0].toUpperCase(), margin, y);
@@ -1186,103 +1008,98 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
       pdf.text(`Date: ${new Date().toLocaleDateString()}`, pdfWidth - margin, y, { align: "right" });
 
       y += 5;
-      pdf.setTextColor(51, 65, 85); // Slate-700
+      pdf.setTextColor(51, 65, 85);
       pdf.text(customerEmail, margin, y);
       pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(16, 185, 129); // Emerald-500
+      pdf.setTextColor(16, 185, 129);
       pdf.text("Status: PAID & VERIFIED", pdfWidth - margin, y, { align: "right" });
 
       y += 15;
-      // 3. Table Header
-      pdf.setFillColor(241, 245, 249); // Slate-100
+      pdf.setFillColor(241, 245, 249);
       pdf.rect(margin, y, pdfWidth - (margin * 2), 10, "F");
       
-      pdf.setTextColor(71, 85, 105); // Slate-600
+      pdf.setTextColor(71, 85, 105);
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(9);
-      pdf.text("COURSE / ITEM DESCRIPTION", margin + 5, y + 6.5);
+      pdf.text("SITE VISIT / FACILITY DESCRIPTION", margin + 5, y + 6.5);
       pdf.text("STATUS", pdfWidth - margin - 35, y + 6.5, { align: "right" });
       pdf.text("AMOUNT", pdfWidth - margin - 5, y + 6.5, { align: "right" });
 
       y += 10;
-      // 4. Table Row
-      pdf.setDrawColor(226, 232, 240); // Slate-200
+      pdf.setDrawColor(226, 232, 240);
       pdf.line(margin, y, pdfWidth - margin, y);
 
       y += 8;
-      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.setTextColor(15, 23, 42);
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(11);
       pdf.text(courseTitle, margin + 5, y);
 
-      pdf.setTextColor(16, 185, 129); // Emerald-500
+      pdf.setTextColor(16, 185, 129);
       pdf.text("PAID", pdfWidth - margin - 35, y, { align: "right" });
 
-      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.setTextColor(15, 23, 42);
       pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
 
       y += 4.5;
-      pdf.setTextColor(100, 116, 139); // Slate-500
+      pdf.setTextColor(100, 116, 139);
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(8.5);
-      pdf.text("Includes full internship curriculum, live mentorship sessions, and certificate of completion.", margin + 5, y);
+      pdf.text("Includes plant entry pass, expert engineer observations guide, and certificate of completion.", margin + 5, y);
 
       y += 10;
       pdf.line(margin, y, pdfWidth - margin, y);
 
-      // 5. Total Section
       y += 10;
-      pdf.setTextColor(71, 85, 105); // Slate-600
+      pdf.setTextColor(71, 85, 105);
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(10);
       pdf.text("Subtotal:", pdfWidth - margin - 40, y, { align: "right" });
-      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.setTextColor(15, 23, 42);
       pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
 
       y += 6;
-      pdf.setTextColor(71, 85, 105); // Slate-600
+      pdf.setTextColor(71, 85, 105);
       pdf.text("Tax (GST 0%):", pdfWidth - margin - 40, y, { align: "right" });
-      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.setTextColor(15, 23, 42);
       pdf.text("₹0.00", pdfWidth - margin - 5, y, { align: "right" });
 
       y += 8;
-      pdf.setDrawColor(226, 232, 240); // Slate-200
+      pdf.setDrawColor(226, 232, 240);
       pdf.line(pdfWidth - margin - 60, y - 4, pdfWidth - margin, y - 4);
-      pdf.setTextColor(37, 99, 235); // Blue-600
+      pdf.setTextColor(37, 99, 235);
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
       pdf.text("Total Paid:", pdfWidth - margin - 40, y, { align: "right" });
       pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
 
-      // 6. Support Details Card
       y += 20;
-      pdf.setFillColor(248, 250, 252); // Slate-50
+      pdf.setFillColor(248, 250, 252);
       pdf.roundedRect(margin, y, pdfWidth - (margin * 2), 35, 3, 3, "F");
       pdf.setDrawColor(241, 245, 249);
       pdf.roundedRect(margin, y, pdfWidth - (margin * 2), 35, 3, 3, "D");
 
-      pdf.setTextColor(15, 23, 42); // Slate-900
+      pdf.setTextColor(15, 23, 42);
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(10);
       pdf.text("Important Notice & Next Steps:", margin + 8, y + 8);
 
-      pdf.setTextColor(71, 85, 105); // Slate-600
+      pdf.setTextColor(71, 85, 105);
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(8.5);
       pdf.text("1. A confirmation email has been sent to your registered email address.", margin + 8, y + 14);
-      pdf.text("2. Our onboarding team will contact you on your WhatsApp number within 24 hours.", margin + 8, y + 19);
-      pdf.text("3. If you have any questions, please feel free to reach out directly to info@nlitedu.com.", margin + 8, y + 24);
+      pdf.text("2. The operational visit coordinator will contact you on your WhatsApp number within 24 hours.", margin + 8, y + 19);
+      pdf.text("3. Safety equipment guidelines (shoes, helmets) will be shared prior to the visit.", margin + 8, y + 24);
 
-      // 7. Footer
       pdf.setDrawColor(226, 232, 240);
       pdf.line(margin, pdfHeight - 30, pdfWidth - margin, pdfHeight - 30);
 
       pdf.setFontSize(8);
-      pdf.setTextColor(148, 163, 184); // Slate-400
+      pdf.setTextColor(148, 163, 184);
       pdf.text("Nexgen Learning Institute of Technology - nliteedu.com", pdfWidth / 2, pdfHeight - 20, { align: "center" });
       pdf.text("This is an electronically generated official receipt and does not require a physical signature.", pdfWidth / 2, pdfHeight - 15, { align: "center" });
 
-      pdf.save(`NLITedu_Receipt_${orderId.substring(0, 8)}.pdf`);
+      pdf.save(`NLITedu_SiteVisit_Receipt_${orderId.substring(0, 8)}.pdf`);
     } catch (err: any) {
       console.error("Failed to generate PDF", err);
       alert("PDF Generation Error: " + (err.message || "Unknown error"));
@@ -1324,14 +1141,14 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
           </div>
 
           <h2 className="mb-2 text-3xl font-bold text-slate-900 dark:text-white">
-            Welcome to the Course!
+            Booking Confirmed!
           </h2>
           <p className="mb-8 text-slate-600 dark:text-slate-400">
-            Your enrollment for <span className="font-semibold text-blue-600 dark:text-blue-400">{courseTitle}</span> has been confirmed.
+            Your booking for <span className="font-semibold text-blue-600 dark:text-blue-400">{courseTitle}</span> has been confirmed.
           </p>
 
           <div className="mb-8 rounded-2xl border border-slate-100 bg-slate-50 p-6 text-left dark:border-slate-700 dark:bg-slate-900/50">
-            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">Enrollment Details</h4>
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">Registration Details</h4>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-600 dark:text-slate-400">Transaction ID</span>
@@ -1401,16 +1218,16 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
   );
 };
 
-const EnrollmentPage = () => {
+const SiteVisitEnrollmentPage = () => {
   return (
     <Suspense fallback={
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
       </div>
     }>
-      <EnrollmentPageContent />
+      <SiteVisitEnrollmentPageContent />
     </Suspense>
   );
 };
 
-export default EnrollmentPage;
+export default SiteVisitEnrollmentPage;
