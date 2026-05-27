@@ -1369,14 +1369,24 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
                 <FiExternalLink className="h-4 w-4" />
               </Link>
             </div>
-            <a
-              href="https://github.com/saveragraphics/NLITedu-Mobile/raw/main/releases/app-release.apk"
-              download
-              className="flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-4 font-bold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-700 hover:shadow-blue-500/40"
-            >
-              <FiSmartphone className="h-5 w-5" />
-              Download NLITedu Mobile App
-            </a>
+            <div className="flex flex-col gap-3">
+              <a
+                href="https://play.google.com/store/apps/details?id=com.nlitedu.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-4 font-bold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-700 hover:shadow-blue-500/40"
+              >
+                <FiSmartphone className="h-5 w-5" />
+                Get NLITedu on Google Play
+              </a>
+              <a
+                href="https://github.com/saveragraphics/NLITedu-Mobile/raw/main/releases/app-release.apk"
+                download
+                className="text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+              >
+                Or, download the APK file directly
+              </a>
+            </div>
           </div>
         </div>
 
