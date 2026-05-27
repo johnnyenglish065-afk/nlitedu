@@ -93,6 +93,7 @@ const EnrollmentPageContent = () => {
     marksheet12Url: "",
     marksheetSemUrl: "",
     duration: "",
+    internshipMode: "Online",
   });
   const [marksheet12File, setMarksheet12File] = useState<File | null>(null);
   const [marksheetSemFile, setMarksheetSemFile] = useState<File | null>(null);
@@ -254,8 +255,47 @@ const EnrollmentPageContent = () => {
 
     // Apply legacy pricing rules (Bihar/Other State) for internship/general courses
     if (isInternship) {
+      if (form.state === "Bihar") {
+        const duration = form.duration || "";
+        const mode = form.internshipMode || "Online";
+
+        if (form.collegeType === "govt") {
+          if (mode === "Online") {
+            if (duration.includes("2")) return 799;
+            if (duration.includes("4")) return 999;
+            if (duration.includes("6")) return 1199;
+            if (duration.includes("8")) return 1399;
+            return 999; // default fallback before selection
+          } else { // Online + Offline or Both
+            if (duration.includes("2")) return 1299;
+            if (duration.includes("4")) return 1499;
+            if (duration.includes("6")) return 1999;
+            if (duration.includes("8")) return 2499;
+            return 1499; // default fallback before selection
+          }
+        }
+        if (form.collegeType === "private") {
+          if (mode === "Online") {
+            if (duration.includes("2")) return 999;
+            if (duration.includes("4")) return 1499;
+            if (duration.includes("6")) return 1999;
+            if (duration.includes("8")) return 2499;
+            return 1999; // default fallback before selection
+          } else { // Online + Offline or Both
+            if (duration.includes("2")) return 1799;
+            if (duration.includes("4")) return 1999;
+            if (duration.includes("6")) return 2499;
+            if (duration.includes("8")) return 2999;
+            return 1999; // default fallback before selection
+          }
+        }
+        if (form.collegeType === "job") return 2999;
+        return 0;
+      }
+
+      // Other States
       if (form.collegeType === "govt") {
-        return form.state === "Bihar" ? 999 : 1499;
+        return 1499;
       }
       if (form.collegeType === "private") return 1999;
       if (form.collegeType === "job") return 2999;
@@ -267,7 +307,7 @@ const EnrollmentPageContent = () => {
     if (form.collegeType === "private") return course?.pvt_price || 0;
     if (form.collegeType === "job") return course?.job_price || 0;
     return 0;
-  }, [form.collegeType, form.state, course, isInternship, loadingCourses]);
+  }, [form.collegeType, form.state, form.duration, form.internshipMode, course, isInternship, loadingCourses]);
 
   const displayPrice = course?.price ? (parseInt(course.price.replace(/\D/g, '')) || 0) : ((course?.pvt_price || 2999) + 4000);
 
@@ -291,7 +331,7 @@ const EnrollmentPageContent = () => {
       form.qualification !== "" &&
       form.marks10.trim() !== "" &&
       form.marksSem.trim() !== "" &&
-      (!isInternship || form.duration !== "") &&
+      (!isInternship || (form.duration !== "" && form.internshipMode !== "")) &&
       (marksheet12File !== null || marksheetSemFile !== null);
 
     // College ID is mandatory for college students (govt/private), not for job professionals
@@ -338,6 +378,7 @@ const EnrollmentPageContent = () => {
     if (!form.marksSem.trim()) return "Please enter your Last semester marks.";
     if (!marksheet12File && !marksheetSemFile) return "Please upload your 10th/12th marksheet OR your latest semester marksheet.";
     if (marksheet12File && marksheetSemFile) return "Please upload ONLY ONE certificate (do not upload both).";
+    if (isInternship && !form.internshipMode) return "Please select internship mode.";
     if (isInternship && !form.duration) return "Please select internship duration.";
     return null;
   };
@@ -397,7 +438,7 @@ const EnrollmentPageContent = () => {
       if (marksheetSemFile) uploadedSemUrl = await uploadToCloudinary(marksheetSemFile);
 
       // 1. Save Pending Enrollment
-      const pendingData = {
+      const pendingData: any = {
         full_name: form.fullName,
         father_name: form.fatherName,
         gender: form.gender,
@@ -412,7 +453,8 @@ const EnrollmentPageContent = () => {
         state: form.state,
         course_title: form.course,
         duration: isInternship ? form.duration : null,
-        message: form.message,
+        internship_mode: isInternship ? form.internshipMode : null,
+        message: isInternship ? `[Internship Mode: ${form.internshipMode}] ${form.message}` : form.message,
         qualification: form.qualification,
         marks10: form.marks10,
         marks12: form.marks12,
@@ -423,9 +465,16 @@ const EnrollmentPageContent = () => {
         cf_payment_id: orderId,
         status: "PENDING",
       };
-      const { error: pendingError } = await supabase.from("enrollments").insert([
+      let { error: pendingError } = await supabase.from("enrollments").insert([
         pendingData
       ]);
+
+      if (pendingError && (pendingError.message?.includes("internship_mode") || pendingError.code === "42703")) {
+        // Fallback if database table has not been altered yet
+        const { internship_mode, ...fallbackData } = pendingData;
+        const fallbackResult = await supabase.from("enrollments").insert([fallbackData]);
+        pendingError = fallbackResult.error;
+      }
 
       if (pendingError) {
         console.warn("Could not save pending enrollment:", pendingError);
@@ -928,26 +977,44 @@ const EnrollmentPageContent = () => {
             </label>
 
             {isInternship && (
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Internship Duration <span className="text-red-500">*</span>
-                </span>
-                <div className="grid grid-cols-3 gap-3">
-                  {["2 Weeks", "4 Weeks", "6 Weeks"].map((dur) => (
-                    <label key={dur} className={`cursor-pointer rounded-xl border-2 px-4 py-3 text-center font-semibold transition ${form.duration === dur ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-300" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-600"}`}>
-                      <input
-                        type="radio"
-                        name="duration"
-                        value={dur}
-                        checked={form.duration === dur}
-                        onChange={handleChange}
-                        className="hidden"
-                      />
-                      {dur}
-                    </label>
-                  ))}
-                </div>
-              </label>
+              <div className="space-y-4">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Internship Mode <span className="text-red-500">*</span>
+                  </span>
+                  <select
+                    name="internshipMode"
+                    value={form.internshipMode}
+                    onChange={handleChange}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    required
+                  >
+                    <option value="Online">Online</option>
+                    <option value="Online + Offline">Online + Offline</option>
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Internship Duration <span className="text-red-500">*</span>
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {["2 Weeks", "4 Weeks", "6 Weeks", "8 Weeks"].map((dur) => (
+                      <label key={dur} className={`cursor-pointer rounded-xl border-2 px-4 py-3 text-center font-semibold transition ${form.duration === dur ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-300" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-600"}`}>
+                        <input
+                          type="radio"
+                          name="duration"
+                          value={dur}
+                          checked={form.duration === dur}
+                          onChange={handleChange}
+                          className="hidden"
+                        />
+                        {dur}
+                      </label>
+                    ))}
+                  </div>
+                </label>
+              </div>
             )}
 
             <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between border-t border-slate-200 dark:border-slate-800">
