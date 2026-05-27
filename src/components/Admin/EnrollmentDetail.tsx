@@ -13,6 +13,16 @@ interface EnrollmentDetailProps {
 }
 
 export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDetailProps) {
+  let internshipMode = enrollment.internship_mode || null;
+  let cleanMessage = enrollment.message || "";
+  if (!internshipMode && cleanMessage.includes("[Internship Mode:")) {
+    const match = cleanMessage.match(/\[Internship Mode:\s*([^\]]+)\]/);
+    if (match) {
+      internshipMode = match[1];
+      cleanMessage = cleanMessage.replace(/\[Internship Mode:\s*[^\]]+\]\s*/, "").trim();
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <motion.div
@@ -128,10 +138,22 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
               <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1">Enrolled Course</p>
               <p className="text-sm font-bold text-primary">{enrollment.course_title}</p>
             </div>
-            {enrollment.message && (
+            {internshipMode && (
+              <div className="bg-slate-100 dark:bg-slate-800 px-4 py-3 rounded-2xl">
+                <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1">Internship Mode</p>
+                <p className="text-sm font-bold text-primary">{internshipMode}</p>
+              </div>
+            )}
+            {enrollment.duration && (
+              <div className="bg-slate-100 dark:bg-slate-800 px-4 py-3 rounded-2xl">
+                <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1">Internship Duration</p>
+                <p className="text-sm font-bold text-primary">{enrollment.duration}</p>
+              </div>
+            )}
+            {cleanMessage && (
               <div className="w-full bg-slate-100 dark:bg-slate-800 px-4 py-3 rounded-2xl">
                 <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1">Additional Notes</p>
-                <p className="text-sm italic text-slate-600 dark:text-slate-400">{enrollment.message}</p>
+                <p className="text-sm italic text-slate-600 dark:text-slate-400">{cleanMessage}</p>
               </div>
             )}
             {/* Interested Internship Courses removed */}
