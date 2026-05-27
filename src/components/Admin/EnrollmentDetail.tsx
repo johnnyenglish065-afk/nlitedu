@@ -45,8 +45,19 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
               <FaRegIdBadge className="text-primary text-xl" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Student Dossier</h2>
-              <p className="text-xs font-mono font-bold text-primary tracking-widest uppercase">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                Student Dossier
+                {(!enrollment.enrollment_type || enrollment.enrollment_type === 'internship') && (
+                  <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-widest">Internship</span>
+                )}
+                {enrollment.enrollment_type === 'workshop' && (
+                  <span className="px-2 py-0.5 rounded-md bg-fuchsia-100 text-fuchsia-700 text-[10px] font-black uppercase tracking-widest">Workshop</span>
+                )}
+                {enrollment.enrollment_type === 'site-visit' && (
+                  <span className="px-2 py-0.5 rounded-md bg-sky-100 text-sky-700 text-[10px] font-black uppercase tracking-widest">Site Visit</span>
+                )}
+              </h2>
+              <p className="text-xs font-mono font-bold text-primary tracking-widest uppercase mt-1">
                 ID: {enrollment.user_id?.slice(0, 8).toUpperCase() || "NEW"}
               </p>
             </div>

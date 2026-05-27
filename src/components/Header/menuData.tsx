@@ -43,6 +43,18 @@ const menuData: Menu[] = [
         path: "/internship",
         newTab: false,
       },
+      {
+        id: 44,
+        title: "Workshop",
+        path: "/workshop",
+        newTab: false,
+      },
+      {
+        id: 45,
+        title: "Site Visit",
+        path: "/site-visit",
+        newTab: false,
+      },
     ], 
   },
   // {
