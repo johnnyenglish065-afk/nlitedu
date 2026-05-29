@@ -36,10 +36,8 @@ serve(async (req: Request) => {
       .eq("cf_payment_id", orderId)
       .maybeSingle();
 
-    if (currentRecord?.status === "PAID") {
-      return new Response(JSON.stringify({ status: "PAID" }), { headers: corsHeaders });
-    }
-
+    // We will fetch from Cashfree anyway to return the actual amount paid
+    // which is needed for receipt generation on the frontend.
     const env = Deno.env.get("CASHFREE_MODE") || Deno.env.get("NEXT_PUBLIC_CASHFREE_MODE") || "production";
     const appId = Deno.env.get("CASHFREE_APP_ID") || Deno.env.get("NEXT_PUBLIC_CASHFREE_APP_ID");
     const secretKey = Deno.env.get("CASHFREE_SECRET_KEY");
@@ -60,6 +58,9 @@ serve(async (req: Request) => {
     });
 
     if (!response.ok) {
+      if (currentRecord?.status === "PAID") {
+        return new Response(JSON.stringify({ status: "PAID" }), { headers: corsHeaders });
+      }
       return new Response(JSON.stringify({ error: "Failed to verify payment with Cashfree" }), { status: 400, headers: corsHeaders });
     }
 
@@ -100,10 +101,10 @@ serve(async (req: Request) => {
          }
       }
 
-      return new Response(JSON.stringify({ status: "PAID" }), { headers: corsHeaders });
+      return new Response(JSON.stringify({ status: "PAID", amount: orderData.order_amount }), { headers: corsHeaders });
     }
 
-    return new Response(JSON.stringify({ status: orderData.order_status }), { headers: corsHeaders });
+    return new Response(JSON.stringify({ status: orderData.order_status, amount: orderData.order_amount }), { headers: corsHeaders });
   } catch (error: any) {
     console.error("Verification error:", error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
