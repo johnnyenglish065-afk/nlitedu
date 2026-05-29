@@ -144,9 +144,9 @@ const EnrollmentPageContent = () => {
   const supabaseConfigured = Boolean(supabase);
 
   // Persistence helpers
-  const saveFormToLocal = (formData: any) => {
+  const saveFormToLocal = (formData: any, fee: number, mrp: number) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("pending_enrollment", JSON.stringify(formData));
+      localStorage.setItem("pending_enrollment", JSON.stringify({ ...formData, _fee: fee, _mrp: mrp }));
     }
   };
 
@@ -184,7 +184,14 @@ const EnrollmentPageContent = () => {
     }
   }, [searchParams]);
 
-  const handlePaymentSuccess = () => {
+  const [paidFee, setPaidFee] = useState<number>(0);
+  const [originalPrice, setOriginalPrice] = useState<number>(0);
+
+  const handlePaymentSuccess = (actualAmount?: number) => {
+    const saved = loadFormFromLocal();
+    setPaidFee(actualAmount || (saved ? saved._fee : enrollmentFee));
+    setOriginalPrice(saved ? saved._mrp : displayPrice);
+    
     setSuccess("Enrollment Successful!");
     setPaymentVerified(true);
     setPendingOrderId(null);
@@ -228,7 +235,7 @@ const EnrollmentPageContent = () => {
       }
 
       if (parsedData?.status === "PAID") {
-        handlePaymentSuccess();
+        handlePaymentSuccess(parsedData.amount);
       } else {
         setError("Payment could not be verified or is still processing. Please wait a moment and click 'Retry Verification' below.");
         const savedForm = loadFormFromLocal();
@@ -522,7 +529,7 @@ const EnrollmentPageContent = () => {
         throw new Error("Payment gateway (Cashfree SDK) failed to load. Please refresh the page.");
       }
 
-      saveFormToLocal(form);
+      saveFormToLocal(form, enrollmentFee, displayPrice);
 
       cfInstance.checkout({
         paymentSessionId: orderData.payment_session_id,
@@ -1052,6 +1059,8 @@ const EnrollmentPageContent = () => {
               courseTitle={course.title}
               orderId={searchParams.get("order_id") || pendingOrderId || "N/A"}
               customerEmail={user?.email || form.email || ""}
+              paidAmount={paidFee}
+              originalPrice={originalPrice}
             />
           )}
         </AnimatePresence>
@@ -1130,7 +1139,7 @@ const EnrollmentPageContent = () => {
   );
 };
 
-const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClose: () => void, courseTitle: string, orderId: string, customerEmail: string }) => {
+const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail, paidAmount, originalPrice }: { onClose: () => void, courseTitle: string, orderId: string, customerEmail: string, paidAmount: number, originalPrice: number }) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleDownloadReceipt = async () => {
@@ -1219,13 +1228,13 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
       pdf.text("PAID", pdfWidth - margin - 35, y, { align: "right" });
 
       pdf.setTextColor(15, 23, 42); // Slate-900
-      pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       y += 4.5;
       pdf.setTextColor(100, 116, 139); // Slate-500
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(8.5);
-      pdf.text("Includes full internship curriculum, live mentorship sessions, and certificate of completion.", margin + 5, y);
+      pdf.text("Includes full curriculum, mentorship sessions, and certificate of completion.", margin + 5, y);
 
       y += 10;
       pdf.line(margin, y, pdfWidth - margin, y);
@@ -1235,9 +1244,19 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
       pdf.setTextColor(71, 85, 105); // Slate-600
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(10);
+      
+      if (originalPrice > paidAmount) {
+         pdf.text("Course Fee:", pdfWidth - margin - 40, y, { align: "right" });
+         pdf.text(`₹${originalPrice.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         y += 6;
+         pdf.text("Discount:", pdfWidth - margin - 40, y, { align: "right" });
+         pdf.text(`-₹${(originalPrice - paidAmount).toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         y += 6;
+      }
+
       pdf.text("Subtotal:", pdfWidth - margin - 40, y, { align: "right" });
       pdf.setTextColor(15, 23, 42); // Slate-900
-      pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       y += 6;
       pdf.setTextColor(71, 85, 105); // Slate-600
@@ -1252,7 +1271,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
       pdf.text("Total Paid:", pdfWidth - margin - 40, y, { align: "right" });
-      pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       // 6. Support Details Card
       y += 20;

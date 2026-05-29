@@ -136,9 +136,9 @@ const SiteVisitEnrollmentPageContent = () => {
   const supabaseConfigured = Boolean(supabase);
 
   // Persistence helpers
-  const saveFormToLocal = (formData: any) => {
+  const saveFormToLocal = (formData: any, fee: number, mrp: number) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("pending_site_visit_enrollment", JSON.stringify(formData));
+      localStorage.setItem("pending_site_visit_enrollment", JSON.stringify({ ...formData, _fee: fee, _mrp: mrp }));
     }
   };
 
@@ -174,7 +174,14 @@ const SiteVisitEnrollmentPageContent = () => {
     }
   }, [searchParams]);
 
-  const handlePaymentSuccess = () => {
+  const [paidFee, setPaidFee] = useState<number>(0);
+  const [originalPrice, setOriginalPrice] = useState<number>(0);
+
+  const handlePaymentSuccess = (actualAmount?: number) => {
+    const saved = loadFormFromLocal();
+    setPaidFee(actualAmount || (saved ? saved._fee : enrollmentFee));
+    setOriginalPrice(saved ? saved._mrp : displayPrice);
+
     setSuccess("Site Visit Enrollment Successful!");
     setPaymentVerified(true);
     setPendingOrderId(null);
@@ -216,7 +223,7 @@ const SiteVisitEnrollmentPageContent = () => {
       }
 
       if (parsedData?.status === "PAID") {
-        handlePaymentSuccess();
+        handlePaymentSuccess(parsedData.amount);
       } else {
         setError("Payment could not be verified or is still processing. Please wait a moment and click 'Retry Verification' below.");
         const savedForm = loadFormFromLocal();
@@ -435,7 +442,7 @@ const SiteVisitEnrollmentPageContent = () => {
         throw new Error("Payment gateway failed to load. Please refresh the page.");
       }
 
-      saveFormToLocal(form);
+      saveFormToLocal(form, enrollmentFee, displayPrice);
       cfInstance.checkout({
         paymentSessionId: orderData.payment_session_id,
       });
@@ -881,6 +888,8 @@ const SiteVisitEnrollmentPageContent = () => {
               courseTitle={siteVisit.title}
               orderId={searchParams.get("order_id") || pendingOrderId || "N/A"}
               customerEmail={user?.email || form.email || ""}
+              paidAmount={paidFee}
+              originalPrice={originalPrice}
             />
           )}
         </AnimatePresence>
@@ -955,7 +964,7 @@ const SiteVisitEnrollmentPageContent = () => {
   );
 };
 
-const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClose: () => void, courseTitle: string, orderId: string, customerEmail: string }) => {
+const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail, paidAmount, originalPrice }: { onClose: () => void, courseTitle: string, orderId: string, customerEmail: string, paidAmount: number, originalPrice: number }) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleDownloadReceipt = async () => {
@@ -1039,7 +1048,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
       pdf.text("PAID", pdfWidth - margin - 35, y, { align: "right" });
 
       pdf.setTextColor(15, 23, 42);
-      pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       y += 4.5;
       pdf.setTextColor(100, 116, 139);
@@ -1054,9 +1063,19 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
       pdf.setTextColor(71, 85, 105);
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(10);
+
+      if (originalPrice > paidAmount) {
+         pdf.text("Course Fee:", pdfWidth - margin - 40, y, { align: "right" });
+         pdf.text(`₹${originalPrice.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         y += 6;
+         pdf.text("Discount:", pdfWidth - margin - 40, y, { align: "right" });
+         pdf.text(`-₹${(originalPrice - paidAmount).toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         y += 6;
+      }
+
       pdf.text("Subtotal:", pdfWidth - margin - 40, y, { align: "right" });
       pdf.setTextColor(15, 23, 42);
-      pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       y += 6;
       pdf.setTextColor(71, 85, 105);
@@ -1071,7 +1090,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail }: { onClos
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
       pdf.text("Total Paid:", pdfWidth - margin - 40, y, { align: "right" });
-      pdf.text("₹999.00", pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       y += 20;
       pdf.setFillColor(248, 250, 252);
