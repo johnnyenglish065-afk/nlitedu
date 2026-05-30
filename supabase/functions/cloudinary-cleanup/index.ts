@@ -102,12 +102,15 @@ serve(async (req) => {
       const oldRecord = payload.old_record;
       const urlsToDelete = [];
 
-      // Add known cloudinary URL fields
+      // Add known cloudinary URL fields (checking both camelCase and snake_case to be safe)
       if (oldRecord.marksheet_12_url) urlsToDelete.push(oldRecord.marksheet_12_url);
       if (oldRecord.marksheet_sem_url) urlsToDelete.push(oldRecord.marksheet_sem_url);
+      if (oldRecord.marksheet12Url) urlsToDelete.push(oldRecord.marksheet12Url);
+      if (oldRecord.marksheetSemUrl) urlsToDelete.push(oldRecord.marksheetSemUrl);
       
       // Expandable if you add profile photos, etc.
       if (oldRecord.profile_photo_url) urlsToDelete.push(oldRecord.profile_photo_url);
+      if (oldRecord.profilePhotoUrl) urlsToDelete.push(oldRecord.profilePhotoUrl);
 
       console.log(`Found ${urlsToDelete.length} files to delete for record ${oldRecord.id}`);
 
