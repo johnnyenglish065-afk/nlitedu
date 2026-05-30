@@ -82,7 +82,12 @@ serve(async (req) => {
          // Update to PAID
          const { data: updatedRecord, error: dbError } = await supabase
            .from("enrollments")
-           .update({ status: "PAID" })
+           .update({ 
+             status: "PAID",
+             payment_amount: paymentData.amount / 100,
+             payment_currency: paymentData.currency || "INR",
+             payment_method: paymentData.method || "razorpay"
+           })
            .eq("cf_payment_id", orderId)
            .select()
            .single();
