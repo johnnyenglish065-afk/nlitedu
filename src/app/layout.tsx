@@ -1,39 +1,34 @@
-// app/layout.tsx (or app/layout.jsx)
-
-"use client";
-
-import { useEffect, useState } from "react";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import ScrollToTop from "@/components/ScrollToTop";
-import WelcomeAnimation from "@/components/Common/WelcomeAnimation";
-import AppDownloadPopup from "@/components/AppDownloadPopup";
 import { Inter } from "next/font/google";
-// @ts-ignore: allow side-effect import of global CSS (global stylesheet)
-import "../styles/index.css";
-import { Providers } from "./providers";
-import { usePathname } from "next/navigation";
+import { Metadata } from "next";
 import Script from "next/script";
+import { Providers } from "./providers";
+import ClientLayoutWrapper from "@/components/ClientLayoutWrapper";
+import "../styles/index.css";
 
 const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s | NLITedu",
+    default: "NLITedu | Empowering Future Innovators, Today!",
+  },
+  description:
+    "Technology training, certification, internship programs and real-world skills development at Nexgen Learning Institute of Technology (NLIT).",
+  keywords: ["NLIT", "Technology Training", "Internships", "Certifications", "Workshops", "Tech Education"],
+  openGraph: {
+    title: "NLITedu | Nexgen Learning Institute of Technology",
+    description: "Technology training, certification, internship programs and real-world skills development.",
+    url: "https://nlitedu.com",
+    siteName: "NLITedu",
+    type: "website",
+  },
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [showWelcome, setShowWelcome] = useState(true);
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (pathname !== "/") {
-      setShowWelcome(false); // don’t show on subpages
-      return;
-    }
-    const timer = setTimeout(() => setShowWelcome(false), 4000);
-    return () => clearTimeout(timer);
-  }, [pathname]);
-
   return (
     <html suppressHydrationWarning lang="en">
       <head>
@@ -51,18 +46,7 @@ export default function RootLayout({
       </head>
       <body className={`bg-[#FCFCFC] dark:bg-black ${inter.className}`}>
         <Providers>
-          {showWelcome ? (
-            <WelcomeAnimation />
-          ) : (
-            <>
-              {/* Only show website header/footer if NOT in admin dashboard */}
-              {!pathname?.startsWith("/admin") && <Header />}
-              {children}
-              {!pathname?.startsWith("/admin") && <Footer />}
-              <ScrollToTop />
-              <AppDownloadPopup />
-            </>
-          )}
+          <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
         </Providers>
       </body>
     </html>

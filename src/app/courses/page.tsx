@@ -3,9 +3,8 @@ import CoursesSection from "@/components/CoursesSection/CoursesSection";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Page | Free Next.js Template for Startup and SaaS",
-  description: "This is Contact Page for Startup Nextjs Template",
-  // other metadata
+  title: "Professional Courses & Certifications",
+  description: "Browse our extensive catalog of professional tech courses and industry-recognized certifications at NLITedu.",
 };
 
 const CoursesPage = () => {
