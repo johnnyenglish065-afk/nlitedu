@@ -780,7 +780,8 @@ const EnrollmentPageContent = () => {
                 {pendingOrderId && !submitting && (
                   <button
                     type="button"
-                    onClick={() => verifyPaymentStatus(pendingOrderId)}
+                    onClick={() => verifyPaymentStatus({ orderId: pendingOrderId })}
+                    disabled={submitting}
                     className="mt-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
                   >
                     🔄 Retry Verification

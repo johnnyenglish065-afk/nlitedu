@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import Script from "next/script";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -170,7 +171,7 @@ const SiteVisitEnrollmentPageContent = () => {
     const orderId = searchParams.get("order_id");
     if (orderId) {
       setPendingOrderId(orderId);
-      verifyPaymentStatus(orderId);
+      verifyPaymentStatus({ orderId });
     }
   }, [searchParams]);
 
@@ -196,7 +197,7 @@ const SiteVisitEnrollmentPageContent = () => {
     });
   };
 
-  const verifyPaymentStatus = async (orderId: string) => {
+  const verifyPaymentStatus = async (payload: any) => {
     setSubmitting(true);
     setError(null);
 
@@ -204,22 +205,41 @@ const SiteVisitEnrollmentPageContent = () => {
       if (!supabase) {
         throw new Error("Supabase client is not initialized");
       }
-
-      const { data, error: invokeError } = await supabase.functions.invoke("verify-cashfree-payment", {
-        body: { orderId },
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "razorpay";
+      const functionUrl = activeGateway === "razorpay" 
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/verify-razorpay-payment`
+        : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/verify-cashfree-payment`;
+      
+      const res = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+        },
+        body: JSON.stringify(payload)
       });
 
-      if (invokeError) {
-        throw new Error(invokeError.message || "Failed to call verification service");
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Verify Edge Function Error:", errText);
+        let errorMsg = errText;
+        try {
+           const parsed = JSON.parse(errText);
+           if (parsed.error) errorMsg = parsed.error;
+           if (parsed.message) errorMsg = parsed.message;
+        } catch(e) {}
+        throw new Error(`Verification Error: ${errorMsg}`);
       }
 
-      let parsedData = data;
-      if (typeof data === "string") {
-        try {
-          parsedData = JSON.parse(data);
-        } catch (e) {
-          console.error("Failed to parse response data as JSON:", e);
-        }
+      const data = await res.text();
+      let parsedData: any = data;
+      try {
+        parsedData = JSON.parse(data);
+      } catch (e) {
+        console.error("Failed to parse response data as JSON:", e);
       }
 
       if (parsedData?.status === "PAID") {
@@ -345,7 +365,9 @@ const SiteVisitEnrollmentPageContent = () => {
     setPaymentLoading(true);
 
     try {
-      const orderId = `NLIT_SV_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      const activeGatewayForId = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "razorpay";
+      const orderIdPrefix = activeGatewayForId === "razorpay" ? "NLIT_RZP_" : "NLIT_SV_";
+      const orderId = `${orderIdPrefix}${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       if (!supabase) throw new Error("Database not initialized");
 
       let uploaded12Url = "";
@@ -412,40 +434,140 @@ const SiteVisitEnrollmentPageContent = () => {
         console.warn("Could not save pending enrollment:", pendingError);
       }
 
-      // Create Cashfree Order
-      const { data: orderData, error: orderError } = await supabase.functions.invoke("create-cashfree-order", {
-        body: {
-          amount: enrollmentFee,
-          order_id: orderId,
-          customer_id: form.email.replace(/[^a-zA-Z0-9]/g, "_"),
-          customer_email: form.email,
-          customer_phone: form.whatsapp,
-        },
-      });
+      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "razorpay";
+      if (activeGateway === "razorpay") {
+        // 2. Create Razorpay Order using Supabase Client SDK
+        if (!supabase) {
+          throw new Error("Supabase client is not initialized");
+        }
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        
+        const functionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-razorpay-order`;
+        const fnResponse = await fetch(functionUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+            "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+          },
+          body: JSON.stringify({
+            amount: enrollmentFee,
+            order_id: orderId,
+            customer_id: form.email.replace(/[^a-zA-Z0-9]/g, "_"),
+            customer_email: form.email,
+            customer_phone: form.whatsapp,
+          })
+        });
 
-      if (orderError) {
-        throw new Error(orderError.message || "Payment system unavailable");
+        let orderData;
+        if (!fnResponse.ok) {
+          const errText = await fnResponse.text();
+          console.error("Razorpay Edge Function Error:", errText);
+          let errorMsg = errText;
+          try {
+             const parsed = JSON.parse(errText);
+             if (parsed.error) errorMsg = parsed.error;
+             if (parsed.message) errorMsg = parsed.message;
+          } catch(e) {}
+          throw new Error(`Payment Error: ${errorMsg}`);
+        } else {
+          orderData = await fnResponse.json();
+        }
+
+        if (!orderData || !orderData.id) {
+          console.error("Missing Razorpay order id. Full response:", orderData);
+          throw new Error("Payment session could not be created. Please try again.");
+        }
+
+        if (typeof window === "undefined" || !(window as any).Razorpay) {
+          throw new Error("Razorpay SDK not loaded. Please check your connection.");
+        }
+
+        saveFormToLocal(form, enrollmentFee, displayPrice);
+
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "", // Fallback, usually loaded from server
+          amount: orderData.amount, 
+          currency: orderData.currency,
+          name: "NLITedu",
+          description: `Enrollment for ${form.course}`,
+          image: "https://www.nlitedu.com/images/logo/logo-dark.png",
+          order_id: orderData.id,
+          handler: function (response: any) {
+            verifyPaymentStatus({
+              orderId: orderData.receipt || orderId,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            });
+          },
+          prefill: {
+            name: form.fullName,
+            email: form.email,
+            contact: form.whatsapp
+          },
+          theme: {
+            color: "#2563EB"
+          }
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on('payment.failed', function (response: any){
+          setError(`Payment Failed: ${response.error.description}`);
+          clearFormFromLocal();
+        });
+        rzp.open();
+      } else {
+        // 2. Create Cashfree Order using Supabase Client SDK
+        if (!supabase) {
+          throw new Error("Supabase client is not initialized");
+        }
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        
+        const functionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-cashfree-order`;
+        const fnResponse = await fetch(functionUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+            "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+          },
+          body: JSON.stringify({
+            amount: enrollmentFee,
+            order_id: orderId,
+            customer_id: form.email.replace(/[^a-zA-Z0-9]/g, "_"),
+            customer_email: form.email,
+            customer_phone: form.whatsapp,
+          })
+        });
+
+        let orderData;
+        if (!fnResponse.ok) {
+          const errText = await fnResponse.text();
+          console.error("Cashfree Edge Function Error:", errText);
+          throw new Error("Payment session could not be created. Please try again.");
+        } else {
+          orderData = await fnResponse.json();
+        }
+
+        if (!orderData || !orderData.payment_session_id) {
+          throw new Error("Payment session could not be created. Please try again.");
+        }
+
+        saveFormToLocal(form, enrollmentFee, displayPrice);
+
+        if (!cashfree) {
+          throw new Error("Cashfree SDK is not loaded. Please wait a moment and try again.");
+        }
+
+        cashfree.checkout({
+          paymentSessionId: orderData.payment_session_id,
+          returnUrl: `${window.location.origin}/site-visit/enroll?order_id=${orderId}`
+        });
       }
 
-      if (!orderData || !orderData.payment_session_id) {
-        throw new Error("Payment session could not be created. Please try again.");
-      }
-
-      let cfInstance = cashfree;
-      if (!cfInstance && typeof window !== "undefined" && (window as any).Cashfree) {
-        const mode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "sandbox";
-        cfInstance = (window as any).Cashfree({ mode });
-        setCashfree(cfInstance);
-      }
-
-      if (!cfInstance) {
-        throw new Error("Payment gateway failed to load. Please refresh the page.");
-      }
-
-      saveFormToLocal(form, enrollmentFee, displayPrice);
-      cfInstance.checkout({
-        paymentSessionId: orderData.payment_session_id,
-      });
     } catch (err: any) {
       console.error("Payment initiation error:", err);
       setError(err.message || "Failed to initiate payment. Please try again.");
@@ -508,6 +630,7 @@ const SiteVisitEnrollmentPageContent = () => {
 
   return (
     <main className="min-h-screen bg-gray-50 pt-[160px] pb-14 px-4 text-slate-900 dark:bg-slate-950 dark:text-white sm:px-6 lg:px-8 relative">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <div className="mx-auto max-w-6xl mb-8">
         <div className="flex items-center gap-3 py-3 px-4 rounded-2xl bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
           <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
@@ -545,7 +668,7 @@ const SiteVisitEnrollmentPageContent = () => {
                 {pendingOrderId && !submitting && (
                   <button
                     type="button"
-                    onClick={() => verifyPaymentStatus(pendingOrderId)}
+                    onClick={() => verifyPaymentStatus({ orderId: pendingOrderId })}
                     className="mt-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
                   >
                     🔄 Retry Verification
