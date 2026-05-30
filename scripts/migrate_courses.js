@@ -43,7 +43,7 @@ const coursePricing: Record<string, { govt: number; private: number; job: number
 
 // Course list from courses.ts
 const courseList = [
-  { slug: "autocad-2d-3d-design", title: "AutoCAD & BIM", description: "Master industrial drafting and 3D modeling for modern construction and engineering projects.", image_url: "/courses/autocad.jpg", duration: "2 Months" },
+  { slug: "autocad-2d-3d-design", title: "AutoCAD", description: "Master industrial drafting and 3D modeling for modern construction and engineering projects.", image_url: "/courses/autocad.jpg", duration: "2 Months" },
   { slug: "java-programming", title: "Java Full Stack", description: "Build robust enterprise-grade applications using the world's most versatile programming language.", image_url: "/courses/java.jpg", duration: "2 Months" },
   { slug: "python-data-science-ai", title: "Python for AI", description: "Dive into Data Science and Artificial Intelligence with Python scripting and automation.", image_url: "/courses/python.jpg", duration: "2 Months" },
   { slug: "matlab-scientific-computing", title: "MATLAB Simulation", description: "Advanced mathematical computation and algorithm development for engineering research.", image_url: "/courses/matlab.jpg", duration: "2 Months" },
