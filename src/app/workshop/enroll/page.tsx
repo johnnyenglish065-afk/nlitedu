@@ -1165,9 +1165,40 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail, paidAmount
       pdf.line(margin, pdfHeight - 30, pdfWidth - margin, pdfHeight - 30);
 
       pdf.setFontSize(8);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(6);
+      
+      const t1 = "WEBSITE DESIGNED BY ";
+      const t2 = "SAVERAGRAPHICS ";
+      const t3 = "A ";
+      const t4 = "sindhuragroup ";
+      const t5 = "COMPANY";
+      
+      const w1 = pdf.getTextWidth(t1);
+      const w2 = pdf.getTextWidth(t2);
+      const w3 = pdf.getTextWidth(t3);
+      pdf.setFont("times", "italic");
+      const w4 = pdf.getTextWidth(t4);
+      pdf.setFont("helvetica", "normal");
+      const w5 = pdf.getTextWidth(t5);
+      
+      let startX = (pdfWidth - (w1 + w2 + w3 + w4 + w5)) / 2;
+      const fY = pdfHeight - 8;
+      
       pdf.setTextColor(148, 163, 184);
-      pdf.text("Nexgen Learning Institute of Technology - nliteedu.com", pdfWidth / 2, pdfHeight - 20, { align: "center" });
-      pdf.text("This is an electronically generated official receipt and does not require a physical signature.", pdfWidth / 2, pdfHeight - 15, { align: "center" });
+      pdf.text(t1, startX, fY); startX += w1;
+      
+      pdf.setTextColor(100, 116, 139); // slightly darker
+      pdf.text(t2, startX, fY); startX += w2;
+      
+      pdf.setTextColor(148, 163, 184);
+      pdf.text(t3, startX, fY); startX += w3;
+      
+      pdf.setFont("times", "italic");
+      pdf.text(t4, startX, fY); startX += w4;
+      
+      pdf.setFont("helvetica", "normal");
+      pdf.text(t5, startX, fY);
 
       pdf.save(`NLITedu_Workshop_Receipt_${orderId.substring(0, 8)}.pdf`);
     } catch (err: any) {

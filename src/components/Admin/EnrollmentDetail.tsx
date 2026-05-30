@@ -4,8 +4,11 @@ import { motion } from "framer-motion";
 import { 
   FaTimes, FaFileAlt, FaExternalLinkAlt, FaUser, 
   FaUniversity, FaRegIdBadge, FaMapMarkerAlt, FaVenusMars,
-  FaCalendarAlt, FaPhoneAlt, FaEnvelope, FaBriefcase
+  FaCalendarAlt, FaPhoneAlt, FaEnvelope, FaBriefcase, FaDownload
 } from "react-icons/fa";
+import { useState } from "react";
+import { jsPDF } from "jspdf";
+import { supabase } from "@/lib/supabaseClient";
 
 interface EnrollmentDetailProps {
   enrollment: any;
@@ -22,6 +25,292 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
       cleanMessage = cleanMessage.replace(/\[Internship Mode:\s*[^\]]+\]\s*/, "").trim();
     }
   }
+
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleDownloadInvoice = async () => {
+    setIsGenerating(true);
+    try {
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+
+      // 1. Header Blue Band
+      pdf.setFillColor(37, 99, 235);
+      pdf.rect(0, 0, pdfWidth, 45, "F");
+
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(26);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("NLITedu", margin, 20);
+
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "normal");
+      pdf.text("NEXGEN LEARNING INSTITUTE OF TECHNOLOGY", margin, 26);
+
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("OFFICIAL ENROLLMENT RECEIPT", pdfWidth - margin, 20, { align: "right" });
+
+      pdf.setFontSize(8);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Transaction ID: ${enrollment.cf_payment_id || "N/A"}`, pdfWidth - margin, 26, { align: "right" });
+
+      // 2. Receipt Details Header
+      let y = 65;
+      pdf.setTextColor(100, 116, 139);
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("RECEIPT TO:", margin, y);
+      pdf.text("RECEIPT DETAILS:", pdfWidth - margin, y, { align: "right" });
+
+      y += 6;
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text((enrollment.email || "").split("@")[0].toUpperCase(), margin, y);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.text(`Date: ${new Date(enrollment.created_at || Date.now()).toLocaleDateString()}`, pdfWidth - margin, y, { align: "right" });
+
+      y += 5;
+      pdf.setTextColor(51, 65, 85);
+      pdf.text(enrollment.email || "N/A", margin, y);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(16, 185, 129);
+      pdf.text(`Status: ${enrollment.status || "UNKNOWN"}`, pdfWidth - margin, y, { align: "right" });
+
+      y += 15;
+      // Calculate price using same logic as enroll/page.tsx as a fallback
+      let calculatedFee = 0;
+      let originalPrice = 6999;
+      
+      const isInternship = (!enrollment.enrollment_type || enrollment.enrollment_type === 'internship');
+      
+      if (isInternship) {
+          if (enrollment.state === "Bihar") {
+            const duration = enrollment.duration || "";
+            const mode = internshipMode || "Online";
+
+            if (enrollment.college_type === "govt") {
+              if (mode === "Online") {
+                if (duration.includes("2")) calculatedFee = 799;
+                else if (duration.includes("4")) calculatedFee = 999;
+                else if (duration.includes("6")) calculatedFee = 1199;
+                else if (duration.includes("8")) calculatedFee = 1399;
+                else calculatedFee = 999;
+              } else {
+                if (duration.includes("2")) calculatedFee = 1299;
+                else if (duration.includes("4")) calculatedFee = 1499;
+                else if (duration.includes("6")) calculatedFee = 1999;
+                else if (duration.includes("8")) calculatedFee = 2499;
+                else calculatedFee = 1499;
+              }
+            }
+            else if (enrollment.college_type === "private") {
+              if (mode === "Online") {
+                if (duration.includes("2")) calculatedFee = 999;
+                else if (duration.includes("4")) calculatedFee = 1499;
+                else if (duration.includes("6")) calculatedFee = 1999;
+                else if (duration.includes("8")) calculatedFee = 2499;
+                else calculatedFee = 1999;
+              } else {
+                if (duration.includes("2")) calculatedFee = 1799;
+                else if (duration.includes("4")) calculatedFee = 1999;
+                else if (duration.includes("6")) calculatedFee = 2499;
+                else if (duration.includes("8")) calculatedFee = 2999;
+                else calculatedFee = 1999;
+              }
+            }
+            else if (enrollment.college_type === "job") calculatedFee = 2999;
+          }
+          else {
+            if (enrollment.college_type === "govt") calculatedFee = 1499;
+            else if (enrollment.college_type === "private") calculatedFee = 1999;
+            else if (enrollment.college_type === "job") calculatedFee = 2999;
+          }
+      } else {
+         calculatedFee = 499;
+         originalPrice = 1499;
+      }
+
+      if (calculatedFee === 0) calculatedFee = 999;
+      
+      let paidAmount = calculatedFee;
+
+      // First check if the exact amount is already saved in the database
+      if (enrollment.payment_amount != null) {
+        paidAmount = Number(enrollment.payment_amount);
+      } 
+      // Try to get exact amount from Cashfree if payment ID exists and we didn't find it in DB
+      else if (enrollment.cf_payment_id) {
+        try {
+          if (!supabase) {
+            throw new Error("Supabase client is not initialized");
+          }
+          const { data } = await supabase.functions.invoke("verify-cashfree-payment", {
+            body: { orderId: enrollment.cf_payment_id },
+          });
+          
+          let parsedData = data;
+          if (typeof data === "string") {
+            try { parsedData = JSON.parse(data); } catch (e) {}
+          }
+          
+          if (parsedData?.amount) {
+            paidAmount = parsedData.amount;
+          }
+        } catch (e) {
+          console.warn("Could not fetch exact amount from Cashfree, using fallback:", e);
+        }
+      }
+
+      // 3. Table Header
+      pdf.setFillColor(241, 245, 249);
+      pdf.rect(margin, y, pdfWidth - (margin * 2), 10, "F");
+      
+      pdf.setTextColor(71, 85, 105);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.text("COURSE / ITEM DESCRIPTION", margin + 5, y + 6.5);
+      pdf.text("STATUS", pdfWidth - margin - 35, y + 6.5, { align: "right" });
+      pdf.text("AMOUNT", pdfWidth - margin - 5, y + 6.5, { align: "right" });
+
+      y += 10;
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(margin, y, pdfWidth - margin, y);
+
+      y += 8;
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text(enrollment.course_title || "Unknown Course", margin + 5, y);
+
+      pdf.setTextColor(16, 185, 129);
+      pdf.text(enrollment.status || "PAID", pdfWidth - margin - 35, y, { align: "right" });
+
+      pdf.setTextColor(15, 23, 42);
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+
+      y += 4.5;
+      pdf.setTextColor(100, 116, 139);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8.5);
+      pdf.text("Includes full curriculum, mentorship sessions, and certificate of completion.", margin + 5, y);
+
+      y += 10;
+      pdf.line(margin, y, pdfWidth - margin, y);
+
+      // 5. Total Section
+      y += 10;
+      pdf.setTextColor(71, 85, 105);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      
+      if (originalPrice > paidAmount) {
+         pdf.text("Course Fee:", pdfWidth - margin - 40, y, { align: "right" });
+         pdf.text(`Rs. ${originalPrice.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         y += 6;
+         pdf.text("Discount:", pdfWidth - margin - 40, y, { align: "right" });
+         pdf.text(`-Rs. ${(originalPrice - paidAmount).toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         y += 6;
+      }
+
+      pdf.text("Subtotal:", pdfWidth - margin - 40, y, { align: "right" });
+      pdf.setTextColor(15, 23, 42);
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+
+      y += 6;
+      pdf.setTextColor(71, 85, 105);
+      pdf.text("Tax (GST 0%):", pdfWidth - margin - 40, y, { align: "right" });
+      pdf.setTextColor(15, 23, 42);
+      pdf.text("Rs. 0.00", pdfWidth - margin - 5, y, { align: "right" });
+
+      y += 8;
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(pdfWidth - margin - 60, y - 4, pdfWidth - margin, y - 4);
+      pdf.setTextColor(37, 99, 235);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text("Total Paid:", pdfWidth - margin - 40, y, { align: "right" });
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+
+      // 6. Support Details Card
+      y += 20;
+      pdf.setFillColor(248, 250, 252);
+      pdf.roundedRect(margin, y, pdfWidth - (margin * 2), 35, 3, 3, "F");
+      pdf.setDrawColor(241, 245, 249);
+      pdf.roundedRect(margin, y, pdfWidth - (margin * 2), 35, 3, 3, "D");
+
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(10);
+      pdf.text("Important Notice:", margin + 8, y + 8);
+
+      pdf.setTextColor(71, 85, 105);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8.5);
+      pdf.text("1. This is a system-generated copy of the student's enrollment receipt.", margin + 8, y + 14);
+      pdf.text("2. Please verify the transaction ID in the payment gateway if necessary.", margin + 8, y + 19);
+
+      // 7. Footer
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(margin, pdfHeight - 30, pdfWidth - margin, pdfHeight - 30);
+
+      pdf.setFontSize(8);
+      pdf.setTextColor(148, 163, 184);
+      pdf.text("Nexgen Learning Institute of Technology - nliteedu.com", pdfWidth / 2, pdfHeight - 20, { align: "center" });
+      pdf.text("This is an electronically generated official receipt and does not require a physical signature.", pdfWidth / 2, pdfHeight - 15, { align: "center" });
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(6);
+      
+      const t1 = "WEBSITE DESIGNED BY ";
+      const t2 = "SAVERAGRAPHICS ";
+      const t3 = "A ";
+      const t4 = "sindhuragroup ";
+      const t5 = "COMPANY";
+      
+      const w1 = pdf.getTextWidth(t1);
+      const w2 = pdf.getTextWidth(t2);
+      const w3 = pdf.getTextWidth(t3);
+      pdf.setFont("times", "italic");
+      const w4 = pdf.getTextWidth(t4);
+      pdf.setFont("helvetica", "normal");
+      const w5 = pdf.getTextWidth(t5);
+      
+      let startX = (pdfWidth - (w1 + w2 + w3 + w4 + w5)) / 2;
+      const fY = pdfHeight - 8;
+      
+      pdf.setTextColor(148, 163, 184);
+      pdf.text(t1, startX, fY); startX += w1;
+      
+      pdf.setTextColor(100, 116, 139); // slightly darker
+      pdf.text(t2, startX, fY); startX += w2;
+      
+      pdf.setTextColor(148, 163, 184);
+      pdf.text(t3, startX, fY); startX += w3;
+      
+      pdf.setFont("times", "italic");
+      pdf.text(t4, startX, fY); startX += w4;
+      
+      pdf.setFont("helvetica", "normal");
+      pdf.text(t5, startX, fY);
+
+      pdf.save(`Admin_Invoice_${(enrollment.cf_payment_id || "N/A").substring(0, 8)}.pdf`);
+    } catch (err: any) {
+      console.error("Failed to generate PDF", err);
+      alert("PDF Generation Error: " + (err.message || "Unknown error"));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -165,6 +454,29 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
               <div className="w-full bg-slate-100 dark:bg-slate-800 px-4 py-3 rounded-2xl">
                 <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1">Additional Notes</p>
                 <p className="text-sm italic text-slate-600 dark:text-slate-400">{cleanMessage}</p>
+              </div>
+            )}
+            
+            {/* Download Invoice Button */}
+            {enrollment.status === "PAID" && (
+              <div className="w-full mt-4 flex justify-end">
+                <button
+                  onClick={handleDownloadInvoice}
+                  disabled={isGenerating}
+                  className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <FaDownload />
+                      Download Invoice PDF
+                    </>
+                  )}
+                </button>
               </div>
             )}
             {/* Interested Internship Courses removed */}
