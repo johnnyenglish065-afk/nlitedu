@@ -86,7 +86,8 @@ serve(async (req) => {
              status: "PAID",
              payment_amount: paymentData.amount / 100,
              payment_currency: paymentData.currency || "INR",
-             payment_method: paymentData.method || "razorpay"
+             payment_method: paymentData.method || "razorpay",
+             payment_time: new Date().toISOString()
            })
            .eq("cf_payment_id", orderId)
            .select()
