@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -287,10 +287,10 @@ const WorkshopEnrollmentPageContent = () => {
   };
 
   // Workshop pricing: flat table based on duration × college type
-  // 7 Days  → Govt ₹999,  Private ₹1199
-  // 14 Days → Govt ₹1699, Private ₹1999
-  // 21 Days → Govt ₹2499, Private ₹2999
-  // 28 Days → Govt ₹3499, Private ₹3999
+  // 7 Days  → Govt Rs. 999,  Private Rs. 1199
+  // 14 Days → Govt Rs. 1699, Private Rs. 1999
+  // 21 Days → Govt Rs. 2499, Private Rs. 2999
+  // 28 Days → Govt Rs. 3499, Private Rs. 3999
   const enrollmentFee = useMemo(() => {
     const duration = form.duration || "";
 
@@ -916,7 +916,7 @@ const WorkshopEnrollmentPageContent = () => {
                 ) : submitting ? (
                   <>⏳ Processing...</>
                 ) : isFormComplete && enrollmentFee > 0 ? (
-                  <><span className="line-through text-white/60 mr-1">₹{displayPrice.toLocaleString("en-IN")}</span> 💳 Pay ₹{enrollmentFee.toLocaleString("en-IN")} & Register</>
+                  <><span className="line-through text-white/60 mr-1">Rs. {displayPrice.toLocaleString("en-IN")}</span> 💳 Pay Rs. {enrollmentFee.toLocaleString("en-IN")} & Register</>
                 ) : (
                   <>✓ Fill Form to Register</>
                 )}
@@ -989,14 +989,14 @@ const WorkshopEnrollmentPageContent = () => {
                   <>
                     <div className="flex items-center justify-between">
                       <dt className="font-medium text-slate-500 dark:text-slate-400">MRP</dt>
-                      <dd className="font-medium text-slate-400 line-through">₹{displayPrice.toLocaleString("en-IN")}</dd>
+                      <dd className="font-medium text-slate-400 line-through">Rs. {displayPrice.toLocaleString("en-IN")}</dd>
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <dt className="font-bold text-green-700 dark:text-green-400 text-base">Offer Price</dt>
-                      <dd className="font-extrabold text-green-700 dark:text-green-400 text-lg">₹{enrollmentFee.toLocaleString("en-IN")}</dd>
+                      <dd className="font-extrabold text-green-700 dark:text-green-400 text-lg">Rs. {enrollmentFee.toLocaleString("en-IN")}</dd>
                     </div>
                     <div className="rounded-lg bg-green-100 dark:bg-green-900/30 px-3 py-2 text-center mt-2">
-                      <span className="text-xs font-bold text-green-700 dark:text-green-400">💰 You save ₹{(displayPrice - enrollmentFee).toLocaleString("en-IN")} ({Math.round(((displayPrice - enrollmentFee) / displayPrice) * 100)}% OFF)</span>
+                      <span className="text-xs font-bold text-green-700 dark:text-green-400">💰 You save Rs. {(displayPrice - enrollmentFee).toLocaleString("en-IN")} ({Math.round(((displayPrice - enrollmentFee) / displayPrice) * 100)}% OFF)</span>
                     </div>
                   </>
                 ) : (
@@ -1099,7 +1099,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail, paidAmount
       pdf.text("PAID", pdfWidth - margin - 35, y, { align: "right" });
 
       pdf.setTextColor(15, 23, 42);
-      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       y += 4.5;
       pdf.setTextColor(100, 116, 139);
@@ -1117,22 +1117,22 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail, paidAmount
       
       if (originalPrice > paidAmount) {
          pdf.text("Course Fee:", pdfWidth - margin - 40, y, { align: "right" });
-         pdf.text(`₹${originalPrice.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         pdf.text(`Rs. ${originalPrice.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
          y += 6;
          pdf.text("Discount:", pdfWidth - margin - 40, y, { align: "right" });
-         pdf.text(`-₹${(originalPrice - paidAmount).toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         pdf.text(`-Rs. ${(originalPrice - paidAmount).toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
          y += 6;
       }
 
       pdf.text("Subtotal:", pdfWidth - margin - 40, y, { align: "right" });
       pdf.setTextColor(15, 23, 42);
-      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       y += 6;
       pdf.setTextColor(71, 85, 105);
       pdf.text("Tax (GST 0%):", pdfWidth - margin - 40, y, { align: "right" });
       pdf.setTextColor(15, 23, 42);
-      pdf.text("₹0.00", pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text("Rs. 0.00", pdfWidth - margin - 5, y, { align: "right" });
 
       y += 8;
       pdf.setDrawColor(226, 232, 240);
@@ -1141,7 +1141,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail, paidAmount
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
       pdf.text("Total Paid:", pdfWidth - margin - 40, y, { align: "right" });
-      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       y += 20;
       pdf.setFillColor(248, 250, 252);
