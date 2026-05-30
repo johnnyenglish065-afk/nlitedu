@@ -148,14 +148,21 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
       if (enrollment.payment_amount != null) {
         paidAmount = Number(enrollment.payment_amount);
       } 
-      // Try to get exact amount from Cashfree if payment ID exists and we didn't find it in DB
+      // Try to get exact amount from gateway if payment ID exists and we didn't find it in DB
       else if (enrollment.cf_payment_id) {
         try {
           if (!supabase) {
             throw new Error("Supabase client is not initialized");
           }
-          const { data } = await supabase.functions.invoke("verify-cashfree-payment", {
-            body: { orderId: enrollment.cf_payment_id },
+          
+          const isRazorpay = enrollment.cf_payment_id.startsWith("NLIT_RZP_");
+          const functionName = isRazorpay ? "verify-razorpay-payment" : "verify-cashfree-payment";
+          const payload = isRazorpay 
+            ? { orderId: enrollment.cf_payment_id } // Our Edge Function supports this now for backward compatibility
+            : { orderId: enrollment.cf_payment_id };
+            
+          const { data } = await supabase.functions.invoke(functionName, {
+            body: payload,
           });
           
           let parsedData = data;
