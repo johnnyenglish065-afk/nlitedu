@@ -5,9 +5,8 @@ import Team2 from "@/components/Team2";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Page | Free Next.js Template for Startup and SaaS",
-  description: "This is Contact Page for Startup Nextjs Template",
-  // other metadata
+  title: "Our Faculty & Experts",
+  description: "Meet the experienced professionals and industry experts leading the tech programs at NLITedu.",
 };
 
 const FacultyPage = () => {
