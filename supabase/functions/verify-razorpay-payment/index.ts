@@ -17,52 +17,81 @@ serve(async (req) => {
     const { orderId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json();
 
     const keySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
+    const keyId = Deno.env.get("RAZORPAY_KEY_ID");
 
-    if (!keySecret) {
+    if (!keySecret || !keyId) {
       throw new Error("Razorpay credentials not configured in Supabase secrets");
     }
 
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    const authHeader = `Basic ${base64Encode(`${keyId}:${keySecret}`)}`;
+    let paymentData = null;
+
+    if (razorpay_order_id && razorpay_payment_id && razorpay_signature) {
+      // Verify signature using Web Crypto API
+      const textEncoder = new TextEncoder();
+      const data = textEncoder.encode(`${razorpay_order_id}|${razorpay_payment_id}`);
+      const key = await crypto.subtle.importKey(
+        "raw",
+        textEncoder.encode(keySecret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      
+      const signatureBuffer = await crypto.subtle.sign("HMAC", key, data);
+      const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+      const generatedSignature = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      if (generatedSignature !== razorpay_signature) {
+        throw new Error("Invalid payment signature");
+      }
+
+      // Fetch the payment details from Razorpay to get the amount paid
+      const response = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`, {
+        method: "GET",
+        headers: { "Authorization": authHeader }
+      });
+
+      paymentData = await response.json();
+      if (!response.ok) {
+         throw new Error("Payment verified but failed to fetch payment details from Razorpay");
+      }
+    } else if (orderId) {
+      // Fallback for "Retry Verification" flow (no signature params, only orderId/receipt)
+      const ordersRes = await fetch(`https://api.razorpay.com/v1/orders?receipt=${orderId}`, {
+        method: "GET",
+        headers: { "Authorization": authHeader }
+      });
+      const ordersData = await ordersRes.json();
+      
+      if (!ordersRes.ok || !ordersData.items || ordersData.items.length === 0) {
+        throw new Error("Order not found in Razorpay");
+      }
+      
+      const rzpOrderId = ordersData.items[0].id;
+      
+      // Fetch payments for this order
+      const paymentsRes = await fetch(`https://api.razorpay.com/v1/orders/${rzpOrderId}/payments`, {
+        method: "GET",
+        headers: { "Authorization": authHeader }
+      });
+      const paymentsData = await paymentsRes.json();
+      
+      if (!paymentsRes.ok || !paymentsData.items || paymentsData.items.length === 0) {
+        throw new Error("Failed to fetch payments for order, or no payment attempts found");
+      }
+      
+      // Look for a captured payment
+      paymentData = paymentsData.items.find((p: any) => p.status === "captured");
+      
+      if (!paymentData) {
+        throw new Error("Payment is not in captured status");
+      }
+    } else {
       throw new Error("Missing Razorpay payment verification parameters");
     }
 
-    // Verify signature using Web Crypto API
-    const textEncoder = new TextEncoder();
-    const data = textEncoder.encode(`${razorpay_order_id}|${razorpay_payment_id}`);
-    const key = await crypto.subtle.importKey(
-      "raw",
-      textEncoder.encode(keySecret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
-    
-    const signatureBuffer = await crypto.subtle.sign("HMAC", key, data);
-    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
-    const generatedSignature = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-    if (generatedSignature !== razorpay_signature) {
-      throw new Error("Invalid payment signature");
-    }
-
-    // Since signature is valid, fetch the payment details from Razorpay to get the amount paid
-    const keyId = Deno.env.get("RAZORPAY_KEY_ID");
-    const authHeader = `Basic ${base64Encode(`${keyId}:${keySecret}`)}`;
-
-    const response = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`, {
-      method: "GET",
-      headers: {
-        "Authorization": authHeader,
-      }
-    });
-
-    const paymentData = await response.json();
-    
-    if (!response.ok) {
-       throw new Error("Payment verified but failed to fetch payment details from Razorpay");
-    }
-
-    if (paymentData.status !== "captured") {
+    if (!paymentData || paymentData.status !== "captured") {
         throw new Error("Payment is not in captured status");
     }
 
