@@ -214,24 +214,38 @@ const EnrollmentPageContent = () => {
       if (!supabase) {
         throw new Error("Supabase client is not initialized");
       }
-
-      // Directly invoke the verify-cashfree-payment Edge Function
-      const { data, error: invokeError } = await supabase.functions.invoke("verify-cashfree-payment", {
-        body: { orderId },
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const functionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/verify-cashfree-payment`;
+      
+      const res = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+        },
+        body: JSON.stringify({ orderId })
       });
 
-      if (invokeError) {
-        throw new Error(invokeError.message || "Failed to call verification service");
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Cashfree Verify Edge Function Error:", errText);
+        let errorMsg = errText;
+        try {
+           const parsed = JSON.parse(errText);
+           if (parsed.error) errorMsg = parsed.error;
+           if (parsed.message) errorMsg = parsed.message;
+        } catch(e) {}
+        throw new Error(`Verification Error: ${errorMsg}`);
       }
 
-      // Safe parse in case return type is string (due to missing application/json header on Edge Function response)
-      let parsedData = data;
-      if (typeof data === "string") {
-        try {
-          parsedData = JSON.parse(data);
-        } catch (e) {
-          console.error("Failed to parse response data as JSON:", e);
-        }
+      const data = await res.text();
+      let parsedData: any = data;
+      try {
+        parsedData = JSON.parse(data);
+      } catch (e) {
+        console.error("Failed to parse response data as JSON:", e);
       }
 
       if (parsedData?.status === "PAID") {
@@ -496,18 +510,39 @@ const EnrollmentPageContent = () => {
       if (!supabase) {
         throw new Error("Supabase client is not initialized");
       }
-      const { data: orderData, error: orderError } = await supabase.functions.invoke("create-cashfree-order", {
-        body: {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      
+      const functionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-cashfree-order`;
+      const fnResponse = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+        },
+        body: JSON.stringify({
           amount: enrollmentFee,
           order_id: orderId,
           customer_id: form.email.replace(/[^a-zA-Z0-9]/g, "_"),
           customer_email: form.email,
           customer_phone: form.whatsapp,
-        },
+        })
       });
 
-      if (orderError) {
-        throw new Error(orderError.message || "Payment system unavailable");
+      let orderData;
+      if (!fnResponse.ok) {
+        const errText = await fnResponse.text();
+        console.error("Cashfree Edge Function Error:", errText);
+        let errorMsg = errText;
+        try {
+           const parsed = JSON.parse(errText);
+           if (parsed.error) errorMsg = parsed.error;
+           if (parsed.message) errorMsg = parsed.message;
+        } catch(e) {}
+        throw new Error(`Payment Error: ${errorMsg}`);
+      } else {
+        orderData = await fnResponse.json();
       }
 
       if (!orderData) {
