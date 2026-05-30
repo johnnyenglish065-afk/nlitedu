@@ -93,7 +93,7 @@ const EnrollmentPageContent = () => {
     marksheet12Url: "",
     marksheetSemUrl: "",
     duration: "",
-    internshipMode: "Online",
+    internshipMode: "",
   });
   const [marksheet12File, setMarksheet12File] = useState<File | null>(null);
   const [marksheetSemFile, setMarksheetSemFile] = useState<File | null>(null);
@@ -335,6 +335,8 @@ const EnrollmentPageContent = () => {
       form.collegeName.trim() !== "" &&
       form.collegeType !== "" &&
       form.state !== "" &&
+      form.course !== "" &&
+      form.course !== "NLIT Course Enrollment" &&
       form.qualification !== "" &&
       form.marks10.trim() !== "" &&
       form.marksSem.trim() !== "" &&
@@ -352,7 +354,7 @@ const EnrollmentPageContent = () => {
   useEffect(() => {
     setForm((current) => ({
       ...current,
-      course: course.title,
+      course: course.title === "NLIT Course Enrollment" ? current.course : course.title,
       collegeType: searchParams.get("type") || current.collegeType,
       state: searchParams.get("state") || current.state,
       email: user?.email || current.email,
@@ -379,6 +381,7 @@ const EnrollmentPageContent = () => {
     if (!form.semester) return "Please select your semester.";
     if (!form.collegeName.trim()) return "Please enter your college name.";
     if (!form.collegeType) return "Please select your college type.";
+    if (!form.course || form.course === "NLIT Course Enrollment") return "Please select a course.";
     if (!form.state) return "Please select your state.";
     if (!form.qualification) return "Please select your qualification.";
     if (!form.marks10.trim()) return "Please enter your 10th marks.";
@@ -770,7 +773,7 @@ const EnrollmentPageContent = () => {
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-medium">Course Name / Qualification</span>
+                <span className="mb-2 block text-sm font-medium">Qualification / Degree</span>
                 <select
                   name="qualification"
                   value={form.qualification}
@@ -898,6 +901,39 @@ const EnrollmentPageContent = () => {
                   ))}
                 </select>
               </label>
+
+              <label className="block sm:col-span-2">
+                <span className="mb-2 block text-sm font-medium">Select Course <span className="text-red-500">*</span></span>
+                <select
+                  name="course"
+                  value={form.course}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  required
+                >
+                  <option value="">Select a Course</option>
+                  {courses
+                    .filter((c) => !isInternship || [
+                      "autocad-2d-3d-design",
+                      "java-programming",
+                      "python-programming",
+                      "data-science",
+                      "artificial-intelligence",
+                      "matlab-scientific-computing",
+                      "android-ios-mobile-development",
+                      "iot-embedded",
+                      "revit-bim",
+                      "solidworks",
+                      "catia",
+                      "sketchup",
+                      "etabs",
+                      "general"
+                    ].includes(c.slug))
+                    .map((c) => (
+                    <option key={c.slug} value={c.title}>{c.title}</option>
+                  ))}
+                </select>
+              </label>
             </div>
 
             <div className="grid gap-5 sm:grid-cols-3">
@@ -997,6 +1033,7 @@ const EnrollmentPageContent = () => {
                     className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                     required
                   >
+                    <option value="">Select Internship Mode</option>
                     <option value="Online">Online</option>
                     <option value="Online + Offline">Online + Offline</option>
                   </select>
@@ -1228,7 +1265,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail, paidAmount
       pdf.text("PAID", pdfWidth - margin - 35, y, { align: "right" });
 
       pdf.setTextColor(15, 23, 42); // Slate-900
-      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       y += 4.5;
       pdf.setTextColor(100, 116, 139); // Slate-500
@@ -1247,22 +1284,22 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail, paidAmount
       
       if (originalPrice > paidAmount) {
          pdf.text("Course Fee:", pdfWidth - margin - 40, y, { align: "right" });
-         pdf.text(`₹${originalPrice.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         pdf.text(`Rs. ${originalPrice.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
          y += 6;
          pdf.text("Discount:", pdfWidth - margin - 40, y, { align: "right" });
-         pdf.text(`-₹${(originalPrice - paidAmount).toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         pdf.text(`-Rs. ${(originalPrice - paidAmount).toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
          y += 6;
       }
 
       pdf.text("Subtotal:", pdfWidth - margin - 40, y, { align: "right" });
       pdf.setTextColor(15, 23, 42); // Slate-900
-      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       y += 6;
       pdf.setTextColor(71, 85, 105); // Slate-600
       pdf.text("Tax (GST 0%):", pdfWidth - margin - 40, y, { align: "right" });
       pdf.setTextColor(15, 23, 42); // Slate-900
-      pdf.text("₹0.00", pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text("Rs. 0.00", pdfWidth - margin - 5, y, { align: "right" });
 
       y += 8;
       pdf.setDrawColor(226, 232, 240); // Slate-200
@@ -1271,7 +1308,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail, paidAmount
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
       pdf.text("Total Paid:", pdfWidth - margin - 40, y, { align: "right" });
-      pdf.text(`₹${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
 
       // 6. Support Details Card
       y += 20;
@@ -1300,6 +1337,41 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail, paidAmount
       pdf.setTextColor(148, 163, 184); // Slate-400
       pdf.text("Nexgen Learning Institute of Technology - nliteedu.com", pdfWidth / 2, pdfHeight - 20, { align: "center" });
       pdf.text("This is an electronically generated official receipt and does not require a physical signature.", pdfWidth / 2, pdfHeight - 15, { align: "center" });
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(6);
+      
+      const t1 = "WEBSITE DESIGNED BY ";
+      const t2 = "SAVERAGRAPHICS ";
+      const t3 = "A ";
+      const t4 = "sindhuragroup ";
+      const t5 = "COMPANY";
+      
+      const w1 = pdf.getTextWidth(t1);
+      const w2 = pdf.getTextWidth(t2);
+      const w3 = pdf.getTextWidth(t3);
+      pdf.setFont("times", "italic");
+      const w4 = pdf.getTextWidth(t4);
+      pdf.setFont("helvetica", "normal");
+      const w5 = pdf.getTextWidth(t5);
+      
+      let startX = (pdfWidth - (w1 + w2 + w3 + w4 + w5)) / 2;
+      const fY = pdfHeight - 8;
+      
+      pdf.setTextColor(148, 163, 184);
+      pdf.text(t1, startX, fY); startX += w1;
+      
+      pdf.setTextColor(100, 116, 139); // slightly darker
+      pdf.text(t2, startX, fY); startX += w2;
+      
+      pdf.setTextColor(148, 163, 184);
+      pdf.text(t3, startX, fY); startX += w3;
+      
+      pdf.setFont("times", "italic");
+      pdf.text(t4, startX, fY); startX += w4;
+      
+      pdf.setFont("helvetica", "normal");
+      pdf.text(t5, startX, fY);
 
       pdf.save(`NLITedu_Receipt_${orderId.substring(0, 8)}.pdf`);
     } catch (err: any) {
