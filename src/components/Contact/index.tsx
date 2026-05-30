@@ -179,7 +179,7 @@ const Contact = () => {
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 appearance-none text-sm outline-none transition duration-200"
                 >
                   <option value="" className="text-slate-900">Select Program</option>
-                  <option value="AutoCAD & BIM" className="text-slate-900">AutoCAD & BIM</option>
+                  <option value="AutoCAD" className="text-slate-900">AutoCAD</option>
                   <option value="Java Development" className="text-slate-900">Java Development</option>
                   <option value="Python AI/ML" className="text-slate-900">Python AI/ML</option>
                 </select>
