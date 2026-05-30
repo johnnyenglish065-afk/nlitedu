@@ -704,6 +704,33 @@ const WorkshopEnrollmentPageContent = () => {
             <Link
               href="/workshop"
               className="rounded-full bg-blue-50 border border-blue-200 px-5 py-2.5 text-sm font-semibold transition hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-700 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 whitespace-nowrap"
+>
+              ← Back
+            </Link>
+          </div>
+
+          <p className="mb-8 text-base text-slate-600 leading-relaxed dark:text-slate-300 border-l-4 border-blue-500 pl-4">{workshop.description}</p>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-200">
+                <p>{error}</p>
+                {pendingOrderId && !submitting && (
+                  <button
+                    type="button"
+                    onClick={() => verifyPaymentStatus({ orderId: pendingOrderId })}
+                    className="mt-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    🔄 Retry Verification
+                  </button>
+                )}
+              </div>
+            )}
+            {success && (
+              <div className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-200">
+                {success}
+              </div>
+            )}
 
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block">
