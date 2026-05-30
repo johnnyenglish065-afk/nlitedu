@@ -659,7 +659,7 @@ export default function AdminDashboard() {
     total: enrollments.length,
     paid: enrollments.filter(e => e.status === "PAID").length,
     pending: enrollments.filter(e => e.status === "PENDING").length,
-    revenue: enrollments.filter(e => e.status === "PAID").reduce((sum, e) => {
+    revenue: Math.round(enrollments.filter(e => e.status === "PAID").reduce((sum, e) => {
       if (e.payment_amount != null) {
         return sum + Number(e.payment_amount);
       }
@@ -714,7 +714,7 @@ export default function AdminDashboard() {
       }
       if (calculatedFee === 0) calculatedFee = 999;
       return sum + calculatedFee;
-    }, 0)
+    }, 0))
   };
 
   const handleRevenueClick = () => {
@@ -764,7 +764,7 @@ export default function AdminDashboard() {
           { label: "Students", value: stats.total, icon: FaUserGraduate, color: "blue" },
           { label: "Paid", value: stats.paid, icon: FaCreditCard, color: "green" },
           { label: "Pending", value: stats.pending, icon: FaClock, color: "amber" },
-          { label: "Revenue", value: isRevenueVisible ? `₹${stats.revenue}` : "*****", icon: isRevenueVisible ? FaDownload : FaLock, color: "purple", onClick: handleRevenueClick }
+          { label: "Revenue", value: isRevenueVisible ? `₹${stats.revenue.toLocaleString('en-IN')}` : "*****", icon: isRevenueVisible ? FaDownload : FaLock, color: "purple", onClick: handleRevenueClick }
         ].map((s, i) => (
           <div key={i} onClick={s.onClick} className={`bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm ${s.onClick ? 'cursor-pointer hover:shadow-md transition-all' : ''}`}>
             <div className={`w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4`}>
