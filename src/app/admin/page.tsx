@@ -68,6 +68,7 @@ interface Enrollment {
   enrollment_type?: string;
   internship_mode?: string;
   duration?: string;
+  payment_amount?: number | string;
 }
 
 interface Quiz {
@@ -658,7 +659,62 @@ export default function AdminDashboard() {
     total: enrollments.length,
     paid: enrollments.filter(e => e.status === "PAID").length,
     pending: enrollments.filter(e => e.status === "PENDING").length,
-    revenue: enrollments.filter(e => e.status === "PAID").length * 499
+    revenue: enrollments.filter(e => e.status === "PAID").reduce((sum, e) => {
+      if (e.payment_amount != null) {
+        return sum + Number(e.payment_amount);
+      }
+      let calculatedFee = 0;
+      const isInternship = (!e.enrollment_type || e.enrollment_type === 'internship');
+      let internshipMode = e.internship_mode || null;
+      let cleanMessage = e.message || "";
+      if (!internshipMode && cleanMessage.includes("[Internship Mode:")) {
+        const match = cleanMessage.match(/\[Internship Mode:\s*([^\]]+)\]/);
+        if (match) internshipMode = match[1];
+      }
+      if (isInternship) {
+        if (e.state === "Bihar") {
+          const duration = e.duration || "";
+          const mode = internshipMode || "Online";
+          if (e.college_type === "govt") {
+            if (mode === "Online") {
+              if (duration.includes("2")) calculatedFee = 799;
+              else if (duration.includes("4")) calculatedFee = 999;
+              else if (duration.includes("6")) calculatedFee = 1199;
+              else if (duration.includes("8")) calculatedFee = 1399;
+              else calculatedFee = 999;
+            } else {
+              if (duration.includes("2")) calculatedFee = 1299;
+              else if (duration.includes("4")) calculatedFee = 1499;
+              else if (duration.includes("6")) calculatedFee = 1999;
+              else if (duration.includes("8")) calculatedFee = 2499;
+              else calculatedFee = 1499;
+            }
+          } else if (e.college_type === "private") {
+            if (mode === "Online") {
+              if (duration.includes("2")) calculatedFee = 999;
+              else if (duration.includes("4")) calculatedFee = 1499;
+              else if (duration.includes("6")) calculatedFee = 1999;
+              else if (duration.includes("8")) calculatedFee = 2499;
+              else calculatedFee = 1999;
+            } else {
+              if (duration.includes("2")) calculatedFee = 1799;
+              else if (duration.includes("4")) calculatedFee = 1999;
+              else if (duration.includes("6")) calculatedFee = 2499;
+              else if (duration.includes("8")) calculatedFee = 2999;
+              else calculatedFee = 1999;
+            }
+          } else if (e.college_type === "job") calculatedFee = 2999;
+        } else {
+          if (e.college_type === "govt") calculatedFee = 1499;
+          else if (e.college_type === "private") calculatedFee = 1999;
+          else if (e.college_type === "job") calculatedFee = 2999;
+        }
+      } else {
+        calculatedFee = 499;
+      }
+      if (calculatedFee === 0) calculatedFee = 999;
+      return sum + calculatedFee;
+    }, 0)
   };
 
   const handleRevenueClick = () => {
