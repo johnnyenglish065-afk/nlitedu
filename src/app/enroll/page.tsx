@@ -217,7 +217,7 @@ const EnrollmentPageContent = () => {
       }
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "razorpay";
+      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "cashfree";
       const functionUrl = activeGateway === "razorpay" 
         ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/verify-razorpay-payment`
         : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/verify-cashfree-payment`;
@@ -431,7 +431,7 @@ const EnrollmentPageContent = () => {
     setPaymentLoading(true);
 
     try {
-      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "razorpay";
+      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "cashfree";
       const orderIdPrefix = activeGateway === "razorpay" ? "NLIT_RZP_" : "NLIT_";
       const orderId = `${orderIdPrefix}${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       if (!supabase) throw new Error("Database not initialized");
