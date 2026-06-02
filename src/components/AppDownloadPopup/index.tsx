@@ -59,7 +59,7 @@ const AppDownloadPopup = () => {
                 Google Play
               </a>
               <a
-                href="https://github.com/saveragraphics/NLITedu-Mobile/raw/main/releases/app-release.apk"
+                href="https://github.com/saveragraphics/NLITedu-Mobile/releases/download/v1.0.13+20/app-release.apk"
                 className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                 download
                 onClick={handleDismiss}
