@@ -17,7 +17,7 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Pricing from enroll/page.tsx
-const coursePricing: Record<string, { govt: number; private: number; job: number }> = {
+const coursePricing = {
   "autocad-2d-3d-design": { govt: 1999, private: 2999, job: 3999 },
   "java-programming": { govt: 1999, private: 2999, job: 3999 },
   "python-data-science-ai": { govt: 1999, private: 2999, job: 3999 },
