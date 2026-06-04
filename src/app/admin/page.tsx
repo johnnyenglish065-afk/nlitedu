@@ -116,7 +116,7 @@ export default function AdminDashboard() {
   // Study Materials State
   // --- STORAGE LOCK FEATURE FLAG ---
   // Change this to `false` after payment verification to unlock the Study Materials upload feature!
-  const IS_STORAGE_LOCKED = true;
+  const IS_STORAGE_LOCKED = false;
 
   const [studyMaterials, setStudyMaterials] = useState<any[]>([]);
   const [newMaterial, setNewMaterial] = useState({ course_title: "", topic: "", document_url: "" });
