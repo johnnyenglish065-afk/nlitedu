@@ -97,20 +97,31 @@ serve(async (req) => {
     // Database Webhooks send JSON payload with 'type' and 'old_record'/'record'
     const payload = await req.json();
 
-    // Ensure this is a DELETE event
-    if (payload.type === "DELETE" && payload.old_record) {
+    // Ensure this is a DELETE or UPDATE event
+    if ((payload.type === "DELETE" || payload.type === "UPDATE") && payload.old_record) {
       const oldRecord = payload.old_record;
+      const newRecord = payload.record || {};
       const urlsToDelete = [];
 
+      // Helper function to add URL if it was deleted or changed
+      const checkAndAddUrl = (field: string) => {
+        if (oldRecord[field] && oldRecord[field] !== newRecord[field]) {
+          urlsToDelete.push(oldRecord[field]);
+        }
+      };
+
       // Add known cloudinary URL fields (checking both camelCase and snake_case to be safe)
-      if (oldRecord.marksheet_12_url) urlsToDelete.push(oldRecord.marksheet_12_url);
-      if (oldRecord.marksheet_sem_url) urlsToDelete.push(oldRecord.marksheet_sem_url);
-      if (oldRecord.marksheet12Url) urlsToDelete.push(oldRecord.marksheet12Url);
-      if (oldRecord.marksheetSemUrl) urlsToDelete.push(oldRecord.marksheetSemUrl);
+      checkAndAddUrl('marksheet_12_url');
+      checkAndAddUrl('marksheet_sem_url');
+      checkAndAddUrl('marksheet12Url');
+      checkAndAddUrl('marksheetSemUrl');
       
       // Expandable if you add profile photos, etc.
-      if (oldRecord.profile_photo_url) urlsToDelete.push(oldRecord.profile_photo_url);
-      if (oldRecord.profilePhotoUrl) urlsToDelete.push(oldRecord.profilePhotoUrl);
+      checkAndAddUrl('profile_photo_url');
+      checkAndAddUrl('profilePhotoUrl');
+      
+      // Study Materials
+      checkAndAddUrl('document_url');
 
       console.log(`Found ${urlsToDelete.length} files to delete for record ${oldRecord.id}`);
 
