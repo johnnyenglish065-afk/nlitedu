@@ -517,7 +517,7 @@ export default function AdminDashboard() {
         .from("quiz_questions")
         .select("id, question_text, correct_index")
         .eq("quiz_id", quizId)
-        .order("created_at", { ascending: true });
+        .order("id", { ascending: true });
         
       if (qError) throw qError;
       const questions = questionsData || [];
