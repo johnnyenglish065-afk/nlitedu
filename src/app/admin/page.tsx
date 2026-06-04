@@ -7,7 +7,7 @@ import {
   FaClock, FaEye, FaUniversity, FaFilter, FaFileCsv,
   FaVideo, FaStop, FaPlay, FaUsers, FaLink, FaBroadcastTower,
   FaClipboardList, FaPlus, FaTrash, FaEnvelope, FaEdit,
-  FaPlayCircle, FaExternalLinkAlt, FaLock
+  FaPlayCircle, FaExternalLinkAlt, FaLock, FaBook, FaPen
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import EnrollmentDetail from "../../components/Admin/EnrollmentDetail";
@@ -105,13 +105,25 @@ export default function AdminDashboard() {
   const [courses, setCourses] = useState<any[]>([]);
 
   // Live Class State
-  const [activeAdminTab, setActiveAdminTab] = useState<"STUDENTS" | "LIVE" | "RECORDINGS" | "QUIZZES" | "EMAIL" | "COURSES">("STUDENTS");
+  const [activeAdminTab, setActiveAdminTab] = useState<"STUDENTS" | "LIVE" | "RECORDINGS" | "QUIZZES" | "EMAIL" | "COURSES" | "MATERIALS">("STUDENTS");
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
   const [liveAttendance, setLiveAttendance] = useState<LiveAttendance[]>([]);
   const [isStartingSession, setIsStartingSession] = useState(false);
   const [newSession, setNewSession] = useState({ course: "", url: "", scheduled_at: "", course_title: "" });
   const [isNativeLiveKit, setIsNativeLiveKit] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+
+  // Study Materials State
+  // --- STORAGE LOCK FEATURE FLAG ---
+  // Change this to `false` after payment verification to unlock the Study Materials upload feature!
+  const IS_STORAGE_LOCKED = true;
+
+  const [studyMaterials, setStudyMaterials] = useState<any[]>([]);
+  const [newMaterial, setNewMaterial] = useState({ course_title: "", topic: "", document_url: "" });
+  const [materialFile, setMaterialFile] = useState<File | null>(null);
+  const [isAddingMaterial, setIsAddingMaterial] = useState(false);
+  const [editingMaterialId, setEditingMaterialId] = useState<string | null>(null);
+  const [showUpgradeCard, setShowUpgradeCard] = useState(false);
 
   // Recorded Sessions State
   const [recordedSessions, setRecordedSessions] = useState<RecordedSession[]>([]);
@@ -254,6 +266,86 @@ export default function AdminDashboard() {
     fetchRecordedSessions();
   };
 
+  const fetchStudyMaterials = async () => {
+    if (!supabase) return;
+    const { data } = await supabase.from("study_materials").select("*").order("created_at", { ascending: false });
+    if (data) setStudyMaterials(data);
+  };
+
+  const handleAddMaterial = async () => {
+    if (!newMaterial.course_title || !newMaterial.topic || (!newMaterial.document_url && !materialFile) || !supabase) {
+      alert("Fill all fields"); return;
+    }
+    setIsAddingMaterial(true);
+    let finalUrl = newMaterial.document_url;
+
+    if (materialFile) {
+      try {
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+        if (!cloudName || !uploadPreset) throw new Error("Cloudinary config missing.");
+        
+        const formData = new FormData();
+        formData.append("file", materialFile);
+        formData.append("upload_preset", uploadPreset);
+        const resourceType = materialFile.type === "application/pdf" ? "raw" : "auto";
+        
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, { method: "POST", body: formData });
+        if (!res.ok) throw new Error("Upload failed");
+        const data = await res.json();
+        finalUrl = data.secure_url;
+      } catch (err: any) {
+        alert(err.message);
+        setIsAddingMaterial(false);
+        return;
+      }
+    }
+    if (editingMaterialId) {
+      const { error } = await supabase.from("study_materials").update({
+        course_title: newMaterial.course_title,
+        topic: newMaterial.topic,
+        document_url: finalUrl
+      }).eq('id', editingMaterialId);
+      
+      if (!error) {
+        setNewMaterial({ course_title: "", topic: "", document_url: "" });
+        setMaterialFile(null);
+        setEditingMaterialId(null);
+        fetchStudyMaterials();
+      } else alert("Error updating material: " + error.message);
+    } else {
+      const { error } = await supabase.from("study_materials").insert([{
+        course_title: newMaterial.course_title,
+        topic: newMaterial.topic,
+        document_url: finalUrl
+      }]);
+      
+      if (!error) {
+        setNewMaterial({ course_title: "", topic: "", document_url: "" });
+        setMaterialFile(null);
+        fetchStudyMaterials();
+      } else alert("Error: " + error.message);
+    }
+    setIsAddingMaterial(false);
+  };
+
+  const handleEditMaterial = (material: any) => {
+    setEditingMaterialId(material.id);
+    setNewMaterial({
+      course_title: material.course_title || "",
+      topic: material.topic || "",
+      document_url: material.document_url || ""
+    });
+    setMaterialFile(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDeleteMaterial = async (id: string) => {
+    if (!supabase || !confirm("Delete material?")) return;
+    await supabase.from("study_materials").delete().eq("id", id);
+    fetchStudyMaterials();
+  };
+
   useEffect(() => {
     if (supabase) {
       fetchEnrollments();
@@ -261,6 +353,7 @@ export default function AdminDashboard() {
       fetchAttendance();
       fetchQuizzes();
       fetchRecordedSessions();
+      fetchStudyMaterials();
       fetchCourses().then(setCourses);
 
       const currentSupabase = supabase;
@@ -785,6 +878,9 @@ export default function AdminDashboard() {
           </button>
           <button onClick={() => setActiveAdminTab("COURSES")} className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 ${activeAdminTab === "COURSES" ? "bg-white dark:bg-slate-700 text-primary shadow" : "text-slate-500"}`}>
             <FaUniversity /> Courses
+          </button>
+          <button onClick={() => setActiveAdminTab("MATERIALS")} className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 ${activeAdminTab === "MATERIALS" ? "bg-white dark:bg-slate-700 text-primary shadow" : "text-slate-500"}`}>
+            <FaBook /> Materials
           </button>
         </div>
       </div>
@@ -1401,10 +1497,102 @@ export default function AdminDashboard() {
                    </div>
                  </div>
                </div>
-             </div>
+              </div>
+           </motion.div>
+        )}
+
+
+        {activeAdminTab === "MATERIALS" && (
+          <motion.div key="mat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-8">
+              <h3 className="text-xl font-black mb-6">Study Materials</h3>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Upload Form */}
+                <div className="lg:col-span-1 bg-slate-50 dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 h-fit">
+                  <h4 className="font-bold text-lg mb-4 text-primary flex items-center gap-2">
+                    {editingMaterialId ? <FaPen /> : <FaPlus />} {editingMaterialId ? "Edit Material" : "Add Material"}
+                  </h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Course / Topic</label>
+                      <select value={newMaterial.course_title} onChange={e => setNewMaterial({...newMaterial, course_title: e.target.value})} className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none">
+                        <option value="" disabled>Select an Internship / Course</option>
+                        {courses.map(c => <option key={c.id} value={c.title}>{c.title}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Material Title</label>
+                      <input type="text" placeholder="e.g. Final Semester Notes" value={newMaterial.topic} onChange={e => setNewMaterial({...newMaterial, topic: e.target.value})} className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none" />
+                    </div>
+                    {IS_STORAGE_LOCKED ? (
+                      <div 
+                        onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); setShowUpgradeCard(true); }}
+                        className="cursor-pointer group relative"
+                      >
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-[1px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-2"><FaLock /> Unlock Storage</span>
+                        </div>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Upload Document (PDF)</label>
+                        <input disabled type="file" accept=".pdf,.doc,.docx" className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none opacity-60 pointer-events-none" />
+                        <div className="mt-2 text-center text-xs text-slate-400 font-bold">OR</div>
+                        <input disabled type="url" placeholder="Drive Link / External URL" className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none mt-2 opacity-60 pointer-events-none" />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Upload Document (PDF)</label>
+                        <input type="file" accept=".pdf,.doc,.docx" onChange={e => setMaterialFile(e.target.files?.[0] || null)} className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none" />
+                        <div className="mt-2 text-center text-xs text-slate-400 font-bold">OR</div>
+                        <input type="url" placeholder="Drive Link / External URL" value={newMaterial.document_url} onChange={e => setNewMaterial({...newMaterial, document_url: e.target.value})} className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none mt-2" />
+                      </div>
+                    )}
+                    <button onClick={handleAddMaterial} disabled={isAddingMaterial} className="w-full py-3 bg-primary text-white font-black rounded-xl shadow-lg disabled:opacity-50 mt-2">
+                      {isAddingMaterial ? "Uploading..." : (editingMaterialId ? "Update Material" : "Upload Material")}
+                    </button>
+                    {editingMaterialId && (
+                      <button onClick={() => {
+                        setEditingMaterialId(null);
+                        setNewMaterial({ course_title: "", topic: "", document_url: "" });
+                        setMaterialFile(null);
+                      }} className="w-full py-2 text-slate-500 font-bold hover:text-red-500 transition-colors">Cancel Editing</button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Materials List */}
+                <div className="lg:col-span-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {studyMaterials.map(m => (
+                      <div key={m.id} className="bg-slate-50 dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-md">{m.course_title}</span>
+                            <div className="flex gap-3">
+                              <button onClick={() => handleEditMaterial(m)} className="text-slate-400 hover:text-primary transition-colors"><FaPen /></button>
+                              <button onClick={() => handleDeleteMaterial(m.id)} className="text-slate-400 hover:text-red-500 transition-colors"><FaTrash /></button>
+                            </div>
+                          </div>
+                          <h4 className="font-bold text-lg mb-1">{m.topic}</h4>
+                          <p className="text-xs text-slate-500">{new Date(m.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <a href={m.document_url} target="_blank" rel="noopener noreferrer" className="mt-4 flex items-center justify-center gap-2 w-full py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                          <FaExternalLinkAlt /> Open Document
+                        </a>
+                      </div>
+                    ))}
+                    {studyMaterials.length === 0 && (
+                      <div className="col-span-2 text-center p-8 text-slate-500 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-600">
+                        No materials uploaded yet.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
+
 
       <AnimatePresence>
         {selectedEnrollment && <EnrollmentDetail enrollment={selectedEnrollment} onClose={() => setSelectedEnrollment(null)} />}
@@ -1511,6 +1699,88 @@ export default function AdminDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {showUpgradeCard && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] w-full max-w-md border border-white/20 dark:border-slate-800 relative">
+              
+              {/* Premium Glow Effect Behind the Header */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-40 bg-indigo-500/20 blur-3xl rounded-full pointer-events-none"></div>
+
+              <div className="bg-slate-900 p-6 sm:p-8 text-center text-white relative overflow-hidden border-b border-white/10 shrink-0">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
+                
+                {/* Decorative Premium Glow */}
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/30 blur-3xl rounded-full"></div>
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-500/30 blur-3xl rounded-full"></div>
+
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-amber-400 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-[0_0_30px_rgba(251,191,36,0.4)] border-2 border-amber-300/50 backdrop-blur-md relative z-10">
+                  <FaLock className="text-2xl sm:text-3xl text-white drop-shadow-md" />
+                </div>
+                <h3 className="font-black text-xl sm:text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300 relative z-10 leading-tight">Storage Limit Reached</h3>
+                <p className="text-amber-400 mt-2 text-[10px] sm:text-xs font-bold tracking-widest uppercase relative z-10">Database Upgrade Required</p>
+              </div>
+
+              <div className="p-5 sm:p-6 relative z-10 bg-white dark:bg-slate-900">
+                <p className="text-slate-600 dark:text-slate-400 text-center mb-4 leading-relaxed text-xs sm:text-sm">
+                  Your current storage tier does not support hosting rich study materials (PDFs, Documents). 
+                  Please upgrade your <span className="font-black text-slate-900 dark:text-white border-b-2 border-indigo-200 dark:border-indigo-900">Cloudinary & Supabase</span> backend to enable this feature.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 mb-4 border border-slate-100 dark:border-slate-800 shadow-inner">
+                  <div className="text-center w-full">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Current Plan</span>
+                    <span className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-slate-700 px-3 py-1 rounded-full inline-block">Basic</span>
+                  </div>
+                  <div className="hidden sm:block w-px h-8 bg-slate-200 dark:bg-slate-700 mx-2"></div>
+                  <div className="w-full h-px sm:hidden bg-slate-200 dark:bg-slate-700 my-1"></div>
+                  <div className="text-center w-full">
+                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block mb-1">Required Plan</span>
+                    <span className="text-xs sm:text-sm font-black text-white bg-gradient-to-r from-indigo-500 to-purple-600 px-3 py-1 rounded-full shadow-md inline-block whitespace-nowrap">Pro Storage</span>
+                  </div>
+                </div>
+
+                <div className="text-left bg-gradient-to-br from-slate-50 to-indigo-50/30 dark:from-slate-800/50 dark:to-indigo-900/10 p-4 sm:p-5 rounded-2xl border border-slate-100 dark:border-slate-800 mb-6 shadow-sm">
+                  <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+                    <FaClipboardList className="text-indigo-500" /> Coverage Details
+                  </h4>
+                  <ul className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 space-y-2">
+                    <li className="flex items-start gap-2">
+                      <span className="text-indigo-500 mt-0.5 shrink-0">•</span>
+                      <span><strong className="text-slate-800 dark:text-slate-200">Duration:</strong> 9 Months minimum (and onward according to the backend provider).</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-indigo-500 mt-0.5 shrink-0">•</span>
+                      <span><strong className="text-slate-800 dark:text-slate-200">Capacity:</strong> Unlocks high-bandwidth PDF streaming via Cloudinary.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-indigo-500 mt-0.5 shrink-0">•</span>
+                      <span><strong className="text-slate-800 dark:text-slate-200">Maintenance:</strong> Includes automated storage cleanup to prevent bloat.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-indigo-500 mt-0.5 shrink-0">•</span>
+                      <span><strong className="text-slate-800 dark:text-slate-200">Activation:</strong> Instant provisioning upon payment verification.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3 sm:space-y-4">
+                  <a href="https://rzp.io/rzp/yNYOhZM" target="_blank" rel="noopener noreferrer" className="relative group block w-full text-center rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_10px_20px_rgba(79,70,229,0.3)] transition-all transform hover:-translate-y-1">
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-[length:200%_auto] animate-gradient"></div>
+                    <div className="relative py-3 sm:py-4 px-4 sm:px-6 flex items-center justify-center gap-2 text-white font-black text-xs sm:text-sm tracking-wide">
+                      <FaLock className="text-indigo-200 group-hover:text-white transition-colors" /> Upgrade Database Setup
+                    </div>
+                  </a>
+                  <button onClick={() => setShowUpgradeCard(false)} className="w-full py-2 text-[10px] sm:text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors uppercase tracking-widest">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
