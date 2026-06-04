@@ -513,9 +513,18 @@ export default function AdminDashboard() {
   const handleDownloadQuizResults = async (quizId: string, quizTitle: string) => {
     if (!supabase) return;
     try {
+      const { data: questionsData, error: qError } = await supabase
+        .from("quiz_questions")
+        .select("id, question_text, correct_index")
+        .eq("quiz_id", quizId)
+        .order("created_at", { ascending: true });
+        
+      if (qError) throw qError;
+      const questions = questionsData || [];
+
       const { data, error } = await supabase
         .from("quiz_attempts")
-        .select("user_email, score, total_points")
+        .select("user_email, score, total_points, answers")
         .eq("quiz_id", quizId)
         .order("score", { ascending: false });
         
@@ -525,9 +534,31 @@ export default function AdminDashboard() {
         return;
       }
       
-      const headers = ["User Email", "Score", "Total Points"].join(",");
-      const rows = data.map(r => [r.user_email, r.score, r.total_points].join(","));
-      const blob = new Blob([[headers, ...rows].join("\n")], { type: "text/csv" });
+      const headers = ["Name", "Email", "Score", "Total Points"];
+      questions.forEach((q, i) => {
+        headers.push(`"Q${i + 1}"`);
+      });
+
+      const rows = data.map(r => {
+        const studentName = enrollments.find(e => e.email === r.user_email)?.full_name || "Unknown";
+        const row = [`"${studentName}"`, r.user_email, r.score, r.total_points];
+        
+        questions.forEach(q => {
+          const answers = r.answers || {};
+          const selected = answers[q.id];
+          if (selected === undefined || selected === null) {
+            row.push("Not Answered");
+          } else if (selected === q.correct_index) {
+            row.push("Correct");
+          } else {
+            row.push("Incorrect");
+          }
+        });
+        
+        return row.join(",");
+      });
+
+      const blob = new Blob([[headers.join(","), ...rows].join("\n")], { type: "text/csv" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url; 
