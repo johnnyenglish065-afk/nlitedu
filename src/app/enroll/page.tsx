@@ -1582,7 +1582,7 @@ const SuccessModal = ({ onClose, courseTitle, orderId, customerEmail, paidAmount
                 Get NLITedu on Google Play
               </a>
               <a
-                href="https://github.com/saveragraphics/NLITedu-Mobile/releases/download/v1.0.15%2B22/app-release.apk"
+                href="https://github.com/saveragraphics/NLITedu-Mobile/releases/download/v1.0.16%2B23/app-release.apk"
                 download
                 className="text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
               >
