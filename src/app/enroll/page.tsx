@@ -207,7 +207,7 @@ const EnrollmentPageContent = () => {
     });
   };
 
-  const verifyPaymentStatus = async (payload: any) => {
+  const verifyPaymentStatus = async (payload: any, retryCount = 0) => {
     setSubmitting(true);
     setError(null);
 
@@ -254,17 +254,31 @@ const EnrollmentPageContent = () => {
 
       if (parsedData?.status === "PAID") {
         handlePaymentSuccess(parsedData.amount);
+        setSubmitting(false);
       } else {
+        if (activeGateway === "razorpay" && retryCount < 3) {
+          setError(`Verifying payment status (attempt ${retryCount + 1}/3)...`);
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          await verifyPaymentStatus(payload, retryCount + 1);
+          return;
+        }
         setError("Payment could not be verified or is still processing. Please wait a moment and click 'Retry Verification' below.");
         const savedForm = loadFormFromLocal();
         if (savedForm) setForm(savedForm);
+        setSubmitting(false);
       }
     } catch (err: any) {
       console.error("Post-payment error:", err);
+      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "razorpay";
+      if (activeGateway === "razorpay" && retryCount < 3) {
+        setError(`Verifying payment status (attempt ${retryCount + 1}/3)...`);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await verifyPaymentStatus(payload, retryCount + 1);
+        return;
+      }
       setError("Payment received, but we couldn't verify your enrollment. Please click 'Retry Verification' below or contact support.");
       const savedForm = loadFormFromLocal();
       if (savedForm) setForm(savedForm);
-    } finally {
       setSubmitting(false);
     }
   };
@@ -562,6 +576,7 @@ const EnrollmentPageContent = () => {
         }
 
         saveFormToLocal(form, enrollmentFee, displayPrice);
+        setPendingOrderId(orderId);
 
         const options = {
           key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "", // Fallback, usually loaded from server
