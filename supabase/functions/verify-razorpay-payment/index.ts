@@ -56,6 +56,21 @@ serve(async (req) => {
       if (!response.ok) {
          throw new Error("Payment verified but failed to fetch payment details from Razorpay");
       }
+
+      // If payment is authorized, poll for auto-capture
+      let attempts = 0;
+      while (paymentData && paymentData.status === "authorized" && attempts < 5) {
+         console.log(`Payment ${razorpay_payment_id} is authorized. Polling for capture... Attempt ${attempts + 1}`);
+         await new Promise((resolve) => setTimeout(resolve, 1000));
+         const pollResponse = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`, {
+           method: "GET",
+           headers: { "Authorization": authHeader }
+         });
+         if (pollResponse.ok) {
+           paymentData = await pollResponse.json();
+         }
+         attempts++;
+      }
     } else if (orderId) {
       // Fallback for "Retry Verification" flow (no signature params, only orderId/receipt)
       const ordersRes = await fetch(`https://api.razorpay.com/v1/orders?receipt=${orderId}`, {
@@ -81,18 +96,36 @@ serve(async (req) => {
         throw new Error("Failed to fetch payments for order, or no payment attempts found");
       }
       
-      // Look for a captured payment
-      paymentData = paymentsData.items.find((p: any) => p.status === "captured");
+      // Look for a captured or authorized payment
+      paymentData = paymentsData.items.find((p: any) => p.status === "captured" || p.status === "authorized");
       
       if (!paymentData) {
-        throw new Error("Payment is not in captured status");
+        throw new Error("No payment attempts found in captured or authorized status");
+      }
+
+      // If authorized, poll for capture
+      if (paymentData.status === "authorized") {
+         let attempts = 0;
+         const payId = paymentData.id;
+         while (paymentData && paymentData.status === "authorized" && attempts < 5) {
+            console.log(`Fallback: Payment ${payId} is authorized. Polling for capture... Attempt ${attempts + 1}`);
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            const pollResponse = await fetch(`https://api.razorpay.com/v1/payments/${payId}`, {
+              method: "GET",
+              headers: { "Authorization": authHeader }
+            });
+            if (pollResponse.ok) {
+              paymentData = await pollResponse.json();
+            }
+            attempts++;
+         }
       }
     } else {
       throw new Error("Missing Razorpay payment verification parameters");
     }
 
-    if (!paymentData || paymentData.status !== "captured") {
-        throw new Error("Payment is not in captured status");
+    if (!paymentData || (paymentData.status !== "captured" && paymentData.status !== "authorized")) {
+        throw new Error(`Payment is in ${paymentData?.status || 'unknown'} status, not captured or authorized`);
     }
 
     // 3. Update Database if Razorpay order is PAID

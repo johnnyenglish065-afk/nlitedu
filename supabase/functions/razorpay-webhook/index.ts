@@ -49,8 +49,8 @@ serve(async (req) => {
     // 2. Parse Validated Data
     const payload = JSON.parse(rawBody);
 
-    // We only process 'order.paid' or 'payment.captured'
-    if (payload.event === "order.paid" || payload.event === "payment.captured") {
+    // We only process 'order.paid', 'payment.captured', or 'payment.authorized'
+    if (payload.event === "order.paid" || payload.event === "payment.captured" || payload.event === "payment.authorized") {
       
       const paymentEntity = payload.payload?.payment?.entity;
       const orderEntity = payload.payload?.order?.entity;
@@ -66,15 +66,15 @@ serve(async (req) => {
          
          const orderRes = await fetch(`https://api.razorpay.com/v1/orders/${paymentEntity.order_id}`, {
              headers: { "Authorization": authHeader }
-         });
-         const orderData = await orderRes.json();
-         if (orderData && orderData.receipt) {
-             receiptId = orderData.receipt;
-         }
+          });
+          const orderData = await orderRes.json();
+          if (orderData && orderData.receipt) {
+              receiptId = orderData.receipt;
+          }
       }
 
-      if (receiptId && paymentEntity?.status === "captured") {
-        console.log(`Processing verified payment for order receipt: ${receiptId}`);
+      if (receiptId && (paymentEntity?.status === "captured" || paymentEntity?.status === "authorized")) {
+        console.log(`Processing verified payment for order receipt: ${receiptId} with status ${paymentEntity?.status}`);
         
         const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
         const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
