@@ -6,13 +6,14 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "motion/react";
-import { FaGoogle, FaGithub, FaUser, FaEnvelope, FaLock, FaArrowRight, FaCheckCircle } from "react-icons/fa";
+import { FaGoogle, FaGithub, FaUser, FaEnvelope, FaLock, FaArrowRight, FaCheckCircle, FaEye, FaEyeSlash } from "react-icons/fa";
 import { validateEmail } from "@/lib/validation";
 
 const SignupPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -264,14 +265,23 @@ const SignupPage = () => {
                     <label className="text-sm font-semibold text-dark dark:text-white flex items-center gap-2 px-1">
                       <FaLock className="text-primary opacity-70" /> Password
                     </label>
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full rounded-xl border border-stroke dark:border-white/10 bg-gray-50 dark:bg-white/5 py-3 px-5 text-base text-dark dark:text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:focus:border-primary"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full rounded-xl border border-stroke dark:border-white/10 bg-gray-50 dark:bg-white/5 py-3 pl-5 pr-12 text-base text-dark dark:text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:focus:border-primary"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-body-color dark:text-body-color-dark hover:text-primary transition-colors focus:outline-none"
+                      >
+                        {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="pt-2 text-xs text-body-color dark:text-body-color-dark px-1">
