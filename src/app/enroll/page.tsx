@@ -217,7 +217,7 @@ const EnrollmentPageContent = () => {
       }
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "razorpay";
+      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "cashfree";
       const functionUrl = activeGateway === "razorpay" 
         ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/verify-razorpay-payment`
         : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/verify-cashfree-payment`;
@@ -256,7 +256,7 @@ const EnrollmentPageContent = () => {
         handlePaymentSuccess(parsedData.amount);
         setSubmitting(false);
       } else {
-        if (activeGateway === "razorpay" && retryCount < 3) {
+        if (retryCount < 3) {
           setError(`Verifying payment status (attempt ${retryCount + 1}/3)...`);
           await new Promise((resolve) => setTimeout(resolve, 3000));
           await verifyPaymentStatus(payload, retryCount + 1);
@@ -269,8 +269,7 @@ const EnrollmentPageContent = () => {
       }
     } catch (err: any) {
       console.error("Post-payment error:", err);
-      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "razorpay";
-      if (activeGateway === "razorpay" && retryCount < 3) {
+      if (retryCount < 3) {
         setError(`Verifying payment status (attempt ${retryCount + 1}/3)...`);
         await new Promise((resolve) => setTimeout(resolve, 3000));
         await verifyPaymentStatus(payload, retryCount + 1);
@@ -445,7 +444,7 @@ const EnrollmentPageContent = () => {
     setPaymentLoading(true);
 
     try {
-      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "razorpay";
+      const activeGateway = process.env.NEXT_PUBLIC_ACTIVE_PAYMENT_GATEWAY || "cashfree";
       const orderIdPrefix = activeGateway === "razorpay" ? "NLIT_RZP_" : "NLIT_";
       const orderId = `${orderIdPrefix}${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       if (!supabase) throw new Error("Database not initialized");
