@@ -80,6 +80,38 @@ export async function POST(request: Request) {
 
     // 3. Update Database if Cashfree says PAID
     if (orderData.order_status === "PAID") {
+      let paymentMethod = "cashfree";
+      let paymentAmount = orderData.order_amount;
+      let paymentCurrency = orderData.order_currency || "INR";
+      let paymentTime = new Date().toISOString();
+
+      // Fetch payments to get details
+      try {
+        const paymentsUrl = `${cfUrl}/payments`;
+        const paymentsResponse = await fetch(paymentsUrl, {
+          method: "GET",
+          headers: {
+            "x-api-version": "2023-08-01",
+            "x-client-id": appId,
+            "x-client-secret": secretKey,
+          },
+        });
+        if (paymentsResponse.ok) {
+          const paymentsData = await paymentsResponse.json();
+          if (Array.isArray(paymentsData)) {
+            const successPayment = paymentsData.find((p: any) => p.payment_status === "SUCCESS");
+            if (successPayment) {
+              paymentMethod = successPayment.payment_group || "cashfree";
+              paymentAmount = successPayment.payment_amount;
+              paymentCurrency = successPayment.payment_currency || "INR";
+              paymentTime = successPayment.payment_time || new Date().toISOString();
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to fetch payment details from Cashfree:", e);
+      }
+
       const { data: preCheck } = await supabase
         .from("enrollments")
         .select("status, full_name, email, course_title")
@@ -89,7 +121,13 @@ export async function POST(request: Request) {
       if (preCheck && preCheck.status === "PENDING") {
         const { data: updatedRecord, error: dbError } = await supabase
           .from("enrollments")
-          .update({ status: "PAID" })
+          .update({ 
+            status: "PAID",
+            payment_amount: paymentAmount,
+            payment_currency: paymentCurrency,
+            payment_method: paymentMethod,
+            payment_time: paymentTime,
+          })
           .eq("cf_payment_id", orderId)
           .select()
           .single();
