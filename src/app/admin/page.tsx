@@ -617,7 +617,7 @@ export default function AdminDashboard() {
 
       const { data, error } = await supabase
         .from("quiz_attempts")
-        .select("user_email, score, total_points, answers")
+        .select("user_email, score, total_points, answers, completion_time_seconds")
         .eq("quiz_id", quizId)
         .order("score", { ascending: false });
         
@@ -627,14 +627,30 @@ export default function AdminDashboard() {
         return;
       }
       
-      const headers = ["Name", "Email", "Score", "Total Points"];
+      const headers = ["Name", "Email", "Score", "Total Points", "Completion Time"];
       questions.forEach((q, i) => {
         headers.push(`"Q${i + 1}"`);
       });
 
+      const formatDuration = (seconds: number | null | undefined) => {
+        if (seconds === null || seconds === undefined) return "N/A";
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        if (mins > 0) {
+          return `${mins}m ${secs}s`;
+        }
+        return `${secs}s`;
+      };
+
       const rows = data.map(r => {
         const studentName = enrollments.find(e => e.email === r.user_email)?.full_name || "Unknown";
-        const row = [`"${studentName}"`, r.user_email, r.score, r.total_points];
+        const row = [
+          `"${studentName}"`, 
+          r.user_email, 
+          r.score, 
+          r.total_points,
+          `"${formatDuration(r.completion_time_seconds as any)}"`
+        ];
         
         questions.forEach(q => {
           const answers = r.answers || {};
