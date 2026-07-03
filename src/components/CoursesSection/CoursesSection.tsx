@@ -15,7 +15,7 @@ const CoursesSection = () => {
       
       const { data, error } = await supabase
         .from("courses")
-        .select("*")
+        .select("id, title, slug, description, image_url, duration, pvt_price")
         .eq("is_legacy_pricing", false)
         .order("created_at", { ascending: true });
 

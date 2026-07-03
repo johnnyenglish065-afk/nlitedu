@@ -361,7 +361,18 @@ export default function AdminDashboard() {
       // Subscriptions
       const subEnrollments = currentSupabase
         .channel("admin_enrollments")
-        .on("postgres_changes", { event: "*", schema: "public", table: "enrollments" }, () => fetchEnrollments())
+        .on("postgres_changes", { event: "*", schema: "public", table: "enrollments" }, (payload: any) => {
+          if (payload.eventType === "INSERT") {
+            const newRecord = payload.new as Enrollment;
+            setEnrollments(prev => [newRecord, ...prev]);
+          } else if (payload.eventType === "UPDATE") {
+            const updatedRecord = payload.new as Enrollment;
+            setEnrollments(prev => prev.map(e => e.id === updatedRecord.id ? { ...e, ...updatedRecord } : e));
+          } else if (payload.eventType === "DELETE") {
+            const oldRecord = payload.old as { id: string };
+            setEnrollments(prev => prev.filter(e => e.id !== oldRecord.id));
+          }
+        })
         .subscribe();
 
       const subLive = currentSupabase
@@ -395,7 +406,7 @@ export default function AdminDashboard() {
       while (fetchMore) {
         const { data, error } = await supabase
           .from("enrollments")
-          .select("*")
+          .select("id, full_name, email, course_title, status, college_name, enrollment_type, payment_amount, college_type, internship_mode, message, state, duration, cf_payment_id, created_at, user_id")
           .order("created_at", { ascending: false })
           .range(from, from + step - 1);
           
@@ -414,6 +425,25 @@ export default function AdminDashboard() {
 
       setEnrollments(allEnrollments);
     } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+
+  const handleViewEnrollment = async (e: Enrollment) => {
+    setSelectedEnrollment(e);
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from("enrollments")
+          .select("*")
+          .eq("id", e.id)
+          .single();
+        if (!error && data) {
+          setSelectedEnrollment(data);
+          setEnrollments(prev => prev.map(item => item.id === e.id ? data : item));
+        }
+      } catch (err) {
+        console.error("Error fetching enrollment detail:", err);
+      }
+    }
   };
 
   const fetchLiveSessions = async () => {
@@ -1002,7 +1032,7 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button onClick={() => setSelectedEnrollment(e)} className="p-2 text-primary hover:bg-primary/10 rounded-lg"><FaEye /></button>
+                          <button onClick={() => handleViewEnrollment(e)} className="p-2 text-primary hover:bg-primary/10 rounded-lg"><FaEye /></button>
                         </td>
                       </tr>
                     ))}
