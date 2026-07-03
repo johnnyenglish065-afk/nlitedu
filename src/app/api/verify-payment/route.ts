@@ -129,7 +129,7 @@ export async function POST(request: Request) {
             payment_time: paymentTime,
           })
           .eq("cf_payment_id", orderId)
-          .select()
+          .select("full_name, email, course_title")
           .single();
 
         if (dbError) {

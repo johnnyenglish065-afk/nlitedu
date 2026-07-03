@@ -193,7 +193,7 @@ export default function AdminDashboard() {
         duration: "12 Weeks", level: "Intermediate", is_bestseller: false,
         instructor_name: "NLITedu Official", highlights: ["", "", ""], syllabus: ["", "", ""]
       });
-      const updated = await fetchCourses();
+      const updated = await fetchCourses(undefined, undefined, "*");
       setCourses(updated);
     } catch (err: any) {
       alert("Error: " + err.message);
@@ -226,7 +226,7 @@ export default function AdminDashboard() {
     if (!supabase) return;
     const { error } = await supabase.from("courses").delete().eq("id", id);
     if (!error) {
-      const updated = await fetchCourses();
+      const updated = await fetchCourses(undefined, undefined, "*");
       setCourses(updated);
     }
   };
@@ -354,7 +354,7 @@ export default function AdminDashboard() {
       fetchQuizzes();
       fetchRecordedSessions();
       fetchStudyMaterials();
-      fetchCourses().then(setCourses);
+      fetchCourses(undefined, undefined, "*").then(setCourses);
 
       const currentSupabase = supabase;
       

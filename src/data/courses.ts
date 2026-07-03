@@ -108,9 +108,13 @@ export const COURSE_UI_DATA: Record<string, { icon: string, color: string, bgCol
   },
 };
 
-export async function fetchCourses(legacyFilter?: boolean, tillDate?: string) {
+export async function fetchCourses(
+  legacyFilter?: boolean,
+  tillDate?: string,
+  selectFields = "id, title, slug, description, category, govt_price, pvt_price, job_price, duration, level, is_bestseller, instructor_name, price, rating, total_reviews, image_url, instructor_image, is_legacy_pricing, created_at, highlights"
+) {
   if (!supabase) return [];
-  let query = supabase.from("courses").select("*");
+  let query = supabase.from("courses").select(selectFields);
   
   if (legacyFilter !== undefined) {
     query = query.eq("is_legacy_pricing", legacyFilter);
