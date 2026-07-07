@@ -121,7 +121,7 @@ const WelcomeAnimation = () => {
         variants={textVariants}
       >
         <motion.span variants={flashVariants} animate="visible">
-          Affiliated by Wits Education
+          NLIT EDU (OPC) PVT. LTD.
         </motion.span>
       </motion.p>
     </motion.section>

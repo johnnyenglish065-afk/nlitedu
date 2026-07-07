@@ -1,4 +1,6 @@
 import Image from "next/image";
+import Link from "next/link";
+
 
 const CertificateInfo = () => {
   return (
@@ -17,7 +19,7 @@ const CertificateInfo = () => {
             <div className="max-w-xl text-center md:text-left">
               <p className="mb-6 text-lg leading-relaxed text-gray-700 dark:text-gray-300">
                 Upon successful completion, you’ll receive a certificate from
-                NexGen Learning Institute of Technology (NLIT) — both soft and
+                NLIT EDU (OPC) PVT. LTD. — both soft and
                 hard copies.
               </p>
 
@@ -84,25 +86,22 @@ const CertificateInfo = () => {
           </h2>
           <p className="mx-auto mb-10 max-w-2xl text-lg text-gray-700 dark:text-gray-300">
             Use our official certificate verification tool to confirm the
-            authenticity of any certificate issued by NexGen Learning Institute
-            of Technology (NLIT).
+            authenticity of any certificate issued by NLIT EDU (OPC) PVT. LTD.
           </p>
 
-          <a
-            href="https://wits-education.com/certificate-verification.php"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/verify"
             className="bg-primary hover:bg-primary-dark inline-block rounded-lg px-8 py-4 text-lg font-semibold text-white shadow-md transition dark:bg-blue-600 dark:hover:bg-blue-700"
           >
             Verify Certificate
-          </a>
+          </Link>
           {/* Image Row Below CTA */}
           {/* Image Row Below CTA */}
           <div className="mt-12 rounded-lg border-4 border-blue-500 px-6 py-8 text-center">
             {/* Heading inside the box */}
-<h3 className="bg-primary justify-self-center rounded-lg border-[0px] border-transparent bg-gradient-to-r from-green-300 to-purple-500 px-6 py-4 text-2xl font-bold text-black">
-  Wits Education Tag / Certification
-</h3>
+            <h3 className="bg-primary justify-self-center rounded-lg border-[0px] border-transparent bg-gradient-to-r from-green-300 to-purple-500 px-6 py-4 text-2xl font-bold text-black">
+              NLIT EDU (OPC) PVT. LTD. Certification
+            </h3>
 
 
             {/* Logo Grid */}

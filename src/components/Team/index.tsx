@@ -10,7 +10,7 @@ const teamMembers = [
     role: "MD & FOUNDER OF NLIT",
     image: "/company/nikhil-raj.jpg",
     description: "(Civil Engineer)",
-    bio: `Er. Nikhil Raj, the visionary founder of NLIT, brings extensive expertise in AutoCAD, Revit, and StaadPro, blending advanced technical skills with over a decade of civil engineering experience. His leadership ensures that NLIT stays at the forefront of industry-relevant education, empowering students with practical knowledge and cutting-edge tools.`,
+    bio: `Er. Nikhil Raj, the visionary founder of NLIT EDU (OPC) PVT. LTD., brings extensive expertise in AutoCAD, Revit, and StaadPro, blending advanced technical skills with over a decade of civil engineering experience. His leadership ensures that NLIT stays at the forefront of industry-relevant education, empowering students with practical knowledge and cutting-edge tools.`,
     expertise:
       "Leadership, Civil Engineering, Strategic Planning, AutoCAD, Revit, StaadPro",
   },
@@ -22,7 +22,7 @@ const teamMembers = [
     bio: `Er. Ashutosh Kumar has been instrumental in shaping NLIT's academic rigor. With an extensive background in civil engineering and management, Ashutosh brings a wealth of knowledge in both technical and operational domains.`,
     expertise: "Operations, Team Management, Civil Engineering, Consulting",
   },
-  
+
   {
     name: "Sourav Raj",
     role: "Co.Founder OF NLIT",
@@ -31,8 +31,8 @@ const teamMembers = [
     bio: `Sourav Raj has played a key role in building the brand and presence of NLIT. His strategic approach to marketing helps expand NLIT’s reach, making it a household name in the education sector.`,
     expertise: "Digital Marketing, Brand Management, Content Strategy",
   },
-  
-   {
+
+  {
     name: "Mr. Ravi Kant",
     role: "Director of WITS Education",
     image: "/company/Picture1.png",
@@ -41,7 +41,7 @@ const teamMembers = [
     expertise:
       "AutoCAD, Revit, SolidWorks, StaadPro, Mechanical Engineering, Research & Development",
   },
-  
+
   {
     name: "Er. Rajni Kant",
     role: "Senior Managing Director Of NLIT",
@@ -68,8 +68,8 @@ const teamMembers = [
     expertise:
       "Video Editing, Graphic Design, Motion Graphics, Visual Storytelling,  Content Creation",
   },
-  
-  
+
+
   {
     name: "Er. Vishal Kumar",
     role: "Electrical Engineer",
@@ -80,7 +80,7 @@ const teamMembers = [
     expertise:
       "Electrical Engineering, Instrumentation, Control Systems, Power Systems, Circuit Design",
   },
-   {
+  {
     name: "Mr.Sunny Kumar",
     role: "Marketing Executive Department ",
     image: "/company/sunny.jpg",
@@ -101,7 +101,8 @@ const teamMembers = [
     expertise:
       "SEO-Optimized Content Writing,Blog & Long-Form Article Writing & Landing Pages,Content Strategy & Social Media Content Creation,Audience Engagement.",
   },
-   {name: "Mr.Sumit Kumar",
+  {
+    name: "Mr.Sumit Kumar",
     role: "Marketing Department ",
     image: "/company/summit image.png",
     description:
@@ -132,9 +133,8 @@ const Team = () => {
           {teamMembers.map((member, index) => (
             <motion.div
               key={index}
-              className={`flex flex-col md:flex-row ${
-                index % 2 === 0 ? "md:flex-row-reverse" : ""
-              } items-center gap-y-8 md:items-start md:gap-x-16`}
+              className={`flex flex-col md:flex-row ${index % 2 === 0 ? "md:flex-row-reverse" : ""
+                } items-center gap-y-8 md:items-start md:gap-x-16`}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{

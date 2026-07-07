@@ -10,8 +10,10 @@ import {
   FaUser, FaEnvelope, FaCalendarAlt, FaShieldAlt, FaEdit, 
   FaSignOutAlt, FaBookOpen, FaGraduationCap, FaLock, 
   FaChartLine, FaCheckCircle, FaChevronRight, FaClock,
-  FaUniversity, FaRegIdBadge, FaCheck
+  FaUniversity, FaRegIdBadge, FaCheck, FaDownload, FaFileAlt,
+  FaExternalLinkAlt
 } from "react-icons/fa";
+import { jsPDF } from "jspdf";
 
 interface ProfileData {
   id: string;
@@ -40,6 +42,22 @@ interface Enrollment {
   branch?: string;
   semester?: string;
   college_type?: string;
+  marksheet12Url?: string;
+  marksheetSemUrl?: string;
+  email?: string;
+  duration?: string;
+  cf_payment_id?: string;
+  payment_amount?: number;
+  state?: string;
+  enrollment_type?: string;
+  message?: string;
+  whatsapp?: string;
+  father_name?: string;
+  gender?: string;
+  dob?: string;
+  brn?: string;
+  qualification?: string;
+  full_name?: string;
 }
 
 const ProfilePage = () => {
@@ -47,6 +65,9 @@ const ProfilePage = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [certificates, setCertificates] = useState<any[]>([]);
+  const [invoiceLoadingId, setInvoiceLoadingId] = useState<string | null>(null);
+  const [claimingCourseId, setClaimingCourseId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditingAcademic, setIsEditingAcademic] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -101,7 +122,7 @@ const ProfilePage = () => {
         // Fetch Enrollments - first try by user_id
         let { data: enrollData, error: enrollError } = await supabase
           .from("enrollments")
-          .select("id, course_title, status, created_at, college_name, branch, semester, college_type")
+          .select("id, course_title, status, created_at, college_name, branch, semester, college_type, marksheet12Url, marksheetSemUrl, email, duration, cf_payment_id, payment_amount, state, enrollment_type, message, whatsapp, father_name, gender, dob, brn, qualification, full_name")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
@@ -114,7 +135,7 @@ const ProfilePage = () => {
           console.log("No enrollments found by user_id, trying email fallback...");
           const { data: emailEnrollData, error: emailEnrollError } = await supabase
             .from("enrollments")
-            .select("id, course_title, status, created_at, college_name, branch, semester, college_type, user_id")
+            .select("id, course_title, status, created_at, college_name, branch, semester, college_type, user_id, marksheet12Url, marksheetSemUrl, email, duration, cf_payment_id, payment_amount, state, enrollment_type, message, whatsapp, father_name, gender, dob, brn, qualification, full_name")
             .eq("email", user.email)
             .order("created_at", { ascending: false });
 
@@ -155,6 +176,18 @@ const ProfilePage = () => {
           }
         }
 
+        // Fetch Certificates
+        const fullNameForCerts = profileData?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || "";
+        if (fullNameForCerts) {
+          const { data: certsData, error: certsError } = await supabase
+            .from("certificates")
+            .select("*")
+            .ilike("student_name", fullNameForCerts);
+          if (!certsError && certsData) {
+            setCertificates(certsData);
+          }
+        }
+
       } catch (err) {
         console.error("Unexpected error:", err);
       } finally {
@@ -191,6 +224,484 @@ const ProfilePage = () => {
       alert("Failed to update profile. Please check if you ran the SQL script in Supabase.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const loadImage = (src: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = (e) => reject(e);
+      img.src = src;
+    });
+  };
+
+  const getCertificateForCourse = (courseTitle: string) => {
+    return certificates.find(cert => cert.course_name?.toLowerCase() === courseTitle?.toLowerCase());
+  };
+
+  const handleDownloadInvoice = async (enrollment: Enrollment) => {
+    setInvoiceLoadingId(enrollment.id);
+    try {
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+
+      // 1. Header Blue Band
+      pdf.setFillColor(37, 99, 235);
+      pdf.rect(0, 0, pdfWidth, 45, "F");
+
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(26);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("NLITedu", margin, 20);
+
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "normal");
+      pdf.text("NEXGEN LEARNING INSTITUTE OF TECHNOLOGY", margin, 26);
+
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("OFFICIAL ENROLLMENT RECEIPT", pdfWidth - margin, 20, { align: "right" });
+
+      pdf.setFontSize(8);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Transaction ID: ${enrollment.cf_payment_id || "N/A"}`, pdfWidth - margin, 26, { align: "right" });
+
+      // 2. Receipt Details Header
+      let y = 65;
+      pdf.setTextColor(100, 116, 139);
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("RECEIPT TO:", margin, y);
+      pdf.text("RECEIPT DETAILS:", pdfWidth - margin, y, { align: "right" });
+
+      y += 6;
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text((enrollment.email || "").split("@")[0].toUpperCase(), margin, y);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.text(`Date: ${new Date(enrollment.created_at || Date.now()).toLocaleDateString()}`, pdfWidth - margin, y, { align: "right" });
+
+      y += 5;
+      pdf.setTextColor(51, 65, 85);
+      pdf.text(enrollment.email || "N/A", margin, y);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(16, 185, 129);
+      pdf.text(`Status: ${enrollment.status || "UNKNOWN"}`, pdfWidth - margin, y, { align: "right" });
+
+      y += 15;
+      
+      let internshipMode = enrollment.message || "";
+      if (internshipMode.includes("[Internship Mode:")) {
+        const match = internshipMode.match(/\[Internship Mode:\s*([^\]]+)\]/);
+        if (match) internshipMode = match[1];
+        else internshipMode = "Online";
+      } else {
+        internshipMode = "Online";
+      }
+
+      // Calculate price using same logic as enroll/page.tsx as a fallback
+      let calculatedFee = 0;
+      let originalPrice = 6999;
+      
+      const isInternship = (!enrollment.enrollment_type || enrollment.enrollment_type === 'internship');
+      
+      if (isInternship) {
+          if (enrollment.state === "Bihar") {
+            const duration = enrollment.duration || "";
+            const mode = internshipMode || "Online";
+
+            if (enrollment.college_type === "govt") {
+              if (mode === "Online") {
+                if (duration.includes("2")) calculatedFee = 799;
+                else if (duration.includes("4")) calculatedFee = 999;
+                else if (duration.includes("6")) calculatedFee = 1199;
+                else if (duration.includes("8")) calculatedFee = 1399;
+                else calculatedFee = 999;
+              } else {
+                if (duration.includes("2")) calculatedFee = 1299;
+                else if (duration.includes("4")) calculatedFee = 1499;
+                else if (duration.includes("6")) calculatedFee = 1999;
+                else if (duration.includes("8")) calculatedFee = 2499;
+                else calculatedFee = 1499;
+              }
+            }
+            else if (enrollment.college_type === "private") {
+              if (mode === "Online") {
+                if (duration.includes("2")) calculatedFee = 999;
+                else if (duration.includes("4")) calculatedFee = 1499;
+                else if (duration.includes("6")) calculatedFee = 1999;
+                else if (duration.includes("8")) calculatedFee = 2499;
+                else calculatedFee = 1999;
+              } else {
+                if (duration.includes("2")) calculatedFee = 1799;
+                else if (duration.includes("4")) calculatedFee = 1999;
+                else if (duration.includes("6")) calculatedFee = 2499;
+                else if (duration.includes("8")) calculatedFee = 2999;
+                else calculatedFee = 1999;
+              }
+            }
+            else if (enrollment.college_type === "job") calculatedFee = 2999;
+          }
+          else {
+            if (enrollment.college_type === "govt") calculatedFee = 1499;
+            else if (enrollment.college_type === "private") calculatedFee = 1999;
+            else if (enrollment.college_type === "job") calculatedFee = 2999;
+          }
+      } else {
+         calculatedFee = 499;
+         originalPrice = 1499;
+      }
+
+      if (calculatedFee === 0) calculatedFee = 999;
+      
+      let paidAmount = calculatedFee;
+
+      if (enrollment.payment_amount != null) {
+        paidAmount = Number(enrollment.payment_amount);
+      }
+
+      // 3. Table Header
+      pdf.setFillColor(241, 245, 249);
+      pdf.rect(margin, y, pdfWidth - (margin * 2), 10, "F");
+      
+      pdf.setTextColor(71, 85, 105);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.text("COURSE / ITEM DESCRIPTION", margin + 5, y + 6.5);
+      pdf.text("STATUS", pdfWidth - margin - 35, y + 6.5, { align: "right" });
+      pdf.text("AMOUNT", pdfWidth - margin - 5, y + 6.5, { align: "right" });
+
+      y += 10;
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(margin, y, pdfWidth - margin, y);
+
+      y += 8;
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text(enrollment.course_title || "Unknown Course", margin + 5, y);
+
+      pdf.setTextColor(16, 185, 129);
+      pdf.text(enrollment.status || "PAID", pdfWidth - margin - 35, y, { align: "right" });
+
+      pdf.setTextColor(15, 23, 42);
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+
+      y += 4.5;
+      pdf.setTextColor(100, 116, 139);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8.5);
+      pdf.text("Includes full curriculum, mentorship sessions, and certificate of completion.", margin + 5, y);
+
+      y += 10;
+      pdf.line(margin, y, pdfWidth - margin, y);
+
+      // 5. Total Section
+      y += 10;
+      pdf.setTextColor(71, 85, 105);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      
+      if (originalPrice > paidAmount) {
+         pdf.text("Course Fee:", pdfWidth - margin - 40, y, { align: "right" });
+         pdf.text(`Rs. ${originalPrice.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         y += 6;
+         pdf.text("Discount:", pdfWidth - margin - 40, y, { align: "right" });
+         pdf.text(`-Rs. ${(originalPrice - paidAmount).toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+         y += 6;
+      }
+
+      pdf.text("Subtotal:", pdfWidth - margin - 40, y, { align: "right" });
+      pdf.setTextColor(15, 23, 42);
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+
+      y += 6;
+      pdf.setTextColor(71, 85, 105);
+      pdf.text("Tax (GST 0%):", pdfWidth - margin - 40, y, { align: "right" });
+      pdf.setTextColor(15, 23, 42);
+      pdf.text("Rs. 0.00", pdfWidth - margin - 5, y, { align: "right" });
+
+      y += 8;
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(pdfWidth - margin - 60, y - 4, pdfWidth - margin, y - 4);
+      pdf.setTextColor(37, 99, 235);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text("Total Paid:", pdfWidth - margin - 40, y, { align: "right" });
+      pdf.text(`Rs. ${paidAmount.toLocaleString("en-IN")}.00`, pdfWidth - margin - 5, y, { align: "right" });
+
+      // 6. Support Details Card
+      y += 20;
+      pdf.setFillColor(248, 250, 252);
+      pdf.roundedRect(margin, y, pdfWidth - (margin * 2), 35, 3, 3, "F");
+      pdf.setDrawColor(241, 245, 249);
+      pdf.roundedRect(margin, y, pdfWidth - (margin * 2), 35, 3, 3, "D");
+
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(10);
+      pdf.text("Important Notice:", margin + 8, y + 8);
+
+      pdf.setTextColor(71, 85, 105);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8.5);
+      pdf.text("1. This is a system-generated copy of the student's enrollment receipt.", margin + 8, y + 14);
+      pdf.text("2. Please verify the transaction ID in the payment gateway if necessary.", margin + 8, y + 19);
+
+      // 7. Footer
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(margin, pdfHeight - 30, pdfWidth - margin, pdfHeight - 30);
+
+      pdf.setFontSize(8);
+      pdf.setTextColor(148, 163, 184);
+      pdf.text("Nexgen Learning Institute of Technology - nliteedu.com", pdfWidth / 2, pdfHeight - 20, { align: "center" });
+      pdf.text("This is an electronically generated official receipt and does not require a physical signature.", pdfWidth / 2, pdfHeight - 15, { align: "center" });
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(6);
+      
+      const t1 = "WEBSITE DESIGNED BY ";
+      const t2 = "SAVERAGRAPHICS ";
+      const t3 = "A ";
+      const t4 = "sindhuragroup ";
+      const t5 = "COMPANY";
+      
+      const w1 = pdf.getTextWidth(t1);
+      const w2 = pdf.getTextWidth(t2);
+      const w3 = pdf.getTextWidth(t3);
+      pdf.setFont("times", "italic");
+      const w4 = pdf.getTextWidth(t4);
+      pdf.setFont("helvetica", "normal");
+      const w5 = pdf.getTextWidth(t5);
+      
+      let startX = (pdfWidth - (w1 + w2 + w3 + w4 + w5)) / 2;
+      const fY = pdfHeight - 8;
+      
+      pdf.setTextColor(148, 163, 184);
+      pdf.text(t1, startX, fY); startX += w1;
+      
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(t2, startX, fY); startX += w2;
+      
+      pdf.setTextColor(148, 163, 184);
+      pdf.text(t3, startX, fY); startX += w3;
+      
+      pdf.setFont("times", "italic");
+      pdf.text(t4, startX, fY); startX += w4;
+      
+      pdf.setFont("helvetica", "normal");
+      pdf.text(t5, startX, fY);
+
+      pdf.save(`NLIT_Invoice_${(enrollment.cf_payment_id || "N/A").substring(0, 8)}.pdf`);
+    } catch (err: any) {
+      console.error("Failed to generate PDF", err);
+      alert("PDF Generation Error: " + (err.message || "Unknown error"));
+    } finally {
+      setInvoiceLoadingId(null);
+    }
+  };
+
+  const handleClaimCertificate = async (course: Enrollment) => {
+    const studentName = profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "";
+    if (!studentName) {
+      alert("Please update your full name in the profile section before claiming your certificate.");
+      return;
+    }
+
+    setClaimingCourseId(course.id);
+    try {
+      // 1. Create entry in DB
+      const createRes = await fetch("/api/certificate/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create",
+          studentName,
+          courseName: course.course_title,
+          collegeName: course.college_name || "NLIT Authorized Center",
+          grade: "A",
+          duration: course.duration || "4 Weeks",
+        }),
+      });
+
+      if (!createRes.ok) {
+        throw new Error("Failed to initialize certificate database entry.");
+      }
+
+      const createData = await createRes.json();
+      if (createData.error) {
+        throw new Error(createData.error);
+      }
+
+      const certRecord = createData.data;
+      const certificateNumber = certRecord.certificate_number;
+
+      // 2. Generate PDF client-side
+      const pdf = new jsPDF({
+        orientation: "l",
+        unit: "mm",
+        format: "a4"
+      });
+
+      // Load background and QR code images in parallel
+      const backgroundUrl = window.location.origin + "/company/cert-sample.jpg";
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent("https://nlitedu.in/verify?id=" + certificateNumber)}`;
+
+      const [backgroundImg, qrImg] = await Promise.all([
+        loadImage(backgroundUrl),
+        loadImage(qrUrl)
+      ]);
+
+      // Add template background
+      pdf.addImage(backgroundImg, "JPEG", 0, 0, 297, 210);
+
+      // Write certificate metadata (CIN, Date, Cert No)
+      pdf.setTextColor(71, 85, 105);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(7.5);
+      pdf.text("CIN: U72900BR2021PTC055375", 22, 16);
+      pdf.text(`Certificate No: ${certificateNumber}`, 22, 21);
+
+      const formattedDate = new Date(certRecord.issue_date).toLocaleDateString("en-US", {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      pdf.text(`Date: ${formattedDate}`, 275, 16, { align: "right" });
+
+      // Student Name
+      pdf.setTextColor(30, 41, 59);
+      pdf.setFont("times", "bolditalic");
+      pdf.setFontSize(26);
+      pdf.text(`Mr./Ms. ${studentName}`, 148.5, 98, { align: "center" });
+
+      // Sub-text details
+      pdf.setTextColor(71, 85, 105);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10.5);
+      
+      const durationWeeks = parseInt(course.duration || "4") || 4;
+      const startDateStr = new Date(course.created_at).toLocaleDateString("en-IN", {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      const endDate = new Date(new Date(course.created_at).getTime() + durationWeeks * 7 * 24 * 60 * 60 * 1000);
+      const endDateStr = endDate.toLocaleDateString("en-IN", {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+
+      pdf.text(
+        `has successfully completed the ${course.duration || "4 Weeks"} Training & Internship Program in`,
+        148.5,
+        116,
+        { align: "center" }
+      );
+
+      // Course Title (Sleek bold blue)
+      pdf.setTextColor(37, 99, 235);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(14.5);
+      pdf.text(course.course_title.toUpperCase(), 148.5, 126, { align: "center" });
+
+      // Final metadata text line
+      pdf.setTextColor(71, 85, 105);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10.5);
+      pdf.text(
+        `conducted from ${startDateStr} to ${endDateStr} with performance grade ${certRecord.grade || "A"} (Excellent).`,
+        148.5,
+        136,
+        { align: "center" }
+      );
+
+      // Embed QR code bottom left
+      pdf.addImage(qrImg, "PNG", 22, 155, 24, 24);
+      pdf.setTextColor(148, 163, 184);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(6.5);
+      pdf.text("Scan to Verify", 34, 182.5, { align: "center" });
+      pdf.text(certificateNumber, 34, 185.5, { align: "center" });
+
+      // 3. Upload generated PDF directly to Cloudinary
+      const pdfBlob = pdf.output("blob");
+      const pdfFile = new File([pdfBlob], `Certificate_${certificateNumber}.pdf`, { type: "application/pdf" });
+
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dx1ywq1pi";
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "nlitedu_uploads";
+
+      const formData = new FormData();
+      formData.append("file", pdfFile);
+      formData.append("upload_preset", uploadPreset);
+
+      const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("Failed to upload certificate PDF to Cloudinary.");
+      }
+
+      const cloudData = await uploadRes.json();
+      const pdfUrl = cloudData.secure_url;
+
+      // 4. Update the DB record with Cloudinary pdfUrl
+      const updateRes = await fetch("/api/certificate/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update",
+          id: certRecord.id,
+          pdfUrl,
+        }),
+      });
+
+      if (!updateRes.ok) {
+        throw new Error("Failed to finalize certificate URL in database.");
+      }
+
+      const updateData = await updateRes.json();
+      if (updateData.error) {
+        throw new Error(updateData.error);
+      }
+
+      // Add to local state certificates list
+      setCertificates(prev => [...prev, updateData.data]);
+
+      // 5. Fire congratulatory email with attached PDF (runs async)
+      fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "certificate",
+          studentName,
+          studentEmail: profile?.email || user?.email || "",
+          courseTitle: course.course_title,
+          certificateNumber,
+          pdfUrl,
+        }),
+      }).catch(e => console.error("Email API invocation failed:", e));
+
+      alert("Congratulations! Your certificate has been issued and emailed to you successfully.");
+    } catch (error: any) {
+      console.error("Certificate claim error:", error);
+      alert("Certificate Claiming Error: " + (error.message || "Unknown error occurred."));
+    } finally {
+      setClaimingCourseId(null);
     }
   };
 
@@ -419,6 +930,104 @@ const ProfilePage = () => {
                                     <button className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
                                       Continue Learning
                                     </button>
+                                 </div>
+
+                                 {/* Academic Documents & Verification Panel */}
+                                 <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800">
+                                    <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Academic Documents & Verification</h5>
+                                    <div className="flex flex-wrap gap-3">
+                                      {/* Download Invoice Button */}
+                                      <button 
+                                        onClick={() => handleDownloadInvoice(course)}
+                                        disabled={invoiceLoadingId === course.id}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 text-xs font-bold transition hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50"
+                                      >
+                                        {invoiceLoadingId === course.id ? (
+                                          <div className="h-3 w-3 animate-spin rounded-full border-2 border-slate-700 border-t-transparent dark:border-slate-300"></div>
+                                        ) : (
+                                          <FaDownload className="text-[10px]" />
+                                        )}
+                                        Invoice Receipt
+                                      </button>
+
+                                      {/* View Marksheets */}
+                                      {(course.marksheet12Url || course.marksheetSemUrl) && (
+                                        <div className="flex gap-2">
+                                          {course.marksheet12Url && (
+                                            <a 
+                                              href={course.marksheet12Url} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="inline-flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 text-xs font-bold transition hover:bg-slate-200 dark:hover:bg-slate-700"
+                                            >
+                                              <FaFileAlt className="text-[10px]" /> 12th Marksheet
+                                            </a>
+                                          )}
+                                          {course.marksheetSemUrl && (
+                                            <a 
+                                              href={course.marksheetSemUrl} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="inline-flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 text-xs font-bold transition hover:bg-slate-200 dark:hover:bg-slate-700"
+                                            >
+                                              <FaFileAlt className="text-[10px]" /> Sem Marksheet
+                                            </a>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {/* Certificate Claim/Download Status */}
+                                      {(() => {
+                                        const cert = getCertificateForCourse(course.course_title);
+                                        if (cert) {
+                                          return (
+                                            <div className="flex gap-2">
+                                              {cert.pdf_url ? (
+                                                <a 
+                                                  href={cert.pdf_url} 
+                                                  target="_blank" 
+                                                  rel="noopener noreferrer"
+                                                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 text-emerald-600 px-4 py-2.5 text-xs font-bold transition hover:bg-emerald-500/20"
+                                                >
+                                                  <FaDownload className="text-[10px]" /> Download Certificate
+                                                </a>
+                                              ) : (
+                                                <span className="inline-flex items-center gap-2 rounded-xl bg-amber-500/10 text-amber-600 px-4 py-2.5 text-xs font-bold">
+                                                  Processing PDF...
+                                                </span>
+                                              )}
+                                              <a 
+                                                href={`/verify?id=${cert.certificate_number}`} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 rounded-xl bg-indigo-500/10 text-indigo-600 px-4 py-2.5 text-xs font-bold transition hover:bg-indigo-500/20"
+                                              >
+                                                <FaExternalLinkAlt className="text-[10px]" /> Verify Page
+                                              </a>
+                                            </div>
+                                          );
+                                        } else {
+                                          return (
+                                            <button 
+                                              onClick={() => handleClaimCertificate(course)}
+                                              disabled={claimingCourseId === course.id}
+                                              className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-4 py-2.5 text-xs font-bold transition hover:bg-primary/95 disabled:opacity-50"
+                                            >
+                                              {claimingCourseId === course.id ? (
+                                                <>
+                                                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                                  Issuing & Sending Email...
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <FaGraduationCap className="text-[12px]" /> Claim Certificate
+                                                </>
+                                              )}
+                                            </button>
+                                          );
+                                        }
+                                      })()}
+                                    </div>
                                  </div>
                                </div>
                              </div>
