@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const { action, studentName, courseName, collegeName, grade, duration, id, pdfUrl, issueDate } = await req.json();
+    const { action, studentName, courseName, collegeName, grade, duration, id, pdfUrl, issueDate, userEmail } = await req.json();
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -15,16 +15,21 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
       }
 
+      const formattedIssueDate = issueDate || new Date().toISOString().split("T")[0];
+
       const { data, error } = await supabaseAdmin
         .from("certificates")
         .insert({
           student_name: studentName,
           course_name: courseName,
+          course_title: courseName, // for mobile app compatibility
           college_name: collegeName || "NLIT Authorized Center",
           grade: grade || "A",
           duration: duration || "4 Weeks",
           pdf_url: null,
-          issue_date: issueDate || new Date().toISOString().split("T")[0],
+          issue_date: formattedIssueDate,
+          issued_date: formattedIssueDate, // for mobile app compatibility
+          user_email: userEmail || null, // for mobile app compatibility
         })
         .select()
         .single();

@@ -9,6 +9,9 @@ CREATE TABLE IF NOT EXISTS certificates (
     duration VARCHAR(100),
     pdf_url VARCHAR(512),
     issue_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    user_email VARCHAR(255),
+    course_title VARCHAR(255),
+    issued_date DATE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

@@ -532,6 +532,7 @@ const ProfilePage = () => {
           collegeName: course.college_name || "NLIT Authorized Center",
           grade: "A",
           duration: course.duration || "4 Weeks",
+          userEmail: user?.email || "",
         }),
       });
 
