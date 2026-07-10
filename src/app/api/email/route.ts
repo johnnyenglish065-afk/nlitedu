@@ -14,13 +14,24 @@ export async function POST(req: NextRequest) {
     }
 
     // Configure GoDaddy SMTP transporter
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+
+    if (!smtpHost || !smtpUser || !smtpPass) {
+      return NextResponse.json(
+        { error: "SMTP not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS in environment variables." },
+        { status: 500 }
+      );
+    }
+
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtpout.secureserver.net",
+      host: smtpHost,
       port: Number(process.env.SMTP_PORT) || 465,
       secure: true,
       auth: {
-        user: process.env.SMTP_USER || "info@nlitedu.com",
-        pass: process.env.SMTP_PASS || "Nlitedu@Admin2026",
+        user: smtpUser,
+        pass: smtpPass,
       },
     });
 
@@ -241,7 +252,7 @@ export async function POST(req: NextRequest) {
               
               <p class="verify-text">
                 This credential is securely registered on our server. To verify its authenticity, visit:<br/>
-                <a class="verify-link" href="https://nlitedu.in/verify?id=${certificateNumber}">https://nlitedu.in/verify?id=${certificateNumber}</a>
+                <a class="verify-link" href="https://nlitedu.com/verify?id=${certificateNumber}">https://nlitedu.com/verify?id=${certificateNumber}</a>
               </p>
             </div>
             <div class="footer">
@@ -425,7 +436,7 @@ export async function POST(req: NextRequest) {
                 </div>
               </div>
 
-              <a href="https://nlitedu.in/profile" class="cta-btn">Access Student Dashboard</a>
+              <a href="https://nlitedu.com/profile" class="cta-btn">Access Student Dashboard</a>
               
               <p style="font-size: 14px; color: #4b5563; line-height: 1.6;">
                 You can now log in to your profile to download your invoice, view training schedules, upload required academic marksheets, and track your progress.

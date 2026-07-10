@@ -10,7 +10,7 @@ type CertResult = {
   certNumber?: string;
   cloudinaryUrl?: string;
   emailSent?: boolean;
-  isMock?: boolean;
+  dbError?: string;
   status: string;
   error?: string;
 };
@@ -318,10 +318,7 @@ export default function CertificateAdminPage() {
                         {results.map((r, i) => (
                           <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                             <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
-                              <div className="flex flex-col">
-                                <span>{r.name}</span>
-                                {r.isMock && <span className="text-[10px] text-orange-500 font-bold">MOCK FALLBACK</span>}
-                              </div>
+                              {r.name}
                             </td>
                             <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{r.course}</td>
                             <td className="px-6 py-4 font-mono text-xs text-slate-700 dark:text-slate-300">{r.certNumber || "—"}</td>

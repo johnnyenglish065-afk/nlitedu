@@ -111,22 +111,7 @@ function VerifyContent() {
         }
       }
       
-      // 3. Try fallback mock for local/dev testing if starts with NLIT-
-      if (!foundCert && cleanVal.toUpperCase().startsWith("NLIT-")) {
-        const idPart = cleanVal.split("-").pop() || "000044";
-        foundCert = {
-          student_name: "RAHUL",
-          course_name: "PYTHON COMPLETE MASTERCLASS",
-          college_name: "XYZ COLLEGE",
-          grade: "A",
-          duration: "12-06-2026 to 12-07-2026",
-          issue_date: new Date().toISOString().split("T")[0],
-          certificate_number: cleanVal.toUpperCase(),
-          pdf_url: "https://res.cloudinary.com/nlitedu/image/upload/v1720610000/mock_certificate.png",
-          is_fallback: true,
-          status: "ACTIVE"
-        };
-      }
+      // Certificate not found in any source
 
       if (foundCert) {
         setResult(foundCert);

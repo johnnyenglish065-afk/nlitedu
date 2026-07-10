@@ -1,19 +1,59 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createCanvas, loadImage, registerFont } from "@napi-rs/canvas";
+import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
 import QRCode from "qrcode";
 import path from "path";
 import fs from "fs";
 import nodemailer from "nodemailer";
 
+// ─── Font Registration ──────────────────────────────────────────────────────
+
+let fontsRegistered = false;
+
+function registerFonts() {
+  if (fontsRegistered) return;
+
+  try {
+    const fontDir = path.join(process.cwd(), "public", "fonts");
+
+    const boldPath = path.join(fontDir, "Roboto-Bold.ttf");
+    const regularPath = path.join(fontDir, "Roboto-Regular.ttf");
+
+    if (fs.existsSync(boldPath)) {
+      GlobalFonts.registerFromPath(boldPath, "Roboto");
+      console.log("✅ Registered Roboto Bold font");
+    } else {
+      console.warn("⚠️ Roboto-Bold.ttf not found at:", boldPath);
+    }
+
+    if (fs.existsSync(regularPath)) {
+      GlobalFonts.registerFromPath(regularPath, "RobotoRegular");
+      console.log("✅ Registered Roboto Regular font");
+    } else {
+      console.warn("⚠️ Roboto-Regular.ttf not found at:", regularPath);
+    }
+
+    fontsRegistered = true;
+    console.log("Available font families:", GlobalFonts.families.map((f: any) => f.family).join(", "));
+  } catch (err) {
+    console.error("Font registration error:", err);
+  }
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SECRET_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  if (!serviceKey) {
+    console.warn(
+      "⚠️ SUPABASE_SERVICE_ROLE_KEY is not set! Using anon key — database writes may fail due to RLS policies."
+    );
+  }
+
+  const key = serviceKey || anonKey;
   return createClient(url, key);
 }
 
@@ -22,7 +62,7 @@ async function uploadToCloudinary(buffer: Buffer, publicId: string): Promise<str
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
   if (!cloudName || !uploadPreset) {
-    throw new Error("Cloudinary configuration missing.");
+    throw new Error("Cloudinary configuration missing. Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.");
   }
 
   const base64 = buffer.toString("base64");
@@ -59,15 +99,17 @@ function centerTextInGap(
   y: number,
   fontWeight = "bold"
 ) {
+  // Use Roboto (our bundled font) instead of Arial
+  const fontFamily = "Roboto";
   let fontSize = baseFontSize;
-  ctx.font = `${fontWeight} ${fontSize}px Arial`;
+  ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
   let textWidth = ctx.measureText(text).width;
 
   if (gapEnd !== null) {
     const maxWidth = gapEnd - gapStart;
     while (textWidth > maxWidth && fontSize > 10) {
       fontSize -= 2;
-      ctx.font = `${fontWeight} ${fontSize}px Arial`;
+      ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
       textWidth = ctx.measureText(text).width;
     }
     const gapCenter = gapStart + (gapEnd - gapStart) / 2;
@@ -85,6 +127,9 @@ async function generateCertificateImage(
   endDate: string,
   certNumber: string
 ): Promise<Buffer> {
+  // Ensure fonts are registered before rendering
+  registerFonts();
+
   const templateImage = await loadImage(templatePath);
   const width = templateImage.width;
   const height = templateImage.height;
@@ -142,8 +187,6 @@ async function generateCertificateImage(
   return canvas.toBuffer("image/png");
 }
 
-// ─── Main POST handler ─────────────────────────────────────────────────────
-
 // ─── Email Sender Helper ───────────────────────────────────────────────────
 
 async function sendCertificateEmail(
@@ -154,13 +197,24 @@ async function sendCertificateEmail(
   pdfUrl: string
 ) {
   try {
+    // Validate SMTP config
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpPort = process.env.SMTP_PORT;
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+
+    if (!smtpHost || !smtpUser || !smtpPass) {
+      console.error("SMTP not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS in environment variables.");
+      return false;
+    }
+
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 465,
+      host: smtpHost,
+      port: Number(smtpPort) || 465,
       secure: true,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: smtpUser,
+        pass: smtpPass,
       },
     });
 
@@ -386,10 +440,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing start/end date." }, { status: 400 });
     }
 
-    // 2. Fetch enrollments
+    // 2. Fetch enrollments from database
     const supabase = getSupabaseAdmin();
     let students: any[] = [];
-    let isMock = false;
 
     if (mode === "individual") {
       if (!studentQuery) {
@@ -409,25 +462,19 @@ export async function POST(req: Request) {
 
       const { data, error: fetchError } = await query;
       if (fetchError) {
+        console.error("Enrollment fetch error:", fetchError);
         return NextResponse.json(
-          { error: `Database error: ${fetchError.message}` },
+          { error: `Database error fetching enrollments: ${fetchError.message}. Ensure SUPABASE_SERVICE_ROLE_KEY is set.` },
           { status: 500 }
         );
       }
       students = data || [];
 
-      // Testing Fallback for Individual Mode (Local/RLS)
       if (students.length === 0) {
-        isMock = true;
-        const mockEmail = queryClean.includes("@") ? queryClean : "masterrahul.ind@gmail.com";
-        const mockId = /^\d+$/.test(queryClean) ? parseInt(queryClean, 10) : 44;
-        students = [{
-          id: mockId,
-          full_name: "RAHUL",
-          college_name: "XYZ COLLEGE",
-          course_title: "PYTHON",
-          email: mockEmail
-        }];
+        return NextResponse.json(
+          { error: `No paid enrollment found for "${queryClean}". Check the student ID/email and ensure their status is PAID.` },
+          { status: 404 }
+        );
       }
     } else {
       // Bulk Mode by Course Filter
@@ -442,8 +489,9 @@ export async function POST(req: Request) {
 
       const { data, error: fetchError } = await query;
       if (fetchError) {
+        console.error("Enrollment fetch error:", fetchError);
         return NextResponse.json(
-          { error: `Database error: ${fetchError.message}` },
+          { error: `Database error fetching enrollments: ${fetchError.message}. Ensure SUPABASE_SERVICE_ROLE_KEY is set.` },
           { status: 500 }
         );
       }
@@ -476,7 +524,28 @@ export async function POST(req: Request) {
       const certNumber = `NLIT-${new Date().getFullYear()}-${paddedId}`;
 
       try {
-        // Generate image
+        // Check for duplicate certificate before generating
+        const { data: existingCert } = await supabase
+          .from("certificates")
+          .select("id, certificate_number, pdf_url")
+          .eq("certificate_number", certNumber)
+          .maybeSingle();
+
+        if (existingCert) {
+          results.push({
+            name: student.full_name,
+            course: student.course_title,
+            college: student.college_name,
+            certNumber,
+            cloudinaryUrl: existingCert.pdf_url,
+            emailSent: false,
+            status: "success",
+            dbError: "Certificate already exists — skipped regeneration.",
+          });
+          continue;
+        }
+
+        // Generate image with text overlay
         const imageBuffer = await generateCertificateImage(
           templatePath,
           student,
@@ -511,6 +580,7 @@ export async function POST(req: Request) {
           .select()
           .single();
 
+        // Send email if requested
         let emailSent = false;
         if (sendEmail && student.email) {
           emailSent = await sendCertificateEmail(
@@ -524,7 +594,6 @@ export async function POST(req: Request) {
 
         if (certError) {
           console.error(`Database insertion failed for ${student.full_name}:`, certError);
-          // If insert fails (e.g. local RLS), we still have the live Cloudinary URL & SMTP email dispatched!
           results.push({
             name: student.full_name,
             course: student.course_title,
@@ -532,9 +601,8 @@ export async function POST(req: Request) {
             certNumber,
             cloudinaryUrl,
             emailSent,
-            isMock,
             status: "success",
-            dbError: certError.message,
+            dbError: `DB insert failed: ${certError.message}. Add SUPABASE_SERVICE_ROLE_KEY or run certificates RLS fix SQL.`,
           });
         } else {
           results.push({
@@ -545,7 +613,6 @@ export async function POST(req: Request) {
             cloudinaryUrl,
             certId: certData?.id,
             emailSent,
-            isMock,
             status: "success",
           });
         }
@@ -562,10 +629,16 @@ export async function POST(req: Request) {
 
     const successCount = results.filter((r) => r.status === "success").length;
     const errorCount = results.filter((r) => r.status === "error").length;
+    const dbErrors = results.filter((r) => r.dbError).length;
+
+    let message = `Generated ${successCount} certificates. ${errorCount} errors.`;
+    if (dbErrors > 0) {
+      message += ` ${dbErrors} DB warnings (certificates uploaded to Cloudinary but failed to save in database).`;
+    }
 
     return NextResponse.json({
       success: true,
-      message: `Generated ${successCount} certificates. ${errorCount} errors.${isMock ? " (Generated from mock fallback)" : ""}`,
+      message,
       totalStudents: students.length,
       results,
     });
@@ -604,7 +677,7 @@ export async function GET(req: Request) {
       .eq("status", "PAID");
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: `Failed to fetch courses: ${error.message}` }, { status: 500 });
     }
 
     const uniqueCourses = [...new Set((data || []).map((d: any) => d.course_title).filter(Boolean))];
@@ -620,7 +693,7 @@ export async function GET(req: Request) {
       .limit(200);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: `Failed to fetch certificates: ${error.message}` }, { status: 500 });
     }
 
     return NextResponse.json({ certificates: data || [] });
@@ -642,7 +715,7 @@ export async function GET(req: Request) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: `Failed to fetch enrollments: ${error.message}` }, { status: 500 });
     }
 
     return NextResponse.json({ enrollments: data || [] });
