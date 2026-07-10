@@ -13,10 +13,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Configure GoDaddy SMTP transporter
-    const smtpHost = process.env.SMTP_HOST;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
+    // Configure GoDaddy SMTP transporter. Strip quotes in case they were copy-pasted into Vercel.
+    const smtpHost = (process.env.SMTP_HOST || "").replace(/^["']|["']$/g, '');
+    const smtpUser = (process.env.SMTP_USER || "").replace(/^["']|["']$/g, '');
+    const smtpPass = (process.env.SMTP_PASS || "").replace(/^["']|["']$/g, '');
 
     if (!smtpHost || !smtpUser || !smtpPass) {
       return NextResponse.json(
