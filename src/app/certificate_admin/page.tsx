@@ -150,7 +150,7 @@ export default function CertificateAdminPage() {
       if (res.ok) {
         alert("Email sent successfully! (Check spam folder if not in inbox)");
       } else {
-        alert("Failed to send email: " + (data.error || "Unknown error"));
+        alert(`Failed to send email!\n\nReason: ${data.details || data.error || "Unknown error"}`);
       }
     } catch (err: any) {
       alert("Network error: " + err.message);
