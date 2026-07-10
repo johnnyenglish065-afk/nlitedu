@@ -543,13 +543,24 @@ export async function POST(req: Request) {
           .maybeSingle();
 
         if (existingCert) {
+          let emailSent = false;
+          if (sendEmail && student.email) {
+            emailSent = await sendCertificateEmail(
+              student.full_name,
+              student.email,
+              student.course_title,
+              certNumber,
+              existingCert.pdf_url
+            );
+          }
+          
           results.push({
             name: student.full_name,
             course: student.course_title,
             college: student.college_name,
             certNumber,
             cloudinaryUrl: existingCert.pdf_url,
-            emailSent: false,
+            emailSent: emailSent,
             status: "success",
             dbError: "Certificate already exists — skipped regeneration.",
           });
