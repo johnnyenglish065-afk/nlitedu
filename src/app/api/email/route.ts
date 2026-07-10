@@ -258,6 +258,7 @@ export async function POST(req: NextRequest) {
             <div class="footer">
               <p>© ${new Date().getFullYear()} NLITedu. All rights reserved.</p>
               <p>This is an automated delivery. Please do not reply directly to this email.</p>
+              <p style="margin-top: 15px; font-size: 10px; color: #cbd5e1;">System designed by <a href="https://saveragraphics.com" target="_blank" style="color: #94a3b8; text-decoration: underline;">SAVERAGRAPHICS</a> A Sindhura Group Company.</p>
             </div>
           </div>
         </body>
@@ -445,6 +446,7 @@ export async function POST(req: NextRequest) {
             <div class="footer">
               <p>© ${new Date().getFullYear()} NLITedu. All rights reserved.</p>
               <p>This is an automated delivery. Please do not reply directly to this email.</p>
+              <p style="margin-top: 15px; font-size: 10px; color: #cbd5e1;">System designed by <a href="https://saveragraphics.com" target="_blank" style="color: #94a3b8; text-decoration: underline;">SAVERAGRAPHICS</a> A Sindhura Group Company.</p>
             </div>
           </div>
         </body>
