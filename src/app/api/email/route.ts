@@ -51,10 +51,12 @@ export async function POST(req: NextRequest) {
         const pdfResponse = await fetch(pdfUrl);
         if (pdfResponse.ok) {
           const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
+          const isPng = pdfUrl.toLowerCase().includes(".png") || !pdfUrl.toLowerCase().includes(".pdf");
+          
           attachments.push({
-            filename: `NLIT_Certificate_${studentName.replace(/\s+/g, "_")}.pdf`,
+            filename: `NLIT_Certificate_${studentName.replace(/\s+/g, "_")}.${isPng ? "png" : "pdf"}`,
             content: pdfBuffer,
-            contentType: "application/pdf",
+            contentType: isPng ? "image/png" : "application/pdf",
           });
           console.log("Certificate PDF downloaded and attached successfully.");
         } else {
