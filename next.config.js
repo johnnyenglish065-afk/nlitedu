@@ -19,6 +19,9 @@ const nextConfig = {
   // ✅ Required for Next.js 16+ (Turbopack default) — silences the webpack/turbopack mismatch error
   turbopack: {},
 
+  // ✅ Allow native Node.js modules to load in server routes
+  serverExternalPackages: ["@napi-rs/canvas"],
+
   devIndicators: {
     appIsrStatus: false,
   },

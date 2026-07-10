@@ -1,0 +1,13 @@
+[tool.pyrefly]
+project-excludes = [
+    "E:\\_pyrefly_virtual_\\**",
+    "**/_pyrefly_virtual_/**",
+    "**/flutter_sdk/**",
+    "**/node_modules/**"
+]
+project_excludes = [
+    "E:\\_pyrefly_virtual_\\**",
+    "**/_pyrefly_virtual_/**",
+    "**/flutter_sdk/**",
+    "**/node_modules/**"
+]
