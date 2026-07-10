@@ -47,6 +47,7 @@ export default function CertificateAdminPage() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loadingCerts, setLoadingCerts] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
 
   useEffect(() => {
     const savedId = sessionStorage.getItem("cert_admin_id");
@@ -125,6 +126,37 @@ export default function CertificateAdminPage() {
       loadCertificates();
     }
   }, [isAuthenticated, tab]);
+
+  const handleSendEmail = async (c: Certificate) => {
+    const email = window.prompt(`Enter email address to send ${c.student_name}'s certificate to:`);
+    if (!email) return;
+
+    setSendingEmailId(c.id);
+    try {
+      const res = await fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "certificate",
+          studentName: c.student_name,
+          studentEmail: email,
+          courseTitle: c.course_name,
+          certificateNumber: c.certificate_number,
+          pdfUrl: c.pdf_url,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert("Email sent successfully! (Check spam folder if not in inbox)");
+      } else {
+        alert("Failed to send email: " + (data.error || "Unknown error"));
+      }
+    } catch (err: any) {
+      alert("Network error: " + err.message);
+    }
+    setSendingEmailId(null);
+  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -416,9 +448,16 @@ export default function CertificateAdminPage() {
                             <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{c.course_name}</td>
                             <td className="px-6 py-4 font-mono text-xs text-slate-700 dark:text-slate-300">{c.certificate_number}</td>
                             <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{c.issue_date}</td>
-                            <td className="px-6 py-4 flex gap-2">
+                            <td className="px-6 py-4 flex flex-wrap gap-3">
                               {c.pdf_url && <a href={c.pdf_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 text-xs font-bold dark:text-indigo-400">View ↗</a>}
                               <a href={`/verify?id=${c.certificate_number}`} target="_blank" className="text-emerald-600 hover:text-emerald-800 text-xs font-bold dark:text-emerald-400">Verify</a>
+                              <button 
+                                onClick={() => handleSendEmail(c)}
+                                disabled={sendingEmailId === c.id}
+                                className="text-blue-600 hover:text-blue-800 text-xs font-bold dark:text-blue-400 disabled:opacity-50"
+                              >
+                                {sendingEmailId === c.id ? "Sending..." : "📧 Email"}
+                              </button>
                             </td>
                           </tr>
                         ))}
