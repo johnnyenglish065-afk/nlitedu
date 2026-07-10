@@ -174,7 +174,7 @@ async function generateCertificateImage(
   centerTextInGap(ctx, endDate, 60, 1880, 2220, 1345);
 
   // QR Code
-  const verifyUrl = `https://nlitedu.com/verify?id=${certNumber}`;
+  const verifyUrl = `https://www.nlitedu.com/verify?id=${certNumber}`;
   const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
     width: 220,
     margin: 2,
@@ -392,7 +392,7 @@ async function sendCertificateEmail(
             <a href="${pdfUrl}" class="cta-btn" target="_blank">Download Certificate</a>
             <p class="verify-text">
               This credential is securely registered on our server. To verify its authenticity, visit:<br/>
-              <a class="verify-link" href="https://nlitedu.com/verify?id=${certificateNumber}">https://nlitedu.com/verify?id=${certificateNumber}</a>
+              <a class="verify-link" href="https://www.nlitedu.com/verify?id=${certificateNumber}">https://www.nlitedu.com/verify?id=${certificateNumber}</a>
             </p>
           </div>
           <div class="footer">

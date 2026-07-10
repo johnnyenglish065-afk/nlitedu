@@ -250,10 +250,10 @@ export async function POST(req: NextRequest) {
 
               <a href="${pdfUrl}" class="cta-btn">Download Certificate PDF</a>
               
-              <p class="verify-text">
-                This credential is securely registered on our server. To verify its authenticity, visit:<br/>
-                <a class="verify-link" href="https://nlitedu.com/verify?id=${certificateNumber}">https://nlitedu.com/verify?id=${certificateNumber}</a>
-              </p>
+              <div class="verify-text">
+                <p style="margin-bottom: 25px; color: #555;">This credential is securely registered on our server. To verify its authenticity, visit:</p>
+                <a class="verify-link" href="https://www.nlitedu.com/verify?id=${certificateNumber}">https://www.nlitedu.com/verify?id=${certificateNumber}</a>
+              </div>
             </div>
             <div class="footer">
               <p>© ${new Date().getFullYear()} NLITedu. All rights reserved.</p>
