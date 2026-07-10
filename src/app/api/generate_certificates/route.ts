@@ -652,10 +652,16 @@ export async function POST(req: Request) {
     const successCount = results.filter((r) => r.status === "success").length;
     const errorCount = results.filter((r) => r.status === "error").length;
     const dbErrors = results.filter((r) => r.dbError).length;
+    const emailsSent = results.filter((r) => r.emailSent).length;
+    const emailsFailed = results.filter((r) => r.status === "success" && sendEmail && !r.emailSent).length;
 
     let message = `Generated ${successCount} certificates. ${errorCount} errors.`;
+    if (sendEmail) {
+      message += ` 📧 ${emailsSent} emails delivered.`;
+      if (emailsFailed > 0) message += ` ⚠️ ${emailsFailed} emails failed to send!`;
+    }
     if (dbErrors > 0) {
-      message += ` ${dbErrors} DB warnings (certificates uploaded to Cloudinary but failed to save in database).`;
+      message += ` ⚠️ ${dbErrors} DB warnings.`;
     }
 
     return NextResponse.json({
