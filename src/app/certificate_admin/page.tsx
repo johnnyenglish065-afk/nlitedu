@@ -48,15 +48,41 @@ export default function CertificateAdminPage() {
   const [loadingCerts, setLoadingCerts] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  useEffect(() => {
+    const savedId = sessionStorage.getItem("cert_admin_id");
+    const savedPass = sessionStorage.getItem("cert_admin_pass");
+    if (savedId && savedPass) {
+      setAdminId(savedId);
+      setAdminPass(savedPass);
+      // Auto-authenticate with saved credentials
+      setIsLoading(true);
+      fetch(`/api/generate_certificates?action=courses&adminId=${encodeURIComponent(savedId)}&adminPass=${encodeURIComponent(savedPass)}`)
+        .then((r) => {
+          if (r.ok) {
+            setIsAuthenticated(true);
+            return r.json();
+          } else {
+            sessionStorage.removeItem("cert_admin_id");
+            sessionStorage.removeItem("cert_admin_pass");
+            throw new Error("Session expired.");
+          }
+        })
+        .then((d) => setCourses(d.courses || []))
+        .catch(() => {})
+        .finally(() => setIsLoading(false));
+    }
+  }, []);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (adminId && adminPass) {
-      // Test credentials with a quick check request
       setIsLoading(true);
       fetch(`/api/generate_certificates?action=courses&adminId=${encodeURIComponent(adminId)}&adminPass=${encodeURIComponent(adminPass)}`)
         .then((r) => {
           if (r.ok) {
             setIsAuthenticated(true);
+            sessionStorage.setItem("cert_admin_id", adminId);
+            sessionStorage.setItem("cert_admin_pass", adminPass);
             return r.json();
           } else {
             throw new Error("Invalid credentials.");
