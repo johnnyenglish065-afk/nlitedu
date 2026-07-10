@@ -54,11 +54,20 @@ function VerifyContent() {
       // 1. Try querying certificates table if client is initialized
       if (supabase) {
         try {
-          const { data, error } = await supabase
-            .from("certificates")
-            .select("*")
-            .or(`certificate_number.eq.${cleanVal},id.eq.${cleanVal}`)
-            .maybeSingle();
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanVal);
+          
+          let query = supabase.from("certificates").select("*");
+          if (isUuid) {
+            query = query.or(`certificate_number.eq.${cleanVal},id.eq.${cleanVal}`);
+          } else {
+            query = query.eq("certificate_number", cleanVal);
+          }
+          
+          const { data, error } = await query.maybeSingle();
+
+          if (error) {
+            console.error("Supabase verification error:", error);
+          }
 
           if (!error && data) {
             foundCert = {
