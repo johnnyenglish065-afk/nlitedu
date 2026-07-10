@@ -449,10 +449,11 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Missing student ID or Email." }, { status: 400 });
       }
       const queryClean = studentQuery.trim();
+      
+      // Fetch the student regardless of status first to give a better error message
       let query = supabase
         .from("enrollments")
-        .select("id, full_name, college_name, course_title, email")
-        .eq("status", "PAID");
+        .select("id, full_name, college_name, course_title, email, status");
 
       if (/^\d+$/.test(queryClean)) {
         query = query.eq("id", parseInt(queryClean, 10));
@@ -464,16 +465,26 @@ export async function POST(req: Request) {
       if (fetchError) {
         console.error("Enrollment fetch error:", fetchError);
         return NextResponse.json(
-          { error: `Database error fetching enrollments: ${fetchError.message}. Ensure SUPABASE_SERVICE_ROLE_KEY is set.` },
+          { error: `Database error fetching enrollments: ${fetchError.message}` },
           { status: 500 }
         );
       }
-      students = data || [];
+      
+      if (!data || data.length === 0) {
+        return NextResponse.json(
+          { error: `No enrollment found for "${queryClean}". Please check if the ID or Email is correct.` },
+          { status: 404 }
+        );
+      }
+
+      // Filter only PAID students
+      students = data.filter(s => s.status?.toUpperCase() === "PAID" || s.status?.toUpperCase() === "SUCCESS");
 
       if (students.length === 0) {
+        const currentStatus = data[0].status || "UNKNOWN";
         return NextResponse.json(
-          { error: `No paid enrollment found for "${queryClean}". Check the student ID/email and ensure their status is PAID.` },
-          { status: 404 }
+          { error: `Enrollment found for "${queryClean}", but their payment status is "${currentStatus}". Status must be "PAID" to generate a certificate.` },
+          { status: 400 }
         );
       }
     } else {
