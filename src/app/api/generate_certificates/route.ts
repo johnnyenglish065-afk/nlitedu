@@ -198,10 +198,10 @@ async function sendCertificateEmail(
 ) {
   try {
     // Validate SMTP config
-    const smtpHost = process.env.SMTP_HOST;
+    const smtpHost = (process.env.SMTP_HOST || "").replace(/^["']|["']$/g, '');
     const smtpPort = process.env.SMTP_PORT;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
+    const smtpUser = (process.env.SMTP_USER || "").replace(/^["']|["']$/g, '');
+    const smtpPass = (process.env.SMTP_PASS || "").replace(/^["']|["']$/g, '');
 
     if (!smtpHost || !smtpUser || !smtpPass) {
       console.error("SMTP not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS in environment variables.");
