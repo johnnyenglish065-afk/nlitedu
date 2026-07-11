@@ -190,7 +190,14 @@ export default function CertificateAdminPage() {
           queriesToProcess.push(enrollments.slice(i, i + 3).map((enr: any) => enr.id).join(","));
         }
       } else {
-        queriesToProcess = [studentQuery];
+        // Chunk the individual queries (comma-separated) into groups of 3
+        const allQueries = studentQuery.split(",").map(q => q.trim()).filter(Boolean);
+        if (allQueries.length === 0) {
+          throw new Error("Please enter at least one Student ID or Email.");
+        }
+        for (let i = 0; i < allQueries.length; i += 3) {
+          queriesToProcess.push(allQueries.slice(i, i + 3).join(","));
+        }
       }
 
       const allResults: CertResult[] = [];
