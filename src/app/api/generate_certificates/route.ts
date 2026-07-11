@@ -556,10 +556,7 @@ export async function POST(req: Request) {
     }
 
     // 4. Generate certificates
-    const results: any[] = [];
-
-    for (let i = 0; i < students.length; i++) {
-      const student = students[i];
+    const results: any[] = await Promise.all(students.map(async (student) => {
       // Pad to 6 digits to match standard Certificate ID lengths nicely
       const paddedId = String(student.id).padStart(6, "0");
       const certNumber = `NLIT-${new Date().getFullYear()}-${paddedId}`;
@@ -584,7 +581,7 @@ export async function POST(req: Request) {
             );
           }
           
-          results.push({
+          return {
             name: student.full_name,
             course: student.course_title,
             college: student.college_name,
@@ -593,8 +590,7 @@ export async function POST(req: Request) {
             emailSent: emailSent,
             status: "success",
             dbError: "Certificate already exists — skipped regeneration.",
-          });
-          continue;
+          };
         }
 
         // Generate image with text overlay
@@ -646,7 +642,7 @@ export async function POST(req: Request) {
 
         if (certError) {
           console.error(`Database insertion failed for ${student.full_name}:`, certError);
-          results.push({
+          return {
             name: student.full_name,
             course: student.course_title,
             college: student.college_name,
@@ -655,9 +651,9 @@ export async function POST(req: Request) {
             emailSent,
             status: "success",
             dbError: `DB insert failed: ${certError.message}. Add SUPABASE_SERVICE_ROLE_KEY or run certificates RLS fix SQL.`,
-          });
+          };
         } else {
-          results.push({
+          return {
             name: student.full_name,
             course: student.course_title,
             college: student.college_name,
@@ -666,18 +662,18 @@ export async function POST(req: Request) {
             certId: certData?.id,
             emailSent,
             status: "success",
-          });
+          };
         }
       } catch (genErr: any) {
         console.error(`Error generating cert for ${student.full_name}:`, genErr);
-        results.push({
+        return {
           name: student.full_name,
           course: student.course_title,
           status: "error",
           error: genErr.message,
-        });
+        };
       }
-    }
+    }));
 
     const successCount = results.filter((r) => r.status === "success").length;
     const errorCount = results.filter((r) => r.status === "error").length;
