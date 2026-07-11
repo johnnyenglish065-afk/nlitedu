@@ -449,31 +449,61 @@ export async function POST(req: Request) {
       if (!studentQuery) {
         return NextResponse.json({ error: "Missing student ID or Email." }, { status: 400 });
       }
-      const queryClean = studentQuery.trim();
+      const queries = studentQuery.split(",").map((q: string) => q.trim()).filter(Boolean);
       
-      // Fetch the student regardless of status first to give a better error message
-      let query = supabase
-        .from("enrollments")
-        .select("id, full_name, college_name, course_title, email, status");
+      const ids: number[] = [];
+      const emails: string[] = [];
 
-      if (/^\d+$/.test(queryClean)) {
-        query = query.eq("id", parseInt(queryClean, 10));
-      } else {
-        query = query.eq("email", queryClean);
+      for (const q of queries) {
+        if (/^\d+$/.test(q)) {
+          ids.push(parseInt(q, 10));
+        } else {
+          emails.push(q);
+        }
       }
 
-      const { data, error: fetchError } = await query;
-      if (fetchError) {
-        console.error("Enrollment fetch error:", fetchError);
-        return NextResponse.json(
-          { error: `Database error fetching enrollments: ${fetchError.message}` },
-          { status: 500 }
-        );
+      let data: any[] = [];
+      if (ids.length > 0) {
+        const { data: idData, error: idError } = await supabase
+          .from("enrollments")
+          .select("id, full_name, college_name, course_title, email, status")
+          .in("id", ids);
+        
+        if (idError) {
+          console.error("Enrollment fetch error (IDs):", idError);
+          return NextResponse.json(
+            { error: `Database error fetching enrollments by IDs: ${idError.message}` },
+            { status: 500 }
+          );
+        }
+        if (idData) data = data.concat(idData);
       }
-      
+
+      if (emails.length > 0) {
+        const { data: emailData, error: emailError } = await supabase
+          .from("enrollments")
+          .select("id, full_name, college_name, course_title, email, status")
+          .in("email", emails);
+          
+        if (emailError) {
+          console.error("Enrollment fetch error (Emails):", emailError);
+          return NextResponse.json(
+            { error: `Database error fetching enrollments by Emails: ${emailError.message}` },
+            { status: 500 }
+          );
+        }
+        
+        if (emailData) {
+          // Prevent duplicates if someone inputs ID and email for the same student
+          const existingIds = new Set(data.map(d => d.id));
+          const uniqueEmailData = emailData.filter(d => !existingIds.has(d.id));
+          data = data.concat(uniqueEmailData);
+        }
+      }
+
       if (!data || data.length === 0) {
         return NextResponse.json(
-          { error: `No enrollment found for "${queryClean}". Please check if the ID or Email is correct.` },
+          { error: `No enrollments found for the provided inputs. Please check if the IDs or Emails are correct.` },
           { status: 404 }
         );
       }
@@ -482,9 +512,8 @@ export async function POST(req: Request) {
       students = data.filter(s => s.status?.toUpperCase() === "PAID" || s.status?.toUpperCase() === "SUCCESS");
 
       if (students.length === 0) {
-        const currentStatus = data[0].status || "UNKNOWN";
         return NextResponse.json(
-          { error: `Enrollment found for "${queryClean}", but their payment status is "${currentStatus}". Status must be "PAID" to generate a certificate.` },
+          { error: `Enrollments found, but none have "PAID" status. Status must be "PAID" to generate a certificate.` },
           { status: 400 }
         );
       }

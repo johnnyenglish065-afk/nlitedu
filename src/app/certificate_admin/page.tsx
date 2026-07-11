@@ -286,7 +286,7 @@ export default function CertificateAdminPage() {
                             : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/30"
                         }`}
                       >
-                        👤 Individual Mode (ID / Email)
+                        👤 Individual Mode (Comma Separated IDs/Emails)
                       </button>
                     </div>
                   </div>
@@ -303,13 +303,13 @@ export default function CertificateAdminPage() {
                       </div>
                     ) : (
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Student ID or Email</label>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Student IDs or Emails (Comma Separated)</label>
                         <input
                           type="text"
                           value={studentQuery}
                           onChange={(e) => setStudentQuery(e.target.value)}
                           className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
-                          placeholder="e.g. 44 or student@email.com"
+                          placeholder="e.g. 44, 45, student@email.com"
                           required
                         />
                       </div>
