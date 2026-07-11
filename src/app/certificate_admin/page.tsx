@@ -163,32 +163,94 @@ export default function CertificateAdminPage() {
     setIsLoading(true);
     setMessage(null);
     setResults([]);
+    
     try {
-      const res = await fetch("/api/generate_certificates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          adminId,
-          adminPass,
-          startDate,
-          endDate,
-          courseFilter: generationMode === "bulk" ? courseFilter : undefined,
-          mode: generationMode,
-          studentQuery: generationMode === "individual" ? studentQuery : undefined,
-          sendEmail,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage({ type: "success", text: data.message });
-        setResults(data.results || []);
-      } else {
-        if (res.status === 401) {
-          setIsAuthenticated(false);
-          return;
+      let queriesToProcess: string[] = [];
+
+      if (generationMode === "bulk") {
+        setMessage({ type: "success", text: "Fetching enrollments..." });
+        const fetchRes = await fetch(`/api/generate_certificates?action=enrollments&course=${encodeURIComponent(courseFilter)}&adminId=${encodeURIComponent(adminId)}&adminPass=${encodeURIComponent(adminPass)}`);
+        
+        const fetchText = await fetchRes.text();
+        let fetchData;
+        try {
+          fetchData = JSON.parse(fetchText);
+        } catch (err) {
+          throw new Error(`Server returned a non-JSON response during fetch: ${fetchText.substring(0, 50)}...`);
         }
-        setMessage({ type: "error", text: data.error || "Failed." });
+
+        if (!fetchRes.ok) throw new Error(fetchData.error || "Failed to fetch enrollments.");
+        if (!fetchData.enrollments || fetchData.enrollments.length === 0) {
+          throw new Error("No paid enrollments found for the selected course.");
+        }
+
+        // Chunk into groups of 3 students per request to avoid timeout
+        const enrollments = fetchData.enrollments;
+        for (let i = 0; i < enrollments.length; i += 3) {
+          queriesToProcess.push(enrollments.slice(i, i + 3).map((enr: any) => enr.id).join(","));
+        }
+      } else {
+        queriesToProcess = [studentQuery];
       }
+
+      const allResults: CertResult[] = [];
+      let totalSuccess = 0;
+      let totalErrors = 0;
+
+      for (let i = 0; i < queriesToProcess.length; i++) {
+        if (queriesToProcess.length > 1) {
+          setMessage({ type: "success", text: `Processing batch ${i + 1} of ${queriesToProcess.length}...` });
+        }
+
+        const res = await fetch("/api/generate_certificates", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            adminId,
+            adminPass,
+            startDate,
+            endDate,
+            mode: "individual", // Always process as 'individual' chunks under the hood
+            studentQuery: queriesToProcess[i],
+            sendEmail,
+          }),
+        });
+
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (err) {
+          throw new Error(`Batch ${i + 1} failed with a non-JSON response (timeout?): ${text.substring(0, 50)}...`);
+        }
+
+        if (res.ok) {
+          if (data.results) {
+            allResults.push(...data.results);
+            totalSuccess += data.results.filter((r: any) => r.status === "success").length;
+            totalErrors += data.results.filter((r: any) => r.status === "error").length;
+          }
+        } else {
+          if (res.status === 401) {
+            setIsAuthenticated(false);
+            return;
+          }
+          if (queriesToProcess.length === 1) {
+            throw new Error(data.error || "Failed.");
+          } else {
+            console.error(`Batch ${i + 1} error:`, data.error);
+            // Optionally push a synthetic error result so the user sees it in the table
+          }
+        }
+      }
+
+      setResults(allResults);
+      if (queriesToProcess.length > 1 || generationMode === "individual") {
+         setMessage({ type: "success", text: `Completed! Generated ${totalSuccess} certificates. ${totalErrors} errors.` });
+      } else {
+         setMessage({ type: "success", text: `Completed generation.` });
+      }
+
     } catch (err: any) {
       setMessage({ type: "error", text: err.message || "Network error." });
     }
