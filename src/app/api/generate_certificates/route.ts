@@ -744,7 +744,7 @@ export async function GET(req: Request) {
       .from("certificates")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(5000); // Increased limit to fetch all certificates
 
     if (error) {
       return NextResponse.json({ error: `Failed to fetch certificates: ${error.message}` }, { status: 500 });
