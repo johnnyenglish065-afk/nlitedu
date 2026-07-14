@@ -141,6 +141,7 @@ export default function AdminDashboard() {
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
 
   // Course Management State
+  const [courseFilter, setCourseFilter] = useState("ALL");
   const [isCreatingCourse, setIsCreatingCourse] = useState(false);
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [newCourse, setNewCourse] = useState({
@@ -1473,14 +1474,33 @@ export default function AdminDashboard() {
                <div className="lg:col-span-2 space-y-4">
                  <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-                     <h3 className="font-black text-xl flex items-center gap-2"><FaUniversity className="text-primary" /> All Courses</h3>
-                     <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold">{courses.length} Active</span>
+                     <div className="flex items-center gap-4">
+                       <h3 className="font-black text-xl flex items-center gap-2"><FaUniversity className="text-primary" /> All Courses</h3>
+                       <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold">{courses.length} Active</span>
+                     </div>
+                     <select 
+                       value={courseFilter} 
+                       onChange={e => setCourseFilter(e.target.value)} 
+                       className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 outline-none font-semibold text-sm"
+                     >
+                       <option value="ALL">All Categories</option>
+                       <option value="FOUNDATION">Foundation Courses</option>
+                       <option value="INTERNSHIP">Internships</option>
+                       {Array.from(new Set(courses.map(c => c.category).filter(Boolean))).map(cat => (
+                         <option key={cat} value={cat}>{cat}</option>
+                       ))}
+                     </select>
                    </div>
                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
                      {courses.length === 0 && (
                        <div className="p-12 text-center text-slate-400 font-bold">No courses found in database.</div>
                      )}
-                     {courses.map(course => (
+                     {courses.filter(course => {
+                       if (courseFilter === "ALL") return true;
+                       if (courseFilter === "FOUNDATION") return course.category !== "INTERNSHIP";
+                       if (courseFilter === "INTERNSHIP") return course.category === "INTERNSHIP";
+                       return course.category === courseFilter;
+                     }).map(course => (
                        <div key={course.id} className="p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                          <div className="flex items-center gap-4">
                            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-black text-primary border border-slate-200 dark:border-slate-700">
