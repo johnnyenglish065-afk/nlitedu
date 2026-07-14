@@ -17,6 +17,7 @@ const CoursesSection = () => {
         .from("courses")
         .select("id, title, slug, description, image_url, duration, pvt_price")
         .eq("is_legacy_pricing", false)
+        .neq("category", "INTERNSHIP")
         .order("created_at", { ascending: true });
 
       if (error) {

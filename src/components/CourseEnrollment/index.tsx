@@ -108,24 +108,8 @@ const CourseEnrollment = () => {
   }, [showEnrollModal]);
 
   useEffect(() => {
-    const internshipSlugs = [
-      "autocad-2d-3d-design",
-      "java-programming",
-      "python-programming",
-      "data-science",
-      "artificial-intelligence",
-      "matlab-scientific-computing",
-      "android-ios-mobile-development",
-      "iot-embedded",
-      "revit-bim",
-      "solidworks",
-      "catia",
-      "sketchup",
-      "etabs",
-      "general"
-    ];
     fetchCourses().then((data) => {
-      const filtered = data.filter(course => internshipSlugs.includes(course.slug));
+      const filtered = data.filter(course => course.category === "INTERNSHIP");
       setCourses(filtered);
     });
   }, []);
