@@ -162,8 +162,40 @@ const EnrollmentPageContent = () => {
   const clearFormFromLocal = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("pending_enrollment");
+      localStorage.removeItem("nlitedu_enrollment_draft");
     }
   };
+
+  // Global Resume Feature: Load draft on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const draft = localStorage.getItem("nlitedu_enrollment_draft");
+        if (draft) {
+          const parsed = JSON.parse(draft);
+          setForm((prev) => ({
+            ...prev,
+            ...parsed,
+            // Override with URL params if they exist
+            collegeType: searchParams.get("type") || parsed.collegeType || prev.collegeType,
+            state: searchParams.get("state") || parsed.state || prev.state,
+            course: searchParams.get("course") && searchParams.get("course") !== "general" ? course?.title || prev.course : parsed.course || prev.course
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to parse draft form", e);
+      }
+    }
+  }, [searchParams, course?.title]);
+
+  // Global Resume Feature: Auto-save draft on form change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (form.fullName || form.email || form.whatsapp) {
+        localStorage.setItem("nlitedu_enrollment_draft", JSON.stringify(form));
+      }
+    }
+  }, [form]);
 
   // Initialize Cashfree
   const [cashfree, setCashfree] = useState<any>(null);
@@ -282,9 +314,8 @@ const EnrollmentPageContent = () => {
     }
   };
 
-  // Determine if it is an internship course
   const isInternship = useMemo(() => {
-    return programParam === "internship" || courseSlug === "general" || !course?.govt_price;
+    return programParam === "internship" || courseSlug === "general" || course?.program_type === "Internship" || !course?.govt_price;
   }, [programParam, courseSlug, course]);
 
   // Determine fee based on college type and course
@@ -507,7 +538,7 @@ const EnrollmentPageContent = () => {
         user_id: user?.id,
         cf_payment_id: orderId,
         status: "PENDING",
-        enrollment_type: "internship",
+        enrollment_type: course?.program_type ? course.program_type.toLowerCase() : (isInternship ? "internship" : "foundation"),
       };
       let { error: pendingError } = await supabase.from("enrollments").insert([
         pendingData
@@ -792,14 +823,33 @@ const EnrollmentPageContent = () => {
               <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-200">
                 <p>{error}</p>
                 {pendingOrderId && !submitting && (
-                  <button
-                    type="button"
-                    onClick={() => verifyPaymentStatus({ orderId: pendingOrderId })}
-                    disabled={submitting}
-                    className="mt-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
-                  >
-                    🔄 Retry Verification
-                  </button>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => verifyPaymentStatus({ orderId: pendingOrderId })}
+                      disabled={submitting}
+                      className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                    >
+                      🔄 Retry Verification
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPendingOrderId(null);
+                        setError(null);
+                        // Optional: Clear URL params to ensure clean slate
+                        if (typeof window !== "undefined") {
+                          const url = new URL(window.location.href);
+                          url.searchParams.delete("order_id");
+                          window.history.replaceState({}, "", url.toString());
+                        }
+                      }}
+                      disabled={submitting}
+                      className="rounded-lg border border-red-200 bg-red-100 px-4 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-200 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+                    >
+                      ❌ Payment Failed? Restart Payment
+                    </button>
+                  </div>
                 )}
               </div>
             )}

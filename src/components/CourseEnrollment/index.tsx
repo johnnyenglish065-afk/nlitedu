@@ -109,7 +109,7 @@ const CourseEnrollment = () => {
 
   useEffect(() => {
     fetchCourses().then((data) => {
-      const filtered = data.filter(course => course.category === "INTERNSHIP");
+      const filtered = data.filter(course => course.program_type === "Internship");
       setCourses(filtered);
     });
   }, []);

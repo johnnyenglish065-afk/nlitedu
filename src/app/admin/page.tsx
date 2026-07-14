@@ -149,6 +149,7 @@ export default function AdminDashboard() {
     slug: "",
     description: "",
     category: "DESIGN",
+    program_type: "Foundation",
     govt_price: 1999,
     pvt_price: 2999,
     job_price: 3999,
@@ -189,7 +190,7 @@ export default function AdminDashboard() {
       setEditingCourseId(null);
       setIsCreatingCourse(false);
       setNewCourse({
-        title: "", slug: "", description: "", category: "DESIGN",
+        title: "", slug: "", description: "", category: "DESIGN", program_type: "Foundation",
         govt_price: 1999, pvt_price: 2999, job_price: 3999,
         duration: "12 Weeks", level: "Intermediate", is_bestseller: false,
         instructor_name: "NLITedu Official", highlights: ["", "", ""], syllabus: ["", "", ""]
@@ -209,6 +210,7 @@ export default function AdminDashboard() {
       slug: course.slug,
       description: course.description,
       category: course.category,
+      program_type: course.program_type || "Foundation",
       govt_price: course.govt_price,
       pvt_price: course.pvt_price,
       job_price: course.job_price,
@@ -1486,9 +1488,12 @@ export default function AdminDashboard() {
                        <option value="ALL">All Categories</option>
                        <option value="FOUNDATION">Foundation Courses</option>
                        <option value="INTERNSHIP">Internships</option>
-                       {Array.from(new Set(courses.map(c => c.category).filter(Boolean))).map(cat => (
-                         <option key={cat} value={cat}>{cat}</option>
-                       ))}
+                       <option value="WORKSHOP">Workshops</option>
+                       <optgroup label="Subjects">
+                         {Array.from(new Set(courses.map(c => c.category).filter(Boolean))).map(cat => (
+                           <option key={cat} value={cat}>{cat}</option>
+                         ))}
+                       </optgroup>
                      </select>
                    </div>
                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1497,8 +1502,9 @@ export default function AdminDashboard() {
                      )}
                      {courses.filter(course => {
                        if (courseFilter === "ALL") return true;
-                       if (courseFilter === "FOUNDATION") return course.category !== "INTERNSHIP";
-                       if (courseFilter === "INTERNSHIP") return course.category === "INTERNSHIP";
+                       if (courseFilter === "FOUNDATION") return course.program_type === "Foundation" || !course.program_type;
+                       if (courseFilter === "INTERNSHIP") return course.program_type === "Internship";
+                       if (courseFilter === "WORKSHOP") return course.program_type === "Workshop";
                        return course.category === courseFilter;
                      }).map(course => (
                        <div key={course.id} className="p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
@@ -1507,7 +1513,12 @@ export default function AdminDashboard() {
                              {course.category ? course.category[0] : 'C'}
                            </div>
                            <div>
-                             <h4 className="font-bold">{course.title}</h4>
+                             <h4 className="font-bold">
+                               <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded uppercase tracking-wider mr-2">
+                                 {course.program_type || 'Foundation'}
+                               </span>
+                               {course.title}
+                             </h4>
                              <div className="flex gap-4 mt-1">
                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">₹{course.govt_price} Govt</span>
                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{course.duration || 'Flexible'}</span>
@@ -1555,15 +1566,27 @@ export default function AdminDashboard() {
                         <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Job/Training Price (₹)</label>
                         <input type="number" value={newCourse.job_price} onChange={e => setNewCourse({...newCourse, job_price: parseInt(e.target.value)})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none" />
                      </div>
-                     <div>
-                       <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Category</label>
-                       <select value={newCourse.category} onChange={e => setNewCourse({...newCourse, category: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none font-bold">
-                         <option value="DESIGN">Design</option>
-                         <option value="PROGRAMMING">Programming</option>
-                         <option value="ENGINEERING">Engineering</option>
-                         <option value="DATA SCIENCE">Data Science</option>
-                         <option value="AI">AI & Machine Learning</option>
-                       </select>
+                     <div className="grid grid-cols-2 gap-4">
+                       <div>
+                         <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Subject Category</label>
+                         <select value={newCourse.category} onChange={e => setNewCourse({...newCourse, category: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none font-bold">
+                           <option value="DESIGN">Design</option>
+                           <option value="PROGRAMMING">Programming</option>
+                           <option value="ENGINEERING">Engineering</option>
+                           <option value="DATA SCIENCE">Data Science</option>
+                           <option value="AI">AI & Machine Learning</option>
+                           <option value="MANAGEMENT">Management</option>
+                           <option value="GENERAL">General</option>
+                         </select>
+                       </div>
+                       <div>
+                         <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Program Type</label>
+                         <select value={newCourse.program_type} onChange={e => setNewCourse({...newCourse, program_type: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none font-bold">
+                           <option value="Foundation">Foundation</option>
+                           <option value="Internship">Internship</option>
+                           <option value="Workshop">Workshop</option>
+                         </select>
+                       </div>
                      </div>
                      <div>
                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Description</label>
@@ -1582,7 +1605,7 @@ export default function AdminDashboard() {
                         <button onClick={() => {
                           setEditingCourseId(null);
                           setNewCourse({
-                            title: "", slug: "", description: "", category: "DESIGN",
+                            title: "", slug: "", description: "", category: "DESIGN", program_type: "Foundation",
                             govt_price: 1999, pvt_price: 2999, job_price: 3999,
                             duration: "12 Weeks", level: "Intermediate", is_bestseller: false,
                             instructor_name: "NLITedu Official", highlights: ["", "", ""], syllabus: ["", "", ""]
