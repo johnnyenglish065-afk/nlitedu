@@ -6,7 +6,7 @@ import {
   FaUniversity, FaRegIdBadge, FaMapMarkerAlt, FaVenusMars,
   FaCalendarAlt, FaPhoneAlt, FaEnvelope, FaBriefcase, FaDownload
 } from "react-icons/fa";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -27,6 +27,25 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
   }
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [publishedCertificate, setPublishedCertificate] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchCertificate() {
+      if (enrollment.email && enrollment.course_title) {
+        const { data, error } = await supabase
+          .from("certificates")
+          .select("pdf_url, certificate_number")
+          .eq("user_email", enrollment.email)
+          .eq("course_title", enrollment.course_title)
+          .maybeSingle();
+        
+        if (data) {
+          setPublishedCertificate(data);
+        }
+      }
+    }
+    fetchCertificate();
+  }, [enrollment]);
 
   const handleDownloadInvoice = async () => {
     setIsGenerating(true);
@@ -429,6 +448,18 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
                     <DocumentLink label="Semester Marksheet" url={enrollment.marksheetSemUrl} color="green" />
                   ) : (
                     <div className="text-[10px] text-slate-400 italic">No semester marksheet provided.</div>
+                  )}
+                  {publishedCertificate && publishedCertificate.pdf_url && (
+                    <div className="mt-2 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-1.5 h-3 bg-purple-500 rounded-full" /> Issued Certificate
+                      </h4>
+                      <DocumentLink 
+                        label={`Certificate ID: ${publishedCertificate.certificate_number}`} 
+                        url={publishedCertificate.pdf_url} 
+                        color="blue" 
+                      />
+                    </div>
                   )}
                 </div>
               </section>
