@@ -10,18 +10,26 @@ const AppDownloadPopup = () => {
 
   useEffect(() => {
     // Show only for logged-in users and if not dismissed in this session
-    const isDismissed = sessionStorage.getItem("app_download_dismissed");
-    if (user && !isDismissed) {
-      const timer = setTimeout(() => {
-        setIsVisible(true);
-      }, 3000); // Show after 3 seconds
-      return () => clearTimeout(timer);
+    try {
+      const isDismissed = sessionStorage.getItem("app_download_dismissed");
+      if (user && !isDismissed) {
+        const timer = setTimeout(() => {
+          setIsVisible(true);
+        }, 3000); // Show after 3 seconds
+        return () => clearTimeout(timer);
+      }
+    } catch (e) {
+      console.warn("sessionStorage is not accessible:", e);
     }
   }, [user]);
 
   const handleDismiss = () => {
     setIsVisible(false);
-    sessionStorage.setItem("app_download_dismissed", "true");
+    try {
+      sessionStorage.setItem("app_download_dismissed", "true");
+    } catch (e) {
+      console.warn("sessionStorage is not accessible:", e);
+    }
   };
 
   if (!isVisible) return null;

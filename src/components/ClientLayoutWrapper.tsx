@@ -13,8 +13,8 @@ export default function ClientLayoutWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  const [showWelcome, setShowWelcome] = useState(true);
   const pathname = usePathname();
+  const [showWelcome, setShowWelcome] = useState(() => pathname === "/");
 
   useEffect(() => {
     if (pathname !== "/") {
