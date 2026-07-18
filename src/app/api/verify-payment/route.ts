@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
       if (currentRecord?.status === "PAID") {
         // Already paid - trigger email (in case webhook didn't send it) and return success
-        triggerEmail(currentRecord.full_name, currentRecord.email, currentRecord.course_title, orderId);
+        await triggerEmail(currentRecord.full_name, currentRecord.email, currentRecord.course_title, orderId);
         return NextResponse.json({ status: "PAID" });
       }
     }
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
           console.error("Failed to update enrollment status:", dbError);
         } else if (updatedRecord) {
           // Trigger confirmation email
-          triggerEmail(updatedRecord.full_name, updatedRecord.email, updatedRecord.course_title, orderId);
+          await triggerEmail(updatedRecord.full_name, updatedRecord.email, updatedRecord.course_title, orderId);
         }
       }
 
@@ -150,12 +150,19 @@ export async function POST(request: Request) {
   }
 }
 
-// Fire-and-forget email trigger via our own /api/email route
-function triggerEmail(studentName: string, studentEmail: string, courseTitle: string, orderId: string) {
+// Email trigger via our own /api/email route (awaited to ensure completion in serverless environments)
+async function triggerEmail(studentName: string, studentEmail: string, courseTitle: string, orderId: string) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nlitedu.com";
-  fetch(`${siteUrl}/api/email`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ studentName, studentEmail, courseTitle, orderId }),
-  }).catch((e) => console.error("Failed to trigger email:", e));
+  try {
+    const res = await fetch(`${siteUrl}/api/email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentName, studentEmail, courseTitle, orderId }),
+    });
+    if (!res.ok) {
+      console.error(`Email endpoint returned status ${res.status}`);
+    }
+  } catch (e) {
+    console.error("Failed to trigger email:", e);
+  }
 }
