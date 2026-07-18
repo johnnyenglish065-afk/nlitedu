@@ -556,7 +556,7 @@ const ProfilePage = () => {
       });
 
       // Load background and QR code images in parallel
-      const backgroundUrl = window.location.origin + "/company/cert-sample.jpg";
+      const backgroundUrl = window.location.origin + "/company/cert-sample.png";
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent("https://nlitedu.in/verify?id=" + certificateNumber)}`;
 
       const [backgroundImg, qrImg] = await Promise.all([
