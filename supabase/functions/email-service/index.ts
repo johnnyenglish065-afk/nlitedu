@@ -119,7 +119,7 @@ serve(async (req: Request) => {
             </p>
           </div>
           <div style="background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #64748b;">
-            &copy; ${new Date().getFullYear()} Nexgen Learning Institute of Technology. All rights reserved.
+            &copy; ${new Date().getFullYear()} NLIT EDU (OPC) PVT. LTD. All rights reserved.
           </div>
         </div>
       `,

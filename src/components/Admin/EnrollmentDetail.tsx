@@ -70,8 +70,12 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
       pdf.text("NLITedu", margin, 20);
 
       pdf.setFontSize(9);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("NLIT EDU (OPC) PVT. LTD.", margin, 26);
+
+      pdf.setFontSize(8);
       pdf.setFont("helvetica", "normal");
-      pdf.text("NEXGEN LEARNING INSTITUTE OF TECHNOLOGY", margin, 26);
+      pdf.text("GSTIN: 10AALCN7967P1ZO", margin, 32);
 
       pdf.setFontSize(11);
       pdf.setFont("helvetica", "bold");
@@ -291,7 +295,7 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
 
       pdf.setFontSize(8);
       pdf.setTextColor(148, 163, 184);
-      pdf.text("Nexgen Learning Institute of Technology - nliteedu.com", pdfWidth / 2, pdfHeight - 20, { align: "center" });
+      pdf.text("NLIT EDU (OPC) PVT. LTD. - nliteedu.com", pdfWidth / 2, pdfHeight - 20, { align: "center" });
       pdf.text("This is an electronically generated official receipt and does not require a physical signature.", pdfWidth / 2, pdfHeight - 15, { align: "center" });
 
       pdf.setFont("helvetica", "normal");
