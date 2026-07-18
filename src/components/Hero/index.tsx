@@ -807,16 +807,17 @@ const Hero = () => {
                         return;
                       }
                       let path = "/enroll";
+                      let queryParams = `course=general&type=${selection.type}&state=${encodeURIComponent(
+                        selection.state
+                      )}`;
                       if (selectedProgram === "workshop") {
                         path = "/workshop/enroll";
                       } else if (selectedProgram === "site-visit") {
                         path = "/site-visit/enroll";
+                      } else if (selectedProgram === "internship") {
+                        queryParams += "&program=internship";
                       }
-                      router.push(
-                        `${path}?course=general&type=${selection.type}&state=${encodeURIComponent(
-                          selection.state
-                        )}`
-                      );
+                      router.push(`${path}?${queryParams}`);
                       setShowEnrollModal(false);
                     }}
                     className={`rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition ${

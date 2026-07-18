@@ -54,24 +54,6 @@ const EnrollmentPageContent = () => {
     });
   }, []);
 
-  const course = useMemo(() => {
-    if (loadingCourses) return { title: "Loading...", description: "Loading course details...", highlights: [] };
-    const found = courses.find((item) => item.slug === courseSlug);
-    const defaultCourse = {
-      slug: "general",
-      title: "NLIT Course Enrollment",
-      description: "Select your course and fill out the enrollment form so we can reserve your seat and begin your learning journey.",
-      highlights: ["Choose from courses across design, development, AI, and engineering", "Secure admission with a simple online form", "Receive course guidance from the NLIT team"],
-    };
-
-    if (!found) return defaultCourse;
-
-    return {
-      ...found,
-      highlights: Array.isArray(found.highlights) ? found.highlights : [],
-    };
-  }, [courseSlug, courses, loadingCourses]);
-
   const [form, setForm] = useState({
     fullName: "",
     fatherName: "",
@@ -85,7 +67,7 @@ const EnrollmentPageContent = () => {
     collegeName: "",
     collegeType: searchParams.get("type") || "",
     state: searchParams.get("state") || "",
-    course: course?.title || "",
+    course: "",
     message: "",
     marks10: "",
     marks12: "",
@@ -96,6 +78,40 @@ const EnrollmentPageContent = () => {
     duration: "",
     internshipMode: "",
   });
+
+  const course = useMemo(() => {
+    const defaultCourse = {
+      slug: "general",
+      title: "NLIT Course Enrollment",
+      description: "Select your course and fill out the enrollment form so we can reserve your seat and begin your learning journey.",
+      highlights: ["Choose from courses across design, development, AI, and engineering", "Secure admission with a simple online form", "Receive course guidance from the NLIT team"],
+      program_type: "Internship",
+      govt_price: 0,
+      pvt_price: 0,
+      job_price: 0,
+    };
+
+    if (loadingCourses) {
+      return {
+        ...defaultCourse,
+        title: "Loading...",
+        description: "Loading course details...",
+        highlights: [],
+      };
+    }
+
+    let found = courses.find((item) => item.title === form.course);
+    if (!found) {
+      found = courses.find((item) => item.slug === courseSlug);
+    }
+
+    if (!found) return defaultCourse;
+
+    return {
+      ...found,
+      highlights: Array.isArray(found.highlights) ? found.highlights : [],
+    };
+  }, [form.course, courseSlug, courses, loadingCourses]);
   const [marksheet12File, setMarksheet12File] = useState<File | null>(null);
   const [marksheetSemFile, setMarksheetSemFile] = useState<File | null>(null);
   const [collegeIdFile, setCollegeIdFile] = useState<File | null>(null);
@@ -315,7 +331,10 @@ const EnrollmentPageContent = () => {
   };
 
   const isInternship = useMemo(() => {
-    return programParam === "internship" || courseSlug === "general" || course?.program_type === "Internship" || !course?.govt_price;
+    if (course?.program_type) {
+      return course.program_type === "Internship";
+    }
+    return programParam === "internship" || courseSlug === "general" || !course?.govt_price;
   }, [programParam, courseSlug, course]);
 
   // Determine fee based on college type and course
@@ -428,6 +447,22 @@ const EnrollmentPageContent = () => {
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "course") {
+      const selected = courses.find((c) => c.title === value);
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        if (selected) {
+          params.set("course", selected.slug);
+          if (selected.program_type) {
+            params.set("program", selected.program_type.toLowerCase());
+          }
+        } else {
+          params.set("course", "general");
+        }
+        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+      }
+    }
   };
 
   const validate = () => {
@@ -1087,22 +1122,13 @@ const EnrollmentPageContent = () => {
                 >
                   <option value="">Select a Course</option>
                   {courses
-                    .filter((c) => !isInternship || [
-                      "autocad-2d-3d-design",
-                      "java-programming",
-                      "python-programming",
-                      "data-science",
-                      "artificial-intelligence",
-                      "matlab-scientific-computing",
-                      "android-ios-mobile-development",
-                      "iot-embedded",
-                      "revit-bim",
-                      "solidworks",
-                      "catia",
-                      "sketchup",
-                      "etabs",
-                      "general"
-                    ].includes(c.slug))
+                    .filter((c) => {
+                      if (isInternship) {
+                        return c.program_type === "Internship";
+                      } else {
+                        return c.program_type === "Foundation";
+                      }
+                    })
                     .map((c) => (
                     <option key={c.slug} value={c.title}>{c.title}</option>
                   ))}

@@ -268,7 +268,7 @@ const Footer = () => {
             <p className="text-[8px] font-medium uppercase tracking-[0.4em] text-body-color/30 dark:text-white/10 text-center">
               website designed by{" "}
               <Link
-                href="https://saveragraphics-in.web.app"
+                href="https://saveragraphics.com"
                 target="_blank"
                 className="text-amber-500/30 hover:text-amber-500/50 transition-colors duration-300"
               >
