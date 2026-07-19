@@ -399,8 +399,6 @@ const EnrollmentPageContent = () => {
 
   const displayPrice = course?.price ? (parseInt(course.price.replace(/\D/g, '')) || 0) : ((course?.pvt_price || 2999) + 4000);
 
-  const isCollegeStudent = form.collegeType === "govt" || form.collegeType === "private";
-
   // Check if form is fully filled
   const isFormComplete = useMemo(() => {
     const baseComplete =
@@ -424,13 +422,13 @@ const EnrollmentPageContent = () => {
       (!isInternship || (form.duration !== "" && form.internshipMode !== "")) &&
       (marksheet12File !== null || marksheetSemFile !== null);
 
-    // College ID is mandatory for college students (govt/private), not for job professionals
-    // Internship students are exempt from ID card upload
-    if (isCollegeStudent && !isInternship) {
+    // ID Card is mandatory ONLY for working professionals (Job Professionals)
+    const isWorkingProfessional = form.collegeType === "job";
+    if (isWorkingProfessional) {
       return baseComplete && collegeIdFile !== null;
     }
     return baseComplete;
-  }, [form, marksheet12File, marksheetSemFile, collegeIdFile, isCollegeStudent, isInternship]);
+  }, [form, marksheet12File, marksheetSemFile, collegeIdFile]);
 
   useEffect(() => {
     setForm((current) => ({
@@ -485,6 +483,7 @@ const EnrollmentPageContent = () => {
     if (!form.marksSem.trim()) return "Please enter your Last semester marks.";
     if (!marksheet12File && !marksheetSemFile) return "Please upload your 10th/12th marksheet OR your latest semester marksheet.";
     if (marksheet12File && marksheetSemFile) return "Please upload ONLY ONE certificate (do not upload both).";
+    if (form.collegeType === "job" && !collegeIdFile) return "Please upload your ID Card / Employee ID Card.";
     if (isInternship && !form.internshipMode) return "Please select internship mode.";
     if (isInternship && !form.duration) return "Please select internship duration.";
     return null;
@@ -1072,17 +1071,17 @@ const EnrollmentPageContent = () => {
                 </select>
               </label>
 
-              {/* College ID Upload — only for Govt/Private students, not for internships */}
-              {(isCollegeStudent && !isInternship) && (
+              {/* ID Card Upload — only for Job Professionals (working professionals), mandatory */}
+              {form.collegeType === "job" && (
                 <label className="block sm:col-span-2">
-                  <span className="mb-2 block text-sm font-medium">Upload College ID Card <span className="text-red-500">*</span> <span className="text-xs text-slate-400">(Max 200KB — JPG/PNG only)</span></span>
+                  <span className="mb-2 block text-sm font-medium">Upload ID Card / Employee ID Card <span className="text-red-500">*</span> <span className="text-xs text-slate-400">(Max 200KB — JPG/PNG only)</span></span>
                   <div className="flex items-center justify-center w-full">
                     <label htmlFor="dropzone-college-id" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
                       <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
                         <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
                         </svg>
-                        <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{collegeIdFile ? collegeIdFile.name : "Click to upload College ID"}</p>
+                        <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{collegeIdFile ? collegeIdFile.name : "Click to upload ID Card / Employee ID"}</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400">JPG, JPEG, PNG (MAX. 200KB)</p>
                       </div>
                       <input id="dropzone-college-id" type="file" className="hidden" accept="image/jpeg,image/jpg,image/png" onChange={handleCollegeIdFileChange} />
