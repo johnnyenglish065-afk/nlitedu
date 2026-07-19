@@ -85,7 +85,7 @@ const EnrollmentPageContent = () => {
       title: "NLIT Course Enrollment",
       description: "Select your course and fill out the enrollment form so we can reserve your seat and begin your learning journey.",
       highlights: ["Choose from courses across design, development, AI, and engineering", "Secure admission with a simple online form", "Receive course guidance from the NLIT team"],
-      program_type: "Internship",
+      program_type: programParam === "internship" || courseSlug === "general" ? "Internship" : "Foundation",
       govt_price: 0,
       pvt_price: 0,
       job_price: 0,
@@ -1125,7 +1125,7 @@ const EnrollmentPageContent = () => {
                       if (isInternship) {
                         return c.program_type === "Internship";
                       } else {
-                        return c.program_type === "Foundation";
+                        return c.program_type === "Foundation" || c.program_type === "Trending";
                       }
                     })
                     .map((c) => (

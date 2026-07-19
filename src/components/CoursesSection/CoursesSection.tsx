@@ -18,6 +18,7 @@ const CoursesSection = () => {
         .select("id, title, slug, description, image_url, duration, pvt_price")
         .eq("is_legacy_pricing", false)
         .neq("program_type", "Internship")
+        .neq("program_type", "Trending")
         .order("created_at", { ascending: true });
 
       if (error) {

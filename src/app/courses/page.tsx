@@ -1,5 +1,5 @@
 import CoursesSection from "@/components/CoursesSection/CoursesSection";
-
+import TrendingCourses from "@/components/TrendingCourses/TrendingCourses";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,10 +9,10 @@ export const metadata: Metadata = {
 
 const CoursesPage = () => {
   return (
-    <>
-
+    <div className="pt-24 lg:pt-28 dark:bg-gray-950">
+      <TrendingCourses />
       <CoursesSection />
-    </>
+    </div>
   );
 };
 

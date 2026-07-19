@@ -8,6 +8,7 @@ import Brands from "@/components/Brands";
 
 import AboutSectionOne from "@/components/About/AboutSectionOne";
 import AboutSectionTwo from "@/components/About/AboutSectionTwo";
+import TrendingCourses from "@/components/TrendingCourses/TrendingCourses";
 
 import InternshipProgram from "@/components/InternshipProgram";
 import CourseEnrollment from "@/components/CourseEnrollment";
@@ -48,6 +49,9 @@ export default function Home() {
 
       {/* 8. Importance of Courses, Skill Focus */}
       <AboutSectionTwo />
+
+      {/* 8b. Trending Course Packages */}
+      <TrendingCourses />
 
       <HiringSection />
 
