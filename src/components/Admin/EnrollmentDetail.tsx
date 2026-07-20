@@ -32,6 +32,7 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
   useEffect(() => {
     async function fetchCertificate() {
       if (enrollment.email && enrollment.course_title) {
+        if (!supabase) return;
         const { data, error } = await supabase
           .from("certificates")
           .select("pdf_url, certificate_number")

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
@@ -26,6 +26,89 @@ const semesters = [
 ];
 
 const genders = ["Male", "Female", "Prefer not to say"];
+
+const BIHAR_GOVT_COLLEGES = [
+  "B.C.E BHAGALPUR",
+  "D.C.E DARBHANGA",
+  "G.E.C ARARIA",
+  "G.E.C ARWAL",
+  "G.E.C AURANGABAD",
+  "G.E.C BANKA",
+  "G.E.C BEGUSARAI",
+  "G.E.C BHOJPUR",
+  "G.E.C BUXAR",
+  "G.E.C GAYA",
+  "G.E.C GOPALGANJ",
+  "G.E.C JAMUI",
+  "G.E.C JEHANABAD",
+  "G.E.C KAIMUR",
+  "G.E.C KATIHAR",
+  "G.E.C KHAGARIA",
+  "G.E.C KISHANGANJ",
+  "G.E.C LAKHISARAI",
+  "G.E.C MADHEPURA",
+  "G.E.C MADHUBANI",
+  "G.E.C MUNGER",
+  "G.E.C MUZAFFARPUR",
+  "G.E.C NAWADA",
+  "G.E.C PURNEA",
+  "G.E.C SAHARSA",
+  "G.E.C SAMASTIPUR",
+  "G.E.C SARAN",
+  "G.E.C SHEIKHPURA",
+  "G.E.C SHEOHAR",
+  "G.E.C SIWAN",
+  "G.E.C SUPAUL",
+  "G.E.C VAISHALI",
+  "G.E.C WEST CHAMPARAN",
+  "L.J.P.I.T SARAN",
+  "M.C.E MOTIHARI",
+  "N.C.E NALANDA",
+  "N.S.I.T PATNA",
+  "G.P PATNA",
+  "N.G.P PATNA",
+  "G.W.P PATNA",
+  "G.P MUZAFFARPUR",
+  "G.W.P MUZAFFARPUR",
+  "G.P GAYA",
+  "G.P TEKARI",
+  "G.P BHAGALPUR",
+  "G.P DARBHANGA",
+  "G.P BARAUNI",
+  "G.P SAHARSA",
+  "G.P PURNEA",
+  "G.P KATIHAR",
+  "G.P MOTIHARI",
+  "G.P BETTIAH",
+  "G.P CHAPRA",
+  "G.P GOPALGANJ",
+  "G.P VAISHALI",
+  "G.P LAKHISARAI",
+  "G.P ASTHAWAN",
+  "G.P DEHRI-ON-SONE",
+  "G.P MADHUBANI",
+  "G.P SHEOHAR",
+  "G.P SITAMARHI",
+  "G.P SIWAN",
+  "G.P AURANGABAD",
+  "G.P ARARIA",
+  "G.P ARWAL",
+  "G.P BANKA",
+  "G.P BHOJPUR",
+  "G.P BUXAR",
+  "G.P JAMUI",
+  "G.P JEHANABAD",
+  "G.P KAIMUR",
+  "G.P KHAGARIA",
+  "G.P KISHANGANJ",
+  "G.P MADHEPURA",
+  "G.P MUNGER",
+  "G.P NAWADA",
+  "G.P SAMASTIPUR",
+  "G.P SHEIKHPURA",
+  "G.P SUPAUL",
+  "OTHER (in case college name not listed)"
+];
 
 const indianStates = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
@@ -133,8 +216,57 @@ const WorkshopEnrollmentPageContent = () => {
     marksheet12Url: "",
     marksheetSemUrl: "",
     duration: "7 Days",
-    internshipMode: "Online",
+    internshipMode: "Offline",
   });
+
+  // Bihar Government College Searchable dropdown state
+  const [collegeSearch, setCollegeSearch] = useState("");
+  const [showCollegeDropdown, setShowCollegeDropdown] = useState(false);
+  const [selectedBiharGovtCollege, setSelectedBiharGovtCollege] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (form.state !== "Bihar" || form.collegeType !== "govt") {
+      setCollegeSearch("");
+      setShowCollegeDropdown(false);
+      setSelectedBiharGovtCollege("");
+    } else {
+      if (form.collegeName) {
+        const matched = BIHAR_GOVT_COLLEGES.find(
+          (c) => c.toLowerCase() === form.collegeName.toLowerCase()
+        );
+        if (matched) {
+          setSelectedBiharGovtCollege(matched);
+          setCollegeSearch(matched);
+        } else {
+          setSelectedBiharGovtCollege("OTHER (in case college name not listed)");
+          setCollegeSearch("OTHER (in case college name not listed)");
+        }
+      }
+    }
+  }, [form.state, form.collegeType]);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowCollegeDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredColleges = useMemo(() => {
+    const filtered = BIHAR_GOVT_COLLEGES.filter((col) =>
+      col.toLowerCase().includes(collegeSearch.toLowerCase())
+    );
+    if (!filtered.includes("OTHER (in case college name not listed)")) {
+      filtered.push("OTHER (in case college name not listed)");
+    }
+    return filtered;
+  }, [collegeSearch]);
+
   const [marksheet12File, setMarksheet12File] = useState<File | null>(null);
   const [marksheetSemFile, setMarksheetSemFile] = useState<File | null>(null);
   const [collegeIdFile, setCollegeIdFile] = useState<File | null>(null);
@@ -340,7 +472,7 @@ const WorkshopEnrollmentPageContent = () => {
 
   // Check if form is fully filled
   const isFormComplete = useMemo(() => {
-    return (
+    const baseComplete = (
       form.fullName.trim() !== "" &&
       form.fatherName.trim() !== "" &&
       form.gender !== "" &&
@@ -357,7 +489,11 @@ const WorkshopEnrollmentPageContent = () => {
       form.marksSem.trim() !== "" &&
       (marksheet12File !== null || marksheetSemFile !== null)
     );
-  }, [form, marksheet12File, marksheetSemFile]);
+    if (form.collegeType === "job") {
+      return baseComplete && collegeIdFile !== null;
+    }
+    return baseComplete;
+  }, [form, marksheet12File, marksheetSemFile, collegeIdFile]);
 
   useEffect(() => {
     setForm((current) => ({
@@ -394,6 +530,7 @@ const WorkshopEnrollmentPageContent = () => {
     if (!form.marksSem.trim()) return "Please enter your Last semester marks.";
     if (!marksheet12File && !marksheetSemFile) return "Please upload your 10th/12th marksheet OR your latest semester marksheet.";
     if (marksheet12File && marksheetSemFile) return "Please upload ONLY ONE certificate (do not upload both).";
+    if (form.collegeType === "job" && !collegeIdFile) return "Please upload your ID Card / Employee ID Card.";
     return null;
   };
 
@@ -422,11 +559,12 @@ const WorkshopEnrollmentPageContent = () => {
 
       let uploaded12Url = "";
       let uploadedSemUrl = "";
+      let uploadedCollegeIdUrl = "";
 
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-      if ((marksheet12File || marksheetSemFile) && (!cloudName || !uploadPreset)) {
+      if ((marksheet12File || marksheetSemFile || collegeIdFile) && (!cloudName || !uploadPreset)) {
         throw new Error("Cloudinary configuration is missing. Please set Environment Variables.");
       }
 
@@ -441,13 +579,14 @@ const WorkshopEnrollmentPageContent = () => {
           body: formData,
         });
         
-        if (!uploadRes.ok) throw new Error("Failed to upload marksheet to Cloudinary. Please try again.");
+        if (!uploadRes.ok) throw new Error("Failed to upload file to Cloudinary. Please try again.");
         const cloudData = await uploadRes.json();
         return cloudData.secure_url;
       };
 
       if (marksheet12File) uploaded12Url = await uploadToCloudinary(marksheet12File);
       if (marksheetSemFile) uploadedSemUrl = await uploadToCloudinary(marksheetSemFile);
+      if (collegeIdFile) uploadedCollegeIdUrl = await uploadToCloudinary(collegeIdFile);
 
       // Save to enrollments table in Supabase
       const pendingData: any = {
@@ -466,7 +605,13 @@ const WorkshopEnrollmentPageContent = () => {
         course_title: `${form.course} (Workshop)`,
         duration: form.duration,
         internship_mode: form.internshipMode,
-        message: `[Workshop Enrollment] ${form.message}`,
+        message: (() => {
+          let msg = `[Workshop Enrollment] ${form.message}`;
+          if (uploadedCollegeIdUrl) {
+            msg = `[Job ID Card: ${uploadedCollegeIdUrl}] ${msg}`;
+          }
+          return msg;
+        })(),
         qualification: form.qualification,
         marks10: form.marks10,
         marks12: form.marks12,
@@ -871,16 +1016,130 @@ const WorkshopEnrollmentPageContent = () => {
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-medium">College Name</span>
-                <input
-                  name="collegeName"
-                  value={form.collegeName}
+                <span className="mb-2 block text-sm font-medium">State</span>
+                <select
+                  name="state"
+                  value={form.state}
                   onChange={handleChange}
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  placeholder="Enter college name"
                   required
-                />
+                >
+                  <option value="">Select State</option>
+                  {indianStates.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
+                </select>
               </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium">College Type</span>
+                <select
+                  name="collegeType"
+                  value={form.collegeType}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  required
+                >
+                  <option value="">Select College Type</option>
+                  <option value="govt">Govt College</option>
+                  <option value="private">Private College</option>
+                  <option value="job">Job Professional</option>
+                </select>
+              </label>
+
+              {/* ID Card Upload — only for Job Professionals (working professionals), mandatory */}
+              {form.collegeType === "job" && (
+                <label className="block sm:col-span-2">
+                  <span className="mb-2 block text-sm font-medium">Upload ID Card / Employee ID Card <span className="text-red-500">*</span> <span className="text-xs text-slate-400">(Max 200KB — JPG/PNG only)</span></span>
+                  <div className="flex items-center justify-center w-full">
+                    <label htmlFor="dropzone-college-id" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-700 dark:hover:border-slate-600 transition">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                        <svg className="w-8 h-8 mb-3 text-slate-500 dark:text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                        </svg>
+                        <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-semibold">{collegeIdFile ? collegeIdFile.name : "Click to upload ID Card / Employee ID"}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">JPG, JPEG, PNG (MAX. 200KB)</p>
+                      </div>
+                      <input id="dropzone-college-id" type="file" className="hidden" accept="image/jpeg,image/jpg,image/png" onChange={handleCollegeIdFileChange} />
+                    </label>
+                  </div>
+                  {collegeIdFile && (
+                    <p className="mt-2 text-xs text-green-600 dark:text-green-400 font-medium">✓ {collegeIdFile.name} ({(collegeIdFile.size / 1024).toFixed(1)} KB)</p>
+                  )}
+                </label>
+              )}
+
+              {form.state === "Bihar" && form.collegeType === "govt" ? (
+                <div className="relative block" ref={dropdownRef}>
+                  <span className="mb-2 block text-sm font-medium">College Name</span>
+                  <input
+                    type="text"
+                    value={collegeSearch}
+                    onFocus={() => setShowCollegeDropdown(true)}
+                    onChange={(e) => {
+                      setCollegeSearch(e.target.value);
+                      setShowCollegeDropdown(true);
+                    }}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="Search government college..."
+                    required={!selectedBiharGovtCollege}
+                  />
+                  {showCollegeDropdown && (
+                    <div className="absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
+                      {filteredColleges.length > 0 ? (
+                        filteredColleges.map((col) => (
+                          <button
+                            key={col}
+                            type="button"
+                            onClick={() => {
+                              setSelectedBiharGovtCollege(col);
+                              setCollegeSearch(col);
+                              setShowCollegeDropdown(false);
+                              if (col.startsWith("OTHER")) {
+                                setForm((prev) => ({ ...prev, collegeName: "" }));
+                              } else {
+                                setForm((prev) => ({ ...prev, collegeName: col }));
+                              }
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 dark:hover:bg-slate-800 transition dark:text-white"
+                          >
+                            {col}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">No colleges found</div>
+                      )}
+                    </div>
+                  )}
+                  {selectedBiharGovtCollege.startsWith("OTHER") && (
+                    <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <span className="mb-2 block text-sm font-medium">Specify College Name</span>
+                      <input
+                        name="collegeName"
+                        value={form.collegeName}
+                        onChange={handleChange}
+                        className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                        placeholder="Enter college name"
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium">College Name</span>
+                  <input
+                    name="collegeName"
+                    value={form.collegeName}
+                    onChange={handleChange}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="Enter college name"
+                    required
+                  />
+                </label>
+              )}
 
               <label className="block">
                 <span className="mb-2 block text-sm font-medium">{form.collegeType === "job" ? "Job / Employee ID" : "College/University Reg. No."}</span>
@@ -906,40 +1165,6 @@ const WorkshopEnrollmentPageContent = () => {
                   <option value="14 Days">14 Days</option>
                   <option value="21 Days">21 Days</option>
                   <option value="28 Days">28 Days</option>
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium">College Type</span>
-                <select
-                  name="collegeType"
-                  value={form.collegeType}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  required
-                >
-                  <option value="">Select College Type</option>
-                  <option value="govt">Govt College</option>
-                  <option value="private">Private College</option>
-                  <option value="job">Job Professional</option>
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium">State</span>
-                <select
-                  name="state"
-                  value={form.state}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  required
-                >
-                  <option value="">Select State</option>
-                  {indianStates.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
                 </select>
               </label>
             </div>
