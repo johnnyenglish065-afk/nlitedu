@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, use } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { FaPlay, FaVideo, FaClock } from "react-icons/fa";
 import { motion } from "framer-motion";
@@ -16,10 +16,14 @@ interface RecordedSession {
   recorded_at: string;
 }
 
-export default function WorkshopCoursePage() {
-  const params = useParams();
+export default function WorkshopCoursePage({
+  params,
+}: {
+  params: Promise<{ coursename: string }>;
+}) {
   const router = useRouter();
-  const rawCourseName = (params.coursename as string) || "";
+  const unwrappedParams = use(params);
+  const rawCourseName = unwrappedParams.coursename || "";
   
   // Decode URL (e.g. %20 or - to spaces)
   const courseName = decodeURIComponent(rawCourseName).replace(/-/g, " ");
