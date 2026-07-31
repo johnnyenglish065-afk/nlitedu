@@ -24,6 +24,7 @@ type Certificate = {
   pdf_url: string;
   issue_date: string;
   grade: string;
+  certificate_type?: string;
 };
 
 export default function CertificateAdminPage() {
@@ -32,6 +33,7 @@ export default function CertificateAdminPage() {
   const [adminPass, setAdminPass] = useState("");
 
   const [generationMode, setGenerationMode] = useState<"bulk" | "individual">("bulk");
+  const [certificateType, setCertificateType] = useState<"internship" | "workshop">("internship");
   const [studentQuery, setStudentQuery] = useState("");
   const [sendEmail, setSendEmail] = useState(true);
 
@@ -220,6 +222,7 @@ export default function CertificateAdminPage() {
             mode: "individual", // Always process as 'individual' chunks under the hood
             studentQuery: queriesToProcess[i],
             sendEmail,
+            certificateType,
           }),
         });
 
@@ -264,12 +267,20 @@ export default function CertificateAdminPage() {
     setIsLoading(false);
   };
 
-  const filteredCerts = certificates.filter(
-    (c) =>
+  const [historyTypeFilter, setHistoryTypeFilter] = useState("all");
+
+  const filteredCerts = certificates.filter((c) => {
+    const matchesSearch =
       c.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.certificate_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.course_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      c.course_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Default older certificates without a type to "internship"
+    const cType = c.certificate_type || "internship";
+    const matchesType = historyTypeFilter === "all" || cType === historyTypeFilter;
+    
+    return matchesSearch && matchesType;
+  });
 
   // ── LOGIN ──
   if (!isAuthenticated) {
@@ -331,6 +342,35 @@ export default function CertificateAdminPage() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-8">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Certificate Generation System</h2>
                 <form onSubmit={handleGenerate} className="space-y-6">
+                  {/* Certificate Type Selector */}
+                  <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Certificate Type</label>
+                    <div className="flex gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setCertificateType("internship")}
+                        className={`flex-1 py-3 px-4 rounded-xl border text-center font-semibold transition-all ${
+                          certificateType === "internship"
+                            ? "border-indigo-600 bg-indigo-50/50 text-indigo-600 dark:border-indigo-500 dark:bg-indigo-950/20 dark:text-indigo-400"
+                            : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/30"
+                        }`}
+                      >
+                        🎓 Internship Certificate
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCertificateType("workshop")}
+                        className={`flex-1 py-3 px-4 rounded-xl border text-center font-semibold transition-all ${
+                          certificateType === "workshop"
+                            ? "border-indigo-600 bg-indigo-50/50 text-indigo-600 dark:border-indigo-500 dark:bg-indigo-950/20 dark:text-indigo-400"
+                            : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/30"
+                        }`}
+                      >
+                        🛠 Workshop Certificate
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Mode Selector */}
                   <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Generation Mode</label>
@@ -490,9 +530,20 @@ export default function CertificateAdminPage() {
           {tab === "history" && (
             <motion.div key="hist" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between gap-4">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">Issued Certificates ({filteredCerts.length})</h3>
-                  <input type="text" placeholder="Search by name, course, or ID..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm text-slate-900 dark:text-white outline-none w-full sm:w-72" />
+                  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <select 
+                      value={historyTypeFilter} 
+                      onChange={(e) => setHistoryTypeFilter(e.target.value)} 
+                      className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm text-slate-900 dark:text-white outline-none w-full sm:w-48"
+                    >
+                      <option value="all">All Types</option>
+                      <option value="internship">Internship</option>
+                      <option value="workshop">Workshop</option>
+                    </select>
+                    <input type="text" placeholder="Search by name, course, or ID..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm text-slate-900 dark:text-white outline-none w-full sm:w-72" />
+                  </div>
                 </div>
                 {loadingCerts ? (
                   <div className="p-12 text-center"><div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" /></div>

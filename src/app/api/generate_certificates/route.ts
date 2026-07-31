@@ -125,7 +125,8 @@ async function generateCertificateImage(
   student: any,
   startDate: string,
   endDate: string,
-  certNumber: string
+  certNumber: string,
+  certificateType: string
 ): Promise<Buffer> {
   // Ensure fonts are registered before rendering
   registerFonts();
@@ -427,7 +428,7 @@ async function sendCertificateEmail(
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { adminId, adminPass, startDate, endDate, courseFilter, mode, studentQuery, sendEmail } = body;
+    const { adminId, adminPass, startDate, endDate, courseFilter, mode, studentQuery, sendEmail, certificateType = "internship" } = body;
 
     // 1. Authenticate
     const expectedId = process.env.CERTIFICATE_ADMIN_ID;
@@ -547,10 +548,11 @@ export async function POST(req: Request) {
     }
 
     // 3. Load template
-    const templatePath = path.join(process.cwd(), "public", "certificate-template.png");
+    const templateFileName = certificateType === "workshop" ? "certificate-workshop.png" : "certificate-template.png";
+    const templatePath = path.join(process.cwd(), "public", templateFileName);
     if (!fs.existsSync(templatePath)) {
       return NextResponse.json(
-        { error: "Certificate template not found at public/certificate-template.png" },
+        { error: `Certificate template not found at public/${templateFileName}` },
         { status: 500 }
       );
     }
@@ -559,7 +561,11 @@ export async function POST(req: Request) {
     const results: any[] = await Promise.all(students.map(async (student) => {
       // Pad to 6 digits to match standard Certificate ID lengths nicely
       const paddedId = String(student.id).padStart(6, "0");
-      const certNumber = `NLIT-${new Date().getFullYear()}-${paddedId}`;
+      
+      // Differentiate Certificate IDs so a student can have both an internship and a workshop certificate
+      const certNumber = certificateType === "workshop" 
+        ? `NLIT-W-${new Date().getFullYear()}-${paddedId}`
+        : `NLIT-${new Date().getFullYear()}-${paddedId}`;
 
       try {
         // Check for duplicate certificate before generating
@@ -599,7 +605,8 @@ export async function POST(req: Request) {
           student,
           startDate,
           endDate,
-          certNumber
+          certNumber,
+          certificateType
         );
 
         // Upload to Cloudinary
@@ -624,6 +631,7 @@ export async function POST(req: Request) {
             issue_date: issueDate,
             issued_date: issueDate,
             user_email: student.email || null,
+            certificate_type: certificateType,
           })
           .select()
           .single();
