@@ -145,6 +145,7 @@ export default function CertificateAdminPage() {
           courseTitle: c.course_name,
           certificateNumber: c.certificate_number,
           pdfUrl: c.pdf_url,
+          certificateType: c.certificate_type || "internship",
         }),
       });
 

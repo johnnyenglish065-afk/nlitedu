@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { type, studentName, studentEmail, courseTitle, orderId, certificateNumber, pdfUrl } = body;
+    const { type, studentName, studentEmail, courseTitle, orderId, certificateNumber, pdfUrl, certificateType = "internship" } = body;
 
     if (!studentName || !studentEmail || !courseTitle) {
       return NextResponse.json(
@@ -228,7 +228,7 @@ export async function POST(req: NextRequest) {
             <div class="content">
               <div class="greeting">Dear ${studentName},</div>
               <p class="message-text">
-                Great job! You have successfully completed all the requirements for your training and internship program. In recognition of your dedication and excellent performance, your official certificate has been issued.
+                Great job! You have successfully completed all the requirements for your ${certificateType === "workshop" ? "workshop" : "training and internship program"}. In recognition of your dedication and excellent performance, your official certificate has been issued.
               </p>
               
               <div class="details-card">

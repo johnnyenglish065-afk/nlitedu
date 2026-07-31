@@ -195,7 +195,8 @@ async function sendCertificateEmail(
   studentEmail: string,
   courseTitle: string,
   certificateNumber: string,
-  pdfUrl: string
+  pdfUrl: string,
+  certificateType: string = "internship"
 ) {
   try {
     // Validate SMTP config
@@ -370,7 +371,7 @@ async function sendCertificateEmail(
           <div class="content">
             <div class="greeting">Dear ${studentName},</div>
             <p class="message-text">
-              Great job! You have successfully completed all the requirements for your training and internship program. In recognition of your dedication and performance, your official certificate has been issued.
+              Great job! You have successfully completed all the requirements for your ${certificateType === "workshop" ? "workshop" : "training and internship program"}. In recognition of your dedication and performance, your official certificate has been issued.
             </p>
             <div class="details-card">
               <div class="detail-row">
@@ -583,7 +584,8 @@ export async function POST(req: Request) {
               student.email,
               student.course_title,
               certNumber,
-              existingCert.pdf_url
+              existingCert.pdf_url,
+              certificateType
             );
           }
           
@@ -644,7 +646,8 @@ export async function POST(req: Request) {
             student.email,
             student.course_title,
             certNumber,
-            cloudinaryUrl
+            cloudinaryUrl,
+            certificateType
           );
         }
 
