@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { FaPlay, FaVideo, FaClock } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Breadcrumb from "@/components/Common/Breadcrumb";
+import { useAuth } from "@/context/AuthContext";
+import { FiLock } from "react-icons/fi";
 
 interface RecordedSession {
   id: string;
@@ -28,13 +30,14 @@ export default function WorkshopCoursePage({
   // Decode URL (e.g. %20 or - to spaces)
   const courseName = decodeURIComponent(rawCourseName).replace(/-/g, " ");
 
+  const { user, loading: authLoading } = useAuth();
   const [sessions, setSessions] = useState<RecordedSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSession, setActiveSession] = useState<RecordedSession | null>(null);
 
   useEffect(() => {
     const fetchSessions = async () => {
-      if (!supabase || !courseName) {
+      if (!supabase || !courseName || !user) {
         setLoading(false);
         return;
       }
@@ -52,8 +55,50 @@ export default function WorkshopCoursePage({
       setLoading(false);
     };
 
-    fetchSessions();
-  }, [courseName]);
+    if (!authLoading) {
+      fetchSessions();
+    }
+  }, [courseName, user, authLoading]);
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
+        <div className="mx-auto w-full max-w-lg">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+          >
+            <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-primary to-indigo-600" />
+            <div className="p-8 pt-10 text-center">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
+                <FiLock className="h-10 w-10" />
+              </div>
+              <h2 className="mb-3 text-3xl font-bold text-slate-900 dark:text-white">Account Required</h2>
+              <p className="mb-8 text-slate-600 dark:text-slate-400">
+                Please sign in to your NLITedu account to access the recorded sessions for <span className="font-semibold text-primary capitalize">{courseName}</span>.
+              </p>
+              
+              <button
+                onClick={() => router.push(`/signin`)}
+                className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-8 py-4 text-base font-bold text-white shadow-lg shadow-primary/30 transition-all hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/40"
+              >
+                Sign In to Continue
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </main>
+    );
+  }
 
   if (loading) {
     return (
