@@ -126,7 +126,8 @@ async function generateCertificateImage(
   startDate: string,
   endDate: string,
   certNumber: string,
-  certificateType: string
+  certificateType: string,
+  customIssueDate?: string
 ): Promise<Buffer> {
   // Ensure fonts are registered before rendering
   registerFonts();
@@ -148,11 +149,17 @@ async function generateCertificateImage(
   centerTextInGap(ctx, certNumber, 55, 780, null, 445);
 
   // Date
-  const dateStr = new Date().toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).replace(/\//g, "-");
+  let dateStr = "";
+  if (customIssueDate) {
+    const [y, m, d] = customIssueDate.split("-");
+    dateStr = `${d}-${m}-${y}`;
+  } else {
+    dateStr = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).replace(/\//g, "-");
+  }
   centerTextInGap(ctx, dateStr, 55, 2850, null, 330);
 
   // Student Name (spaced letters)
@@ -429,7 +436,7 @@ async function sendCertificateEmail(
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { adminId, adminPass, startDate, endDate, courseFilter, mode, studentQuery, sendEmail, certificateType = "internship" } = body;
+    const { adminId, adminPass, startDate, endDate, courseFilter, mode, studentQuery, sendEmail, certificateType = "internship", customIssueDate } = body;
 
     // 1. Authenticate
     const expectedId = process.env.CERTIFICATE_ADMIN_ID;
@@ -608,7 +615,8 @@ export async function POST(req: Request) {
           startDate,
           endDate,
           certNumber,
-          certificateType
+          certificateType,
+          customIssueDate
         );
 
         // Upload to Cloudinary
@@ -617,7 +625,7 @@ export async function POST(req: Request) {
         const cloudinaryUrl = await uploadToCloudinary(imageBuffer, publicId);
 
         // Insert into certificates table
-        const issueDate = new Date().toISOString().split("T")[0];
+        const issueDate = customIssueDate ? customIssueDate : new Date().toISOString().split("T")[0];
 
         const { data: certData, error: certError } = await supabase
           .from("certificates")

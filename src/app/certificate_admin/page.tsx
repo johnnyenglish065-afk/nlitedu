@@ -39,6 +39,7 @@ export default function CertificateAdminPage() {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [customIssueDate, setCustomIssueDate] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
   const [courses, setCourses] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -224,6 +225,7 @@ export default function CertificateAdminPage() {
             studentQuery: queriesToProcess[i],
             sendEmail,
             certificateType,
+            customIssueDate,
           }),
         });
 
@@ -402,7 +404,7 @@ export default function CertificateAdminPage() {
                   </div>
 
                   {/* Mode-Specific inputs */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     {generationMode === "bulk" ? (
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Course Filter</label>
@@ -413,24 +415,28 @@ export default function CertificateAdminPage() {
                       </div>
                     ) : (
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Student IDs or Emails (Comma Separated)</label>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Student IDs or Emails</label>
                         <input
                           type="text"
                           value={studentQuery}
                           onChange={(e) => setStudentQuery(e.target.value)}
                           className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
-                          placeholder="e.g. 44, 45, student@email.com"
+                          placeholder="e.g. 44, student@email.com"
                           required
                         />
                       </div>
                     )}
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Training Start Date</label>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Start Date</label>
                       <input type="text" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500" placeholder="DD-MM-YYYY" required />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Training End Date</label>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">End Date</label>
                       <input type="text" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500" placeholder="DD-MM-YYYY" required />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Issue Date (Optional)</label>
+                      <input type="date" value={customIssueDate} onChange={(e) => setCustomIssueDate(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500" />
                     </div>
                   </div>
 
