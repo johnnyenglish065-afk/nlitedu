@@ -178,13 +178,28 @@ const ProfilePage = () => {
 
         // Fetch Certificates
         const fullNameForCerts = profileData?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || "";
-        if (fullNameForCerts) {
-          const { data: certsData, error: certsError } = await supabase
-            .from("certificates")
-            .select("*")
-            .ilike("student_name", fullNameForCerts);
+        const emailForCerts = user.email || "";
+        
+        if (emailForCerts || fullNameForCerts) {
+          let query = supabase.from("certificates").select("*");
+          if (emailForCerts && fullNameForCerts) {
+             // using eq instead of ilike in .or to avoid syntax issues with % and spaces
+             query = query.or(`user_email.eq.${emailForCerts},student_name.eq.${fullNameForCerts}`);
+          } else if (emailForCerts) {
+             query = query.eq("user_email", emailForCerts);
+          } else {
+             query = query.ilike("student_name", `%${fullNameForCerts}%`);
+          }
+          
+          const { data: certsData, error: certsError } = await query;
           if (!certsError && certsData) {
-            setCertificates(certsData);
+            const matchedCerts = certsData.filter((c: any) => {
+              if (c.user_email && emailForCerts) {
+                return c.user_email.toLowerCase() === emailForCerts.toLowerCase();
+              }
+              return true;
+            });
+            setCertificates(matchedCerts);
           }
         }
 

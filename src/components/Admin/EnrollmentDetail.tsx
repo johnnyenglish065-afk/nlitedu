@@ -27,25 +27,43 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
   }
 
   const [isGenerating, setIsGenerating] = useState(false);
-  const [publishedCertificate, setPublishedCertificate] = useState<any>(null);
+  const [publishedCertificates, setPublishedCertificates] = useState<any[]>([]);
 
   useEffect(() => {
-    async function fetchCertificate() {
-      if (enrollment.email && enrollment.course_title) {
+    async function fetchCertificates() {
+      if (enrollment && enrollment.course_title) {
         if (!supabase) return;
+        const paddedId = enrollment.id ? String(enrollment.id).padStart(6, "0") : null;
+        
+        // Fetch all certificates for this course to avoid PostgREST .or() parsing errors with special characters
         const { data, error } = await supabase
           .from("certificates")
-          .select("pdf_url, certificate_number")
-          .eq("user_email", enrollment.email)
-          .eq("course_title", enrollment.course_title)
-          .maybeSingle();
-        
-        if (data) {
-          setPublishedCertificate(data);
+          .select("pdf_url, certificate_number, user_email, student_name, certificate_type")
+          .eq("course_name", enrollment.course_title)
+          .order("created_at", { ascending: false });
+
+        if (data && data.length > 0) {
+          const matched = data.filter(c => {
+            const matchesId = paddedId && c.certificate_number && c.certificate_number.endsWith(`-${paddedId}`);
+            const matchesEmail = enrollment.email && c.user_email && c.user_email.toLowerCase() === enrollment.email.toLowerCase();
+            
+            if (c.user_email) {
+              return matchesEmail || matchesId;
+            }
+            
+            if (matchesId) {
+              return true;
+            }
+            
+            const matchesName = enrollment.full_name && c.student_name && c.student_name.toLowerCase() === enrollment.full_name.toLowerCase();
+            return matchesName;
+          });
+          
+          setPublishedCertificates(matched);
         }
       }
     }
-    fetchCertificate();
+    fetchCertificates();
   }, [enrollment]);
 
   const handleDownloadInvoice = async () => {
@@ -454,16 +472,21 @@ export default function EnrollmentDetail({ enrollment, onClose }: EnrollmentDeta
                   ) : (
                     <div className="text-[10px] text-slate-400 italic">No semester marksheet provided.</div>
                   )}
-                  {publishedCertificate && publishedCertificate.pdf_url && (
+                  {publishedCertificates.length > 0 && (
                     <div className="mt-2 pt-4 border-t border-slate-100 dark:border-slate-700/50">
                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-1.5 h-3 bg-purple-500 rounded-full" /> Issued Certificate
+                        <span className="w-1.5 h-3 bg-purple-500 rounded-full" /> Issued Certificates
                       </h4>
-                      <DocumentLink 
-                        label={`Certificate ID: ${publishedCertificate.certificate_number}`} 
-                        url={publishedCertificate.pdf_url} 
-                        color="blue" 
-                      />
+                      <div className="flex flex-col gap-3">
+                        {publishedCertificates.map((cert) => (
+                          <DocumentLink 
+                            key={cert.certificate_number}
+                            label={`${cert.certificate_type === 'workshop' ? 'Workshop ' : ''}Certificate: ${cert.certificate_number}`} 
+                            url={cert.pdf_url} 
+                            color="blue" 
+                          />
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
